@@ -32,6 +32,12 @@ say() { printf "\033[36m▸\033[0m %s\n" "$*"; }
 ok()  { printf "\033[32m✓\033[0m %s\n" "$*"; }
 die() { printf "\033[31m✗ %s\033[0m\n" "$*" >&2; exit 1; }
 
+# 某些环境（沙箱 / 企业代理）会经由 MITM 代理访问外网，
+# 此时 curl 认得 CURL_CA_BUNDLE 但 git 不认，这里自动对齐。
+if [ -n "${CURL_CA_BUNDLE:-}" ] && [ -f "$CURL_CA_BUNDLE" ]; then
+  export GIT_SSL_CAINFO="$CURL_CA_BUNDLE"
+fi
+
 # ---------- 0) 校验 Token ----------
 say "校验 Token ..."
 LOGIN="$(curl -fsS "${AUTH[@]}" "$API/user" | python3 -c 'import sys,json; print(json.load(sys.stdin)["login"])' 2>/dev/null)" \
