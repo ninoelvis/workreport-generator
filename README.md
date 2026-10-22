@@ -1,12 +1,12 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v1.3.1-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v1.3.2-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
 **原生版 Android App（v1.3.0，推荐）**：
-[workreport-native-v1.3.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.1/workreport-native-v1.3.1.apk)
+[workreport-native-v1.3.2.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.2/workreport-native-v1.3.2.apk)
 （12 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版）
 
 源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
@@ -21,6 +21,7 @@
 > 全部历史版本见 [Releases](https://github.com/ninoelvis/workreport-generator/releases)。
 
 **更新记录**
+- `v1.3.2` 修复填了收件人邮箱但拉起邮箱 App 后收件人栏是空的（按邮箱 App 能力自动选择 ACTION_SENDTO / ACTION_SEND 通道）；邮件主题改为与压缩包名完全一致；历史报告二次发送也带上收件人
 - `v1.3.1` 两个内容输入框的清除按钮加上二次确认，防止误删；生成后的「是否拉起邮箱 App 发送」弹窗里新增收件人邮箱输入框，填完自动保存，下次生成直接带上（也可在「我的」页修改），确认后再选择邮箱 App
 - `v1.3.0` **原生重写正式版**：整个 App 从 WebView 套壳改写为 Kotlin + Jetpack Compose 纯原生实现，不再加载任何网页资源。导出的 Excel 与加密 ZIP 与旧版**逐字节一致**（10/10 部件实测比对通过）。新增首次启动功能介绍页、收件人邮箱配置、生成后自动拉起邮箱 App 发送（可记住选择）、两个内容框的独立清除按钮；首页预览表格按 Excel 真实列宽重新对齐
 - `v1.2.1` App 内顶栏图标换成新图标
