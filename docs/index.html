@@ -580,9 +580,12 @@ var EMBEDDED = {
   "disclaimer": "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。使用者应自行确保所填报的工作内容真实、合法，不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，软件作者不承担任何法律责任。"
 };
 (function () {
+  /* 取数顺序：同源 → jsDelivr CDN（带日期参数绕开 CDN 缓存）→ 页面内嵌副本
+     镜像部署目录刻意不含 manifest，使镜像站自动走 CDN 分支拿到最新版本信息 */
+  var DAY = new Date().toISOString().slice(0, 10);
   var SOURCES = [
     './download-manifest.json',
-    'https://cdn.jsdelivr.net/gh/ninoelvis/workreport-generator@main/docs/download-manifest.json'
+    'https://cdn.jsdelivr.net/gh/ninoelvis/workreport-generator@main/docs/download-manifest.json?t=' + DAY
   ];
 
   function load(i) {
