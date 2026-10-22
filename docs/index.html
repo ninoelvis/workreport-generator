@@ -334,12 +334,12 @@ footer a{color:var(--t2)}
 
 <!-- ===== Hero ===== -->
 <section class="hero">
-  <h1>填好这周的工作，一键生成周报</h1>
-  <p class="lead">填上姓名和这周做了什么，点一下就生成一份 Excel 周报，打包成带密码的压缩包，发出去就行。</p>
+  <h1>工作周报快速生成，多版本可选。</h1>
+  <p class="lead">快速生成加密压缩包，原生版APP可直接拉起邮箱APP发送周报，所有内容只存在本地，不发送到任何服务器。</p>
   <div class="badges">
     <span class="badge primary"><span class="dot"></span><span id="heroVer">原生版 —</span></span>
-    <span class="badge">全程离线，不上传任何数据</span>
     <span class="badge">免费，无广告</span>
+    <span class="badge">手机 / 网页 / 单文件 三种用法</span>
   </div>
 </section>
 
@@ -725,7 +725,7 @@ footer a{color:var(--t2)}
     }
   ],
   "disclaimer": "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。使用者应自行确保所填报的工作内容真实、合法，不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，软件作者不承担任何法律责任。",
-  "downloadPageUrl": "https://756wwpvsqctpz.space.mcode.cn"
+  "downloadPageUrl": "https://8da2s9odk23ro.space.mcode.cn"
 };
   /* 取数顺序：同源 → GitHub raw（实时）→ jsDelivr CDN → 页面内嵌副本
      注：jsDelivr 对 @main 分支的同步有分钟级延迟，仅作备用；
@@ -750,7 +750,8 @@ footer a{color:var(--t2)}
   }
   function accept(j, src) {
     if (!j || !j.app) return;
-    if (!best || cmpVer(j.app.version, best.app.version) >= 0) {
+    /* 严格大于才覆盖：同版本时先到者优先，避免滞后源（如 jsDelivr）盖掉新数据 */
+    if (!best || cmpVer(j.app.version, best.app.version) > 0) {
       best = j;
       render(j, src);
     }
