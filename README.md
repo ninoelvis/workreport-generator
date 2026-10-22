@@ -1,13 +1,13 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v1.0.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v1.0.1-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
 **Android App（推荐）**：
-[workreport-generator-v1.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.0.0/workreport-generator-v1.0.apk)
-（250 KB · 首次安装请在「安装未知应用」里放行一次）
+[workreport-generator-v1.0.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.0.1/workreport-generator-v1.0.1.apk)
+（250 KB · 首次安装请在「安装未知应用」里放行一次 · 可直接覆盖安装 v1.0.0）
 
 **网页版（免安装、离线可用）**：
 [`web/workreport-web.htm`](web/workreport-web.htm) —— 下载后用浏览器打开即可，无需联网。
