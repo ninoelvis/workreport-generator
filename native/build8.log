@@ -1,0 +1,155 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.9/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:compileDebugKotlin
+> Task :app:mergeExtDexDebug
+
+> Task :app:compileDebugKotlin FAILED
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:24:17 Conflicting declarations:
+val database: ReportDatabase
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:27:17 Conflicting declarations:
+val apiClient: ApiClient
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:33:17 Conflicting declarations:
+val reportRepository: ReportRepository
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:45:9 Conflicting declarations:
+var database: ReportDatabase?
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:46:17 Overload resolution ambiguity between candidates:
+var database: ReportDatabase?
+val database: ReportDatabase
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:47:13 Overload resolution ambiguity between candidates:
+var database: ReportDatabase?
+val database: ReportDatabase
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:51:30 Overload resolution ambiguity between candidates:
+var database: ReportDatabase?
+val database: ReportDatabase
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:59:9 Conflicting declarations:
+var reportRepository: ReportRepository?
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:60:17 Overload resolution ambiguity between candidates:
+var reportRepository: ReportRepository?
+val reportRepository: ReportRepository
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:61:13 Overload resolution ambiguity between candidates:
+var reportRepository: ReportRepository?
+val reportRepository: ReportRepository
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:62:23 Overload resolution ambiguity between candidates:
+var database: ReportDatabase?
+val database: ReportDatabase
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:62:32 Unresolved reference 'reportDao'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:64:22 Overload resolution ambiguity between candidates:
+var reportRepository: ReportRepository?
+val reportRepository: ReportRepository
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:73:9 Conflicting declarations:
+var apiClient: ApiClient?
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:74:17 Overload resolution ambiguity between candidates:
+var apiClient: ApiClient?
+val apiClient: ApiClient
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:75:13 Overload resolution ambiguity between candidates:
+var apiClient: ApiClient?
+val apiClient: ApiClient
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ServiceLocator.kt:75:45 Overload resolution ambiguity between candidates:
+var apiClient: ApiClient?
+val apiClient: ApiClient
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/data/local/ReportEntity.kt:60:35 Return type mismatch: expected 'kotlin.String', actual 'kotlin.Long'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/data/repository/ReportRepository.kt:7:34 Unresolved reference 'ReportResult'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/data/repository/ReportRepository.kt:45:8 Unresolved reference 'ReportResult'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:4:32 Unresolved reference 'AESEncryptionParameters'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:5:32 Unresolved reference 'CompressionMethod'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:6:32 Unresolved reference 'AesKeyStrength'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:7:32 Unresolved reference 'EncryptionMethod'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:34:32 Unresolved reference 'EncryptionMethod'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:35:30 Unresolved reference 'AesKeyStrength'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:36:13 Unresolved reference 'aesEncryptionParams'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:36:35 Unresolved reference 'AesEncryptionParameters'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:37:33 Unresolved reference 'CompressionMethod'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:38:32 Assignment type mismatch: actual type is 'kotlin.Int', but 'net.lingala.zip4j.model.enums.CompressionLevel!' was expected.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:41:34 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:41:34 Not enough information to infer type argument for 'R'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:41:38 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:42:13 None of the following candidates is applicable:
+constructor(p0: OutputStream!, p1: Charset!): ZipOutputStream
+constructor(p0: OutputStream!, p1: CharArray!): ZipOutputStream
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:42:42 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:42:42 Not enough information to infer type argument for 'R'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:42:42 Unresolved reference. None of the following candidates is applicable because of a receiver type mismatch:
+fun <T : Closeable?, R> T.use(block: (T) -> R): R
+    [R|Contract description]
+     <
+        CallsInPlace(block, EXACTLY_ONCE)
+    >
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:42:48 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:45:25 Unresolved reference 'putNextEntry'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:46:25 Unresolved reference 'write'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/EncryptedZipWriter.kt:47:25 Unresolved reference 'closeEntry'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/ReportExporter.kt:72:32 Unresolved reference 'year?'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/ReportExporter.kt:134:18 Returns are prohibited for functions with an expression body. Use block body '{...}'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:21:13 Const 'val' has type 'kotlin.DoubleArray'. Only primitive types and 'String' are allowed.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:24:13 Const 'val' has type 'kotlin.IntArray'. Only primitive types and 'String' are allowed.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:26:13 Const 'val' has type 'kotlin.collections.List<kotlin.String>'. Only primitive types and 'String' are allowed.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:52:19 None of the following candidates is applicable:
+constructor(p0: String!, p1: CharArray!): ZipFile
+constructor(p0: File!, p1: CharArray!): ZipFile
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:53:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:54:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:55:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:56:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:57:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:58:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:59:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:60:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:61:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/export/XlsxWriter.kt:62:13 Unresolved reference 'addFile'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/history/HistoryScreen.kt:135:76 @Composable invocations can only happen from the context of a @Composable function
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeScreen.kt:442:14 Unresolved reference 'weight'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:151:13 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:151:25 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:160:15 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:160:15 Not enough information to infer type argument for 'T'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:160:27 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:164:43 Unresolved reference 'fileName'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:165:43 Unresolved reference 'password'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:166:51 Unresolved reference 'savedToDownloads'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:169:15 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:169:15 Not enough information to infer type argument for 'T'.
+e: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeViewModel.kt:222:32 Unresolved reference 'year?'.
+w: Detected multiple Kotlin daemon sessions at 
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 2m 4s
+22 actionable tasks: 2 executed, 20 up-to-date
+EXIT=1

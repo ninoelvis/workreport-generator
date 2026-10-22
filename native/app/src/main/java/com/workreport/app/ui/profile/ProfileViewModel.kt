@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.local.ThemeMode
+import com.workreport.app.domain.model.MailSendMode
 import com.workreport.app.domain.model.SensitiveWord
 import com.workreport.app.util.MailApp
 import com.workreport.app.util.MailHelper
@@ -30,6 +31,8 @@ data class ProfileUiState(
     val mailApps: List<MailApp> = emptyList(),
     /** 是否每次生成后都直接拉起邮箱 App 发送（不再询问） */
     val autoSendMail: Boolean = false,
+    /** 邮件发送方式：附件优先 / 收件人优先 */
+    val mailSendMode: MailSendMode = MailSendMode.AUTO,
     val message: String? = null,
 )
 
@@ -55,6 +58,9 @@ class ProfileViewModel(
         }
         viewModelScope.launch {
             settings.autoSendMail.collect { _state.value = _state.value.copy(autoSendMail = it) }
+        }
+        viewModelScope.launch {
+            settings.mailSendMode.collect { _state.value = _state.value.copy(mailSendMode = it) }
         }
         viewModelScope.launch {
             settings.preferredMailPackage.collect { pkg ->
@@ -85,6 +91,10 @@ class ProfileViewModel(
     }
 
     /** 是否每次生成后都直接拉起邮箱 App 发送 */
+    fun setMailSendMode(mode: MailSendMode) {
+        settings.setMailSendMode(mode)
+    }
+
     fun setAutoSendMail(value: Boolean) {
         settings.setAutoSendMail(value)
     }

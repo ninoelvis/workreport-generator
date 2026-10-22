@@ -2,6 +2,7 @@ package com.workreport.app.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.workreport.app.domain.model.MailSendMode
 import com.workreport.app.domain.model.SensitiveWord
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -94,8 +95,21 @@ class SettingsStore(context: Context) {
         _mailRecipient.value = v
     }
 
-    // ---------------- 生成后是否自动发邮件 ----------------
+    // ---------------- 邮件发送方式 ----------------
 
+    /**
+     * 拉起邮箱 App 时的通道选择：附件优先 / 收件人优先。
+     * 两种通道各有各的标准字段，用户切换后立即记住。
+     */
+    private val _mailSendMode = MutableStateFlow(MailSendMode.from(prefs.getString(KEY_MAIL_SEND_MODE, null)))
+    val mailSendMode: StateFlow<MailSendMode> = _mailSendMode.asStateFlow()
+
+    fun setMailSendMode(mode: MailSendMode) {
+        prefs.edit().putString(KEY_MAIL_SEND_MODE, mode.storageValue).apply()
+        _mailSendMode.value = mode
+    }
+
+    // ---------------- 生成后是否自动发邮件 ----------------
     /**
      * true  = 以后每次生成都直接拉起邮箱 App 发送，不再询问
      * false = 每次生成后都弹窗询问
@@ -139,6 +153,7 @@ class SettingsStore(context: Context) {
         _preferredMailPackage.value = ""
         _mailRecipient.value = ""
         _autoSendMail.value = false
+        _mailSendMode.value = MailSendMode.AUTO
         _lastTimeRange.value = ""
         // 引导页不随「清除数据」重置，否则清完又会被弹一次
     }
@@ -176,6 +191,7 @@ class SettingsStore(context: Context) {
         private const val KEY_MAIL_RECIPIENT = "mail_recipient"
         private const val KEY_INTRO_SHOWN = "intro_shown"
         private const val KEY_AUTO_SEND_MAIL = "auto_send_mail"
+        private const val KEY_MAIL_SEND_MODE = "mail_send_mode"
 
         /** 内置默认词库，与 WebView 版保持一致 */
         val DEFAULT_SENSITIVE_WORDS: List<SensitiveWord> = listOf(

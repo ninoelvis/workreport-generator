@@ -14,9 +14,9 @@ android {
         // 最低支持 Android 8.0 (API 26)
         minSdk = 26
         targetSdk = 34
-        versionCode = 11
+        versionCode = 12
         // 测试版：与正式版（1.2.1）区分开
-        versionName = "1.3.2"
+        versionName = "1.3.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -24,8 +24,18 @@ android {
 
     signingConfigs {
         create("release") {
-            // 签名证书与历史版本保持一致，保证可直接覆盖安装
-            storeFile = file(System.getenv("WR_KEYSTORE") ?: "keystore/release.keystore")
+            // 签名证书与历史版本保持一致，保证可直接覆盖安装。
+            // 证书路径按优先级依次尝试：环境变量 WR_KEYSTORE → 工程内 keystore/ → 工程上一级 keystore/。
+            // 用「存在性」判断而不是直接取第一个，避免环境变量指向失效路径时构建失败。
+            val keystoreCandidates = listOfNotNull(
+                System.getenv("WR_KEYSTORE"),
+                "keystore/release.keystore",
+                "../keystore/release.keystore",
+            )
+            storeFile = keystoreCandidates
+                .map { file(it) }
+                .firstOrNull { it.exists() }
+                ?: file("keystore/release.keystore")
             storePassword = System.getenv("WR_KEYSTORE_PASS") ?: "workreport2026"
             keyAlias = System.getenv("WR_KEY_ALIAS") ?: "workreport"
             keyPassword = System.getenv("WR_KEY_PASS") ?: "workreport2026"

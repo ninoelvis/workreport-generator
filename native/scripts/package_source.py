@@ -4,7 +4,7 @@ import os, sys, zipfile, hashlib
 
 SRC = "/workspace/native"
 OUT = "/workspace/output"
-NAME = "工作报告生成器_原生版_工程源码_v1.3.1.zip"
+NAME = "工作报告生成器_原生版_工程源码_v1.3.2.zip"
 
 EXCLUDE_DIRS = {"build", ".gradle", ".idea", "keystore", ".git", "captures", ".kotlin"}
 EXCLUDE_FILES = {"local.properties"}

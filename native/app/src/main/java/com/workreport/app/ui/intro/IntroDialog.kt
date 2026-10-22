@@ -85,6 +85,14 @@ fun IntroDialog(
                             IntroBullet("生成加密 ZIP", "导出 Excel 并用密码加密压缩，保存到系统「下载」目录。")
                             IntroBullet("自动复制文件名", "生成成功的同时，文件名自动进入手机剪贴板。")
                             IntroBullet("自动发邮件", "自动拉起你设定的邮箱 App，压缩包作为附件带入写邮件界面。")
+                            IntroBullet(
+                                "阿里邮箱直达",
+                                "用阿里邮箱发送时，收件人、主题、压缩包附件会一次全部带进写邮件界面。",
+                            )
+                            IntroBullet(
+                                "发送方式可切换",
+                                "不同邮箱 App 对「附件」和「收件人」的兼容性不一样。发送弹窗里可切换「自动」「只带压缩包」「只填收件人」，选过之后会记住。",
+                            )
                             IntroBullet("实时预览", "随时查看最终 Excel 效果，所见即所得。")
                             IntroBullet(
                                 "敏感词管理",
@@ -97,9 +105,13 @@ fun IntroDialog(
                     item {
                         IntroCard(title = "历史版本更新记录", icon = Icons.Filled.History) {
                             ChangeLogItem(
+                                "v1.3.3",
+                                "修复：压缩包附件没有带进邮件。原因是上一版为了保证收件人填上，把发送通道换成了 ACTION_SENDTO —— 而在阿里邮箱里，ACTION_SENDTO+mailto 命中的是中转页，转发时会丢掉附件（反过来，ACTION_SEND 上挂 mailto 地址又会让 Intent 按 scheme 匹配失败，v1.3.1 的两头都丢就是这么来的）。这次逐行分析了阿里邮箱 v4.12.8 的实现，改用它自己的专用通道：收件人、主题、压缩包附件一次全部带进写邮件界面。其他邮箱 App 则保留「自动 / 只带压缩包 / 只填收件人」三档发送方式，首页发送弹窗与「我的」页都能切换，选过会记住。",
+                                current = true,
+                            )
+                            ChangeLogItem(
                                 "v1.3.2",
                                 "修复：填了收件人邮箱后，拉起邮箱 App 时收件人栏是空的。原因是 EXTRA_EMAIL 在附件通道（ACTION_SEND）下只有部分邮箱 App 会读。现在改为按目标邮箱 App 的实际能力自动选择通道——支持邮件 URI 的走 ACTION_SENDTO（收件人必定填上），Gmail 等会丢附件的仍走 ACTION_SEND 并把收件人写进 mailto 与 EXTRA_EMAIL 两处。「我的」页新增「复制收件人地址」按钮作为兜底。",
-                                current = true,
                             )
                             ChangeLogItem(
                                 "v1.3.1",

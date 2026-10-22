@@ -55,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.data.local.ThemeMode
 import com.workreport.app.domain.model.SensitiveWord
+import com.workreport.app.ui.common.MailModeSelector
 import com.workreport.app.ui.common.LabeledField
 import com.workreport.app.ui.common.SectionCard
 import com.workreport.app.util.MailApp
@@ -187,6 +188,11 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+
+                    MailModeSelector(
+                        mode = state.mailSendMode,
+                        onChange = viewModel::setMailSendMode,
+                    )
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

@@ -1,0 +1,25 @@
+Starting a Gradle Daemon, 1 stopped Daemon could not be reused, use --status for details
+Checking the license for package Android SDK Build-Tools 34 in /workspace/android-sdk/licenses
+Warning: License for package Android SDK Build-Tools 34 not accepted.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Could not determine the dependencies of task ':app:compileDebugJavaWithJavac'.
+> Failed to install the following Android SDK packages as some licences have not been accepted.
+     build-tools;34.0.0 Android SDK Build-Tools 34
+  To build this project, accept the SDK license agreements and install the missing components using the Android Studio SDK Manager.
+  All licenses can be accepted using the sdkmanager command line tool:
+  sdkmanager.bat --licenses
+  Or, to transfer the license agreements from one workstation to another, see https://developer.android.com/studio/intro/update.html#download-with-gradle
+  
+  Using Android SDK: /workspace/android-sdk
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 3m
+EXIT=1

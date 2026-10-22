@@ -137,7 +137,11 @@ fun HistoryScreen(
                                 viewModel.fileOf(report).exists()
                             ) {
                                 viewModel.sendAgain(report) { ok ->
-                                    toast = if (ok) "已拉起邮件应用" else "没有找到可用的邮件应用"
+                                    toast = if (ok) {
+                                        "已拉起邮件应用。若附件没带上，可在「我的」页切换发送方式"
+                                    } else {
+                                        "没有找到可用的邮件应用"
+                                    }
                                 }
                             } else {
                                 mailPickerFor = report

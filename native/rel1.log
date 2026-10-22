@@ -1,0 +1,70 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.9/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:buildKotlinToolingMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseResValues FROM-CACHE
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease FROM-CACHE
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:processReleaseManifestForPackage
+> Task :app:javaPreCompileRelease FROM-CACHE
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:mergeReleaseNativeLibs
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
+
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:desugarReleaseFileDependencies
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseResources
+> Task :app:mergeExtDexRelease
+> Task :app:packageReleaseResources
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseResources
+> Task :app:optimizeReleaseResources
+> Task :app:kspReleaseKotlin
+> Task :app:compileReleaseKotlin
+w: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/home/HomeScreen.kt:237:39 'val Icons.Filled.Send: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Send.
+w: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/theme/Theme.kt:92:20 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///run/csi/mount-root/nas/eab0d61a99b6696edb3d2aff87b585e8/native/app/src/main/java/com/workreport/app/ui/theme/Theme.kt:93:20 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:dexBuilderRelease
+> Task :app:mergeDexRelease
+> Task :app:mergeReleaseGlobalSynthetics
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:compileReleaseArtProfile
+> Task :app:processReleaseJavaRes
+> Task :app:mergeReleaseJavaResource
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+BUILD SUCCESSFUL in 9m 39s
+50 actionable tasks: 46 executed, 4 from cache
+EXIT=0

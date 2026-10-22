@@ -71,6 +71,7 @@ class HistoryViewModel(
     fun sendAgain(entity: ReportEntity, onDone: (Boolean) -> Unit) {
         viewModelScope.launch {
             val file = File(entity.filePath)
+            val mode = settings.mailSendMode.value
             val ok = com.workreport.app.util.MailHelper.launchWithAttachment(
                 context = ServiceLocator.context,
                 packageName = settings.preferredMailPackage.value.ifEmpty { null },
@@ -79,6 +80,8 @@ class HistoryViewModel(
                 subject = entity.fileName,
                 // 收件人取「我的」页配置好的地址
                 recipient = settings.mailRecipient.value,
+                // 发送方式与首页一致（附件优先 / 收件人优先）
+                mode = mode,
             )
             onDone(ok)
         }
