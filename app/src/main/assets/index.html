@@ -450,6 +450,14 @@ h1{
 .modal-icon{display:inline-flex;justify-content:center;width:56px;height:56px;line-height:56px;
   font-size:28px;border-radius:50%;background:var(--feishu-blue-light)}
 
+.repo-url{
+  display:inline-block;margin-top:5px;padding:5px 11px;border-radius:7px;
+  background:var(--bg-record);border:1px solid var(--border);
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
+  color:var(--feishu-blue);word-break:break-all;text-decoration:none;
+}
+a.repo-url:hover{border-color:var(--feishu-blue);background:var(--feishu-blue-light)}
+
 /* ===== 记录区 ===== */
 .record-section{border-left:3px solid var(--feishu-blue)}
 .record-count{
@@ -1499,6 +1507,21 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         alert('「下周工作计划」已清空。');
     }
 
+    // ===== 项目仓库地址 =====
+    var REPO_URL = 'https://github.com/ninoelvis/workreport-generator';
+    function copyRepoUrl() {
+        if (hasBridgeMethod('copyToClipboard')) {
+            try { window.AndroidBridge.copyToClipboard(REPO_URL); return; } catch(e) {}
+        }
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(REPO_URL).catch(function(){});
+                return;
+            }
+        } catch(e) {}
+        alert('项目仓库地址：\n' + REPO_URL);
+    }
+
     // ===== 首次启动：功能介绍 & 更新日志 =====
     function showIntro() {
         var el = document.getElementById('introOverlay');
@@ -1545,6 +1568,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
     window.showIntro = showIntro;
     window.closeIntro = closeIntro;
     window.resetAllLocalData = resetAllLocalData;
+    window.copyRepoUrl = copyRepoUrl;
 })();
 </script>
 <!-- 下载成功模态弹窗 -->
@@ -1576,7 +1600,8 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
   <div class="intro-card">
     <h3><span class="panel-icon">🕒</span>历史版本更新记录</h3>
     <ul class="changelog">
-      <li class="current"><span class="ver">v6</span>新增首次启动功能介绍页与更新日志；合并功能重复的清除按钮；提供「重置全部本地数据」入口。</li>
+      <li class="current"><span class="ver">v1.0</span>正式版发布到 GitHub：首页引导页新增「源码与更新记录」，可直接查看并一键复制仓库地址。（v6 为内部构建版本）</li>
+      <li><span class="ver">v6</span>新增首次启动功能介绍页与更新日志；合并功能重复的清除按钮；提供「重置全部本地数据」入口。</li>
       <li><span class="ver">v5</span>界面按飞书 / 钉钉风格重做：品牌栏、图标标签、信息统计卡片、图标按钮、浅深双主题。</li>
       <li><span class="ver">v4</span>邮箱选择列表只显示邮箱类应用，微信 / QQ / 微博等分享类应用不再出现。</li>
       <li><span class="ver">v3</span>发送邮箱可自行选择并持久化记住，之后随时可手动更换。</li>
@@ -1598,6 +1623,18 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
     <div class="intro-actions">
       <button class="btn btn-primary" onclick="closeIntro()"><span class="ico">🚀</span>开始使用</button>
       <button class="btn btn-default" onclick="resetAllLocalData()"><span class="ico">🧹</span>重置全部本地数据</button>
+    </div>
+  </div>
+
+  <div class="intro-card">
+    <h3><span class="panel-icon">📦</span>源码与更新记录</h3>
+    <ul class="intro-list">
+      <li><span class="ico">🔗</span><span>完整源码、历史版本与更新日志都在 GitHub 仓库里：<br>
+        <span class="repo-url" id="repoUrl">github.com/ninoelvis/workreport-generator</span></span></li>
+      <li><span class="ico">💾</span><span>源码可自行构建（<code>./build.sh</code>），每次改版的历史包都能在 Releases 里找到。</span></li>
+    </ul>
+    <div class="intro-actions">
+      <button class="btn btn-default" onclick="copyRepoUrl()"><span class="ico">📋</span>复制仓库地址</button>
     </div>
   </div>
 

@@ -450,6 +450,14 @@ h1{
 .modal-icon{display:inline-flex;justify-content:center;width:56px;height:56px;line-height:56px;
   font-size:28px;border-radius:50%;background:var(--feishu-blue-light)}
 
+.repo-url{
+  display:inline-block;margin-top:5px;padding:5px 11px;border-radius:7px;
+  background:var(--bg-record);border:1px solid var(--border);
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
+  color:var(--feishu-blue);word-break:break-all;text-decoration:none;
+}
+a.repo-url:hover{border-color:var(--feishu-blue);background:var(--feishu-blue-light)}
+
 /* ===== 记录区 ===== */
 .record-section{border-left:3px solid var(--feishu-blue)}
 .record-count{
@@ -1514,6 +1522,21 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         alert('「下周工作计划」已清空。');
     }
 
+    // ===== 项目仓库地址 =====
+    var REPO_URL = 'https://github.com/ninoelvis/workreport-generator';
+    function copyRepoUrl() {
+        if (hasBridgeMethod('copyToClipboard')) {
+            try { window.AndroidBridge.copyToClipboard(REPO_URL); return; } catch(e) {}
+        }
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(REPO_URL).catch(function(){});
+                return;
+            }
+        } catch(e) {}
+        alert('项目仓库地址：\n' + REPO_URL);
+    }
+
     // ===== 首次启动：功能介绍 & 更新日志 =====
     function showIntro() {
         var el = document.getElementById('introOverlay');
@@ -1560,6 +1583,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
     window.showIntro = showIntro;
     window.closeIntro = closeIntro;
     window.resetAllLocalData = resetAllLocalData;
+    window.copyRepoUrl = copyRepoUrl;
 })();
 </script>
 <!-- 下载成功模态弹窗 -->
@@ -1613,6 +1637,18 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
     <div class="intro-actions">
       <button class="btn btn-primary" onclick="closeIntro()"><span class="ico">🚀</span>开始使用</button>
       <button class="btn btn-default" onclick="resetAllLocalData()"><span class="ico">🧹</span>重置全部本地数据</button>
+    </div>
+  </div>
+
+  <div class="intro-card">
+    <h3><span class="panel-icon">📦</span>源码与更新记录</h3>
+    <ul class="intro-list">
+      <li><span class="ico">🔗</span><span>完整源码、历史版本与更新日志都在 GitHub 仓库里：<br>
+        <a class="repo-url" id="repoUrl" href="https://github.com/ninoelvis/workreport-generator" target="_blank" rel="noopener">github.com/ninoelvis/workreport-generator</a></span></li>
+      <li><span class="ico">💾</span><span>源码可自行构建（<code>./build.sh</code>），每次改版的历史包都能在 Releases 里找到。</span></li>
+    </ul>
+    <div class="intro-actions">
+      <button class="btn btn-default" onclick="copyRepoUrl()"><span class="ico">📋</span>复制仓库地址</button>
     </div>
   </div>
 
