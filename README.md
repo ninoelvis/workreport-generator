@@ -30,6 +30,15 @@
 
 > 全部历史版本见 [Releases](https://github.com/ninoelvis/workreport-generator/releases)。
 
+### 📥 官方下载页
+
+**https://ei764og5jbx3h.space.mcode.cn**
+
+统一入口：主推原生版 App，同时提供网页在线版与单文件离线版三个下载入口，
+并附各版本功能对照表、完整更新记录与免责声明。
+页面内容由仓库内的 `docs/download-manifest.json` 驱动，
+**后续发布新版本只需更新该清单并推送 main 分支，下载页会自动展示最新版本信息与下载地址，无需重写页面**。
+
 **更新记录**
 
 *原生版 App*
