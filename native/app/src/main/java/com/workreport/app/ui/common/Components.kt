@@ -78,6 +78,8 @@ fun SectionCard(
 fun InfoStatRow(
     items: List<Pair<String, String>>,
     modifier: Modifier = Modifier,
+    /** 值最多显示几行。文件名很长时传 2，让它换行显示而不是被截断 */
+    valueMaxLines: Int = 1,
 ) {
     Row(
         modifier = modifier
@@ -102,7 +104,7 @@ fun InfoStatRow(
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = valueMaxLines,
                     overflow = TextOverflow.Ellipsis,
                 )
             }

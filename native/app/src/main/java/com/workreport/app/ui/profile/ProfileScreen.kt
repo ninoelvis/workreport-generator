@@ -55,7 +55,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.data.local.ThemeMode
 import com.workreport.app.domain.model.SensitiveWord
-import com.workreport.app.ui.common.MailModeSelector
 import com.workreport.app.ui.common.LabeledField
 import com.workreport.app.ui.common.SectionCard
 import com.workreport.app.util.MailApp
@@ -151,47 +150,11 @@ fun ProfileScreen(
                 hint = "生成后自动拉起邮箱",
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    LabeledField(
-                        label = "收件人邮箱",
-                        value = state.mailRecipient,
-                        onValueChange = viewModel::onMailRecipientChange,
-                        placeholder = "如：leader@example.com（留空则不自动填）",
-                    )
                     Text(
-                        "填写后，拉起邮箱 App 时会一并填入收件人、主题与附件。",
+                        "拉起邮箱 App 时会自动带上邮件主题和压缩包附件，收件人由你在邮箱里填写。",
                         fontSize = 12.sp,
                         lineHeight = 18.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (state.mailRecipient.isNotEmpty()) {
-                        OutlinedButton(
-                            onClick = {
-                                val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
-                                    as? android.content.ClipboardManager
-                                cm?.setPrimaryClip(
-                                    android.content.ClipData.newPlainText(
-                                        "recipient",
-                                        state.mailRecipient,
-                                    ),
-                                )
-                                viewModel.showMessage("收件人地址已复制")
-                            },
-                            modifier = Modifier.height(34.dp),
-                            shape = RoundedCornerShape(8.dp),
-                        ) {
-                            Text("复制收件人地址", fontSize = 12.sp)
-                        }
-                        Text(
-                            "如果邮箱 App 没自动填上收件人，用这个复制后到邮箱里粘贴即可。",
-                            fontSize = 11.5.sp,
-                            lineHeight = 17.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-
-                    MailModeSelector(
-                        mode = state.mailSendMode,
-                        onChange = viewModel::setMailSendMode,
                     )
 
                     Row(
@@ -331,7 +294,7 @@ fun ProfileScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("工作报告生成器 · 原生版", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
                     Text(
-                        "版本 1.3.2",
+                        "版本 " + com.workreport.app.BuildConfig.VERSION_NAME,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -346,6 +309,25 @@ fun ProfileScreen(
                         fontSize = 12.sp,
                         lineHeight = 18.sp,
                         color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "免责声明",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。" +
+                            "使用者应自行确保所填报的工作内容真实、合法，" +
+                            "不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。" +
+                            "因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，" +
+                            "软件作者不承担任何法律责任。",
+                        fontSize = 11.5.sp,
+                        lineHeight = 18.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(4.dp))
                     OutlinedButton(

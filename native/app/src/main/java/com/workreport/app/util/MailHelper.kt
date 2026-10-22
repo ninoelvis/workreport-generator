@@ -9,7 +9,6 @@ import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
-import com.workreport.app.domain.model.MailSendMode
 import java.io.File
 import java.util.Locale
 
@@ -138,16 +137,26 @@ object MailHelper {
     /**
      * 拉起指定邮件应用，并把 [file] 作为附件带入写邮件界面。
      *
-     * ## 通道策略
+     * 邮件里只带**主题**和**附件**，收件人由用户在邮箱 App 里自己填 ——
+     * 这样最省事，也最不容易被各家邮箱 App 的私有实现坑到。
      *
-     * 两个标准通道各有各的标准字段：
+     * ## 通道
      *
-     * | 通道 | 附件 | 收件人 |
-     * |------|------|--------|
-     * | `ACTION_SEND` | ✅ 标准（`EXTRA_STREAM` + `clipData`） | ⚠️ 非标准，部分 App 忽略 `EXTRA_EMAIL` |
-     * | `ACTION_SENDTO` | ⚠️ 非标准，多数 App 忽略 `EXTRA_STREAM` | ✅ 标准（`data = mailto:`） |
+     * **通用**：`ACTION_SEND` + `type=application/zip` + `EXTRA_STREAM` + `clipData`。
+     * 这是 Android 的标准附件分享方式，Gmail / QQ邮箱 / 网易 / Outlook / 阿里邮箱都认。
      *
-     * ### ⚠️ 三条踩过的坑，改之前先看一眼
+     * **阿里邮箱**（`com.alibaba.cloudmail`）：额外做两件事 ——
+     *
+     *  1. 用 `setComponent` 直达它的写邮件页 `MessageComposeOpen`。
+     *     逆向 v4.12.8 得知：它的收件人和主题只有在「data 是 mailto 且 action ∈
+     *     {VIEW, SENDTO, standard.MAIL}」时才会被解析，而 `ACTION_SEND` 走不到那条分支
+     *     → 主题带不进去。指定组件后系统不再做 IntentFilter 匹配，data 想带就带。
+     *  2. 加 `FLAG_ACTIVITY_CLEAR_TASK`：它的写邮件页是 `launchMode=singleTask`，
+     *     而它的 `onNewIntent` **只弹了个 toast、根本没把新 Intent 交给 Fragment 解析**
+     *     → 只要那个页面还在任务栈里，每次启动都复用旧实例，附件永远处理不了。
+     *     CLEAR_TASK 会清掉目标 App 的任务栈，逼它走 `onCreate` 重新解析。
+     *
+     * ## ⚠️ 几条踩过的坑，改之前先看一眼
      *
      * 1. **Intent 带 data URI 就按 scheme 匹配、忽略 mimeType。**
      *    所以 `ACTION_SEND` 上挂 `data = mailto:xxx` 会匹配失败 —— 邮件 App 的
@@ -158,13 +167,7 @@ object MailHelper {
      * 3. **filter 既没声明 scheme 也没声明 mimeType 时，带 data URI 的 Intent 一律不匹配。**
      *    所以想带 `data = mailto:` 就得用 `setComponent` 直达 Activity。
      *
-     * ### 阿里邮箱：一条 Intent 全部带上
-     *
-     * 逆向 `com.alibaba.cloudmail` v4.12.8 得到的结论见 [launchAliMailDirect]。
-     *
-     * @param recipient 收件人邮箱（可为空）
-     * @param body      邮件正文。**默认留空** —— 主题、收件人、附件才是必需的。
-     * @param mode      发送方式：自动 / 附件优先 / 收件人优先
+     * @param body 邮件正文。**默认留空** —— 主题和附件才是必需的。
      * @return 是否成功启动
      */
     fun launchWithAttachment(
@@ -173,8 +176,6 @@ object MailHelper {
         file: File,
         subject: String = "",
         body: String = "",
-        recipient: String = "",
-        mode: MailSendMode = MailSendMode.AUTO,
     ): Boolean {
         // 整条链路兜住异常 —— 拉起邮箱失败也不能让 App 崩
         return runCatching {
@@ -183,23 +184,14 @@ object MailHelper {
                 FileProvider.getUriForFile(context, context.packageName + ".fileprovider", file)
             }.getOrNull() ?: return@runCatching false
 
-            val to = recipient.trim()
-
-            // 阿里邮箱：直达写邮件页，收件人 + 主题 + 附件一次全带
-            if (to.isNotEmpty() && isAliMail(packageName)) {
-                if (launchAliMailDirect(context, packageName, uri, subject, body, to)) {
+            // 阿里邮箱：直达写邮件页，主题和附件一起带
+            if (isAliMail(packageName)) {
+                if (launchAliMailDirect(context, packageName, uri, subject, body)) {
                     return@runCatching true
                 }
             }
 
-            when (mode) {
-                MailSendMode.RECIPIENT_FIRST ->
-                    launchRecipientFirst(context, packageName, uri, subject, body, to)
-                // AUTO 与 ATTACHMENT_FIRST 同走标准附件通道：
-                // 附件是本 App 的核心产出物，优先保证它真的挂上；收件人靠 EXTRA_EMAIL 尽力带上。
-                MailSendMode.AUTO, MailSendMode.ATTACHMENT_FIRST ->
-                    launchAttachmentFirst(context, packageName, uri, subject, body, to)
-            }
+            launchAttachmentFirst(context, packageName, uri, subject, body)
         }.getOrElse { e ->
             Log.e(TAG, "拉起邮件应用失败", e)
             false
@@ -207,23 +199,17 @@ object MailHelper {
     }
 
     /**
-     * 阿里邮箱专用通道：**用 `setComponent` 直达写邮件页**。
+     * 阿里邮箱专用通道：**`setComponent` 直达写邮件页 + CLEAR_TASK 强制重建**。
      *
      * 逆向 `com.alibaba.cloudmail` v4.12.8 得到的结论：
      *
-     *  - 收件人、主题、附件的解析都发生在 `MessageComposeOpen` 挂载的
-     *    `MessageComposeFragment` 里；
-     *  - 收件人有两条路：mailto URI 的 `getSchemeSpecificPart()`，以及 extras 里的
-     *    `EXTRA_EMAIL`（读法是 `bundle.get()` 后强转 `String[]`）—— 两条都给，必定填上；
-     *  - 主题读 `EXTRA_SUBJECT`；
-     *  - 附件按 `clipData` → `EXTRA_STREAM(ArrayList)` → `EXTRA_STREAM`(单个 Uri) 的顺序取，
-     *    **且这一段与 action 无关**。
+     *  - 主题读 `EXTRA_SUBJECT`，但前提是 `data` 的 scheme 是 `mailto`
+     *    且 action ∈ {VIEW, SENDTO, standard.MAIL} → 这里用 `ACTION_SENDTO` + `mailto:` 满足；
+     *  - 附件按 `clipData` → `EXTRA_STREAM`(ArrayList) → `EXTRA_STREAM`(单个 Uri) 的顺序取，
+     *    **且这一段与 action 无关**；
+     *  - 收件人由用户在邮箱 App 里自己填，这里不传任何地址。
      *
-     * 为什么必须 `setComponent`：它的 filter 都不接受带 data URI 的 Intent（见类注释），
-     * 而 `ACTION_SENDTO + mailto:` 会命中 `Welcome` 中转页 —— `Welcome` 转发时只复制
-     * TEXT/SUBJECT/EMAIL/CC/BCC 和 data，**不复制 EXTRA_STREAM / clipData** → 附件必丢。
-     *
-     * 指定组件后系统不再做 IntentFilter 匹配，data 想带就带。
+     * 失败时返回 false，由调用方退回标准通道。
      */
     private fun launchAliMailDirect(
         context: Context,
@@ -231,7 +217,6 @@ object MailHelper {
         uri: Uri,
         subject: String,
         body: String,
-        to: String,
     ): Boolean {
         val pkg = packageName ?: return false
         val component = ComponentName(pkg, ALI_MAIL_COMPOSE_ACTIVITY)
@@ -247,14 +232,19 @@ object MailHelper {
 
         val intent = Intent(Intent.ACTION_SENDTO).apply {
             this.component = component
-            // 收件人：mailto URI（schemeSpecificPart）+ EXTRA_EMAIL 双保险
-            data = Uri.parse("mailto:$to")
-            putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+            // 只带上 mailto 协议头，不带任何地址 —— 收件人由用户自己填。
+            // 这个 data 的作用是让阿里邮箱走「读 EXTRA_SUBJECT」那条分支。
+            data = Uri.parse("mailto:")
             putExtra(Intent.EXTRA_SUBJECT, subject)
+            // 正文为空就放空串：有些 App 转发 Intent 时会直接 .toString()，缺 key 会出问题
             putExtra(Intent.EXTRA_TEXT, body)
             // 附件：clipData 与 EXTRA_STREAM 两种形式都给
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            // 它的写邮件页是 singleTask 且 onNewIntent 不处理新 Intent，
+            // 不清任务栈就会一直复用旧实例 → 附件永远带不上
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
             clipData = android.content.ClipData.newRawUri("attachment", uri)
         }
         return startActivity(context, intent)
@@ -265,9 +255,9 @@ object MailHelper {
         packageName != null && packageName in ALI_MAIL_PACKAGES
 
     /**
-     * 附件优先：`ACTION_SEND` 通道，压缩包必带，收件人靠 `EXTRA_EMAIL` 尽力带上。
+     * 标准通道：`ACTION_SEND` + `type=application/zip`，压缩包必带，主题一起带。
      *
-     * 兜底链：定向到指定 App → 系统选择器。
+     * 兜底链：定向到指定 App → 系统选择器（用干净的 Intent，避免候选为空列不出来）。
      */
     private fun launchAttachmentFirst(
         context: Context,
@@ -275,77 +265,24 @@ object MailHelper {
         uri: Uri,
         subject: String,
         body: String,
-        to: String,
     ): Boolean {
-        val intent = Intent(Intent.ACTION_SEND).apply {
+        fun build(): Intent = Intent(Intent.ACTION_SEND).apply {
             type = "application/zip"
             putExtra(Intent.EXTRA_STREAM, uri)
-            // SUBJECT / TEXT 始终放（正文为空就放空串）：
-            // 有些邮箱 App 转发 Intent 时会直接 .toString()，缺 key 会 NPE
+            // SUBJECT / TEXT 始终放（正文为空就放空串）
             putExtra(Intent.EXTRA_SUBJECT, subject)
             putExtra(Intent.EXTRA_TEXT, body)
-            if (to.isNotEmpty()) putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             clipData = android.content.ClipData.newRawUri("attachment", uri)
         }
+
+        val intent = build()
         if (!packageName.isNullOrEmpty()) intent.setPackage(packageName)
         if (startActivity(context, intent)) return true
 
         // 兜底：系统选择器。用一份干净的 Intent（不带 setPackage），
         // 否则 chooser 可能因为候选为空而什么都列不出来。
-        return startChooser(context, Intent(Intent.ACTION_SEND).apply {
-            type = "application/zip"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-            putExtra(Intent.EXTRA_TEXT, body)
-            if (to.isNotEmpty()) putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            clipData = android.content.ClipData.newRawUri("attachment", uri)
-        })
-    }
-
-    /**
-     * 收件人优先：`ACTION_SENDTO` 通道，收件人必定填上，附件靠 `EXTRA_STREAM` 尽力带上。
-     *
-     * 兜底链：带附件版 → 纯收件人版（去掉附件，防止个别 App 直接拒绝带附件的 SENDTO）。
-     */
-    private fun launchRecipientFirst(
-        context: Context,
-        packageName: String?,
-        uri: Uri,
-        subject: String,
-        body: String,
-        to: String,
-    ): Boolean {
-        if (to.isEmpty()) {
-            // 没有收件人就没必要走收件人通道，退回附件通道
-            return launchAttachmentFirst(context, packageName, uri, subject, body, to)
-        }
-
-        fun build(withAttachment: Boolean): Intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:$to")
-            // SUBJECT / TEXT 始终放（正文为空就放空串），理由同上
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-            putExtra(Intent.EXTRA_TEXT, body)
-            // 双保险：部分 App 只认 EXTRA_EMAIL
-            putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
-            if (withAttachment) {
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                clipData = android.content.ClipData.newRawUri("attachment", uri)
-            }
-        }
-
-        val main = build(withAttachment = true)
-        if (!packageName.isNullOrEmpty()) main.setPackage(packageName)
-        if (startActivity(context, main)) return true
-
-        // 兜底：个别邮箱 App 见到 SENDTO + EXTRA_STREAM 会直接拒绝处理，退成纯收件人
-        val plain = build(withAttachment = false)
-        if (!packageName.isNullOrEmpty()) plain.setPackage(packageName)
-        if (startActivity(context, plain)) return true
-
-        return startChooser(context, plain)
+        return startChooser(context, build())
     }
 
     /**

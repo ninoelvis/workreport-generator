@@ -138,7 +138,7 @@ fun HistoryScreen(
                             ) {
                                 viewModel.sendAgain(report) { ok ->
                                     toast = if (ok) {
-                                        "已拉起邮件应用。若附件没带上，可在「我的」页切换发送方式"
+                                        "已拉起邮件应用，主题和附件都带上了"
                                     } else {
                                         "没有找到可用的邮件应用"
                                     }

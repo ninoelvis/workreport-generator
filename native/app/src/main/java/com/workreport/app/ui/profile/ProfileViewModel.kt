@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.local.ThemeMode
-import com.workreport.app.domain.model.MailSendMode
 import com.workreport.app.domain.model.SensitiveWord
 import com.workreport.app.util.MailApp
 import com.workreport.app.util.MailHelper
@@ -21,8 +20,6 @@ data class ProfileUiState(
     val userName: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val sensitiveWords: List<SensitiveWord> = emptyList(),
-    /** 收件人邮箱 */
-    val mailRecipient: String = "",
     /** 发送邮件使用的应用包名（空 = 未选择） */
     val preferredMailPackage: String = "",
     /** 当前选择的邮件应用名称 */
@@ -31,8 +28,6 @@ data class ProfileUiState(
     val mailApps: List<MailApp> = emptyList(),
     /** 是否每次生成后都直接拉起邮箱 App 发送（不再询问） */
     val autoSendMail: Boolean = false,
-    /** 邮件发送方式：附件优先 / 收件人优先 */
-    val mailSendMode: MailSendMode = MailSendMode.AUTO,
     val message: String? = null,
 )
 
@@ -54,13 +49,7 @@ class ProfileViewModel(
             settings.sensitiveWords.collect { _state.value = _state.value.copy(sensitiveWords = it) }
         }
         viewModelScope.launch {
-            settings.mailRecipient.collect { _state.value = _state.value.copy(mailRecipient = it) }
-        }
-        viewModelScope.launch {
             settings.autoSendMail.collect { _state.value = _state.value.copy(autoSendMail = it) }
-        }
-        viewModelScope.launch {
-            settings.mailSendMode.collect { _state.value = _state.value.copy(mailSendMode = it) }
         }
         viewModelScope.launch {
             settings.preferredMailPackage.collect { pkg ->
@@ -85,16 +74,7 @@ class ProfileViewModel(
 
     // ---------------- 邮件设置 ----------------
 
-    fun onMailRecipientChange(value: String) {
-        _state.value = _state.value.copy(mailRecipient = value)
-        settings.setMailRecipient(value)
-    }
-
     /** 是否每次生成后都直接拉起邮箱 App 发送 */
-    fun setMailSendMode(mode: MailSendMode) {
-        settings.setMailSendMode(mode)
-    }
-
     fun setAutoSendMail(value: Boolean) {
         settings.setAutoSendMail(value)
     }

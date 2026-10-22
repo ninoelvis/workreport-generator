@@ -64,8 +64,6 @@ import com.workreport.app.ui.common.InfoStatRow
 import com.workreport.app.ui.common.LabeledField
 import com.workreport.app.ui.common.SectionCard
 import com.workreport.app.util.MailApp
-import com.workreport.app.domain.model.MailSendMode
-import com.workreport.app.ui.common.MailModeSelector
 import com.workreport.app.util.MailHelper
 import android.widget.Toast
 
@@ -80,8 +78,6 @@ fun HomeScreen(
     val context = LocalContext.current
     val settings = ServiceLocator.settings
     val preferredMailPackage by settings.preferredMailPackage.collectAsStateWithLifecycle()
-    val mailRecipient by settings.mailRecipient.collectAsStateWithLifecycle()
-    val mailSendMode by settings.mailSendMode.collectAsStateWithLifecycle()
 
     /** 生成成功后待发送的邮件（等待用户首次选择邮箱应用） */
     var pendingMail by remember { mutableStateOf<GenerateOutcome.Success?>(null) }
@@ -93,11 +89,6 @@ fun HomeScreen(
     var mailChoiceFor by remember { mutableStateOf<GenerateOutcome.Success?>(null) }
     /** 第二步弹窗里的「以后都这样做」勾选框 */
     var rememberChoice by remember { mutableStateOf(false) }
-    /**
-     * 发送方式：附件优先 / 收件人优先。
-     * 默认沿用上次的选择，弹窗里可改，改了立即记住。
-     */
-    var sendMode by remember { mutableStateOf(mailSendMode) }
     /** 清空「本周已完成工作梳理」的二次确认 */
     var confirmClearDone by remember { mutableStateOf(false) }
     /** 清空「下周工作计划」的二次确认 */
@@ -123,13 +114,19 @@ fun HomeScreen(
         item { AppHeader() }
 
         item {
-            InfoStatRow(
-                items = listOf(
-                    "周次" to state.weekLabel.ifEmpty { "-" },
-                    "解压密码" to state.password.ifEmpty { "-" },
-                    "文件名" to state.fileName.ifEmpty { "-" },
-                ),
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                InfoStatRow(
+                    items = listOf(
+                        "周次" to state.weekLabel.ifEmpty { "-" },
+                        "解压密码" to state.password.ifEmpty { "-" },
+                    ),
+                )
+                // 文件名比较长，单独占一行，允许折行显示，避免被截断
+                InfoStatRow(
+                    items = listOf("文件名" to state.fileName.ifEmpty { "-" }),
+                    valueMaxLines = 2,
+                )
+            }
         }
 
         item {
@@ -333,8 +330,7 @@ fun HomeScreen(
                                     // 记住了「每次都直接发」→ 不再询问
                                     if (preferredMailPackage.isNotEmpty()) {
                                         sendGeneratedMail(
-                                            context, outcome, preferredMailPackage, mailRecipient,
-                                            sendMode,
+                                            context, outcome, preferredMailPackage,
                                         )
                                     } else {
                                         pendingMail = outcome
@@ -363,8 +359,6 @@ fun HomeScreen(
 
     // 第二步：确认是否拉起邮箱 App 发送
     mailChoiceFor?.let { result ->
-        // 弹窗内的收件人输入（默认值取已保存的）
-        var recipientInput by remember(result) { mutableStateOf(mailRecipient) }
         AlertDialog(
             onDismissRequest = { mailChoiceFor = null },
             title = { Text("已生成，是否直接拉起邮箱 App 发送？") },
@@ -388,40 +382,12 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Spacer(Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = recipientInput,
-                        onValueChange = { recipientInput = it },
-                        label = { Text("收件人邮箱", fontSize = 12.sp) },
-                        placeholder = { Text("如：leader@example.com", fontSize = 12.sp) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        ),
-                    )
                     Text(
-                        "填了会保存下来，下次自动带上；也可以在「我的」页修改。",
-                        fontSize = 11.5.sp,
-                        lineHeight = 17.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "可以现在就把压缩包作为附件带入邮箱 App；也可以只把文件保存到本地，自己再发。",
+                        "可以现在就把压缩包作为附件带入邮箱 App —— 主题和附件会自动带好，" +
+                            "收件人在邮箱里填一下就行；也可以只把文件保存到本地，自己再发。",
                         fontSize = 13.sp,
                         lineHeight = 19.sp,
                     )
-                    Spacer(Modifier.height(8.dp))
-                    MailModeSelector(
-                        mode = mailSendMode,
-                        onChange = {
-                            sendMode = it
-                            settings.setMailSendMode(it)
-                        },
-                    )
-                    Spacer(Modifier.height(4.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = rememberChoice,
@@ -439,11 +405,9 @@ fun HomeScreen(
             confirmButton = {
                 TextButton(onClick = {
                     mailChoiceFor = null
-                    // 收件人地址持久化保存
-                    settings.setMailRecipient(recipientInput)
                     if (rememberChoice) settings.setAutoSendMail(true)
                     if (preferredMailPackage.isNotEmpty()) {
-                        sendGeneratedMail(context, result, preferredMailPackage, recipientInput, sendMode)
+                        sendGeneratedMail(context, result, preferredMailPackage)
                     } else {
                         // 还没选过邮箱 App → 先选 App，选完立刻发送
                         pendingMail = result
@@ -454,8 +418,6 @@ fun HomeScreen(
             dismissButton = {
                 TextButton(onClick = {
                     mailChoiceFor = null
-                    // 收件人地址同样保存下来
-                    settings.setMailRecipient(recipientInput)
                     if (rememberChoice) settings.setAutoSendMail(false)
                 }) { Text("否，只保存到本地") }
             },
@@ -475,7 +437,7 @@ fun HomeScreen(
                 if (pending != null) {
                     // ⚠️ 这里要读 StateFlow 的当前值，不能读 Compose state ——
                     //    刚刚 setMailRecipient() 写入的值还没触发重组，state 里还是旧的
-                    sendGeneratedMail(context, pending, pkg, settings.mailRecipient.value, sendMode)
+                    sendGeneratedMail(context, pending, pkg)
                 }
             },
         )
@@ -775,8 +737,6 @@ private fun sendGeneratedMail(
     context: android.content.Context,
     result: GenerateOutcome.Success,
     packageName: String,
-    recipient: String,
-    mode: MailSendMode,
 ) {
     // 邮件只填主题、收件人、附件，正文留空
     // 主题与压缩包名保持一致（旧版也是用 attach.getName() 当主题）
@@ -788,35 +748,20 @@ private fun sendGeneratedMail(
             file = result.file,
             subject = result.fileName,
             body = "",
-            recipient = recipient.trim(),
-            mode = mode,
         )
     }.getOrElse { e ->
         android.util.Log.e("MailHelper", "发送邮件失败", e)
         false
     }
-    if (!ok) {
-        android.widget.Toast.makeText(
-            context,
-            "未能拉起邮件应用，可在「我的」页重新选择邮箱 App",
-            android.widget.Toast.LENGTH_LONG,
-        ).show()
-        return
-    }
-    // 按发送方式给不同的补救提示 —— 两条通道各有各的短板
-    val tip = when (mode) {
-        MailSendMode.AUTO ->
-            "已拉起邮箱 App。若收件人或附件没带上，可在「我的」页切换发送方式。"
-        MailSendMode.ATTACHMENT_FIRST ->
-            "压缩包已作为附件带入。若收件人栏是空的，把「发送方式」换成「只填收件人」再发一次。"
-        MailSendMode.RECIPIENT_FIRST ->
-            if (result.savedToDownloads) {
-                "收件人已填好。若附件没自动带上，请从「下载」目录手动添加：${result.fileName}"
-            } else {
-                "收件人已填好。附件没能自动带入，文件在这里：${result.file.absolutePath}"
-            }
-    }
-    android.widget.Toast.makeText(context, tip, android.widget.Toast.LENGTH_LONG).show()
+    android.widget.Toast.makeText(
+        context,
+        if (ok) {
+            "压缩包已作为附件带入，主题也带上了，收件人在邮箱里填一下就行"
+        } else {
+            "未能拉起邮件应用，可在「我的」页重新选择邮箱 App"
+        },
+        android.widget.Toast.LENGTH_LONG,
+    ).show()
 }
 
 /** 选择要使用的邮箱 App（首次生成时弹出） */

@@ -83,7 +83,7 @@ fun IntroDialog(
                             IntroBullet("填姓名和时间", "自动算出周数、文件名和压缩包密码。")
                             IntroBullet("随手记工作", "做完一项记一条，汇总进「本周已完成工作梳理」。")
                             IntroBullet("一键生成", "导出 Excel 并加密成 ZIP，存到手机「下载」目录。")
-                            IntroBullet("自动发邮件", "拉起邮箱 App，收件人、主题、压缩包一次带好。")
+                            IntroBullet("自动发邮件", "拉起邮箱 App，主题和压缩包附件自动带好，收件人自己填。")
                             IntroBullet("敏感词替换", "「纪委」自动变「jw」，词库自己维护。")
                             IntroBullet("历史报告", "随时回看，可以再下载、再发一次。")
                             IntroBullet("实时预览", "导出前先看 Excel 长什么样。")
@@ -93,13 +93,17 @@ fun IntroDialog(
                     item {
                         IntroCard(title = "历史版本更新记录", icon = Icons.Filled.History) {
                             ChangeLogItem(
-                                "v1.3.4",
-                                "修复拉起邮箱 App 闪退、拉不起来的问题。阿里邮箱改为直达写邮件页，收件人、主题、压缩包附件一次全带。",
+                                "v1.3.5",
+                                "邮件不再自动填收件人，只带主题和附件，收件人在邮箱里自己填 —— 这样各家邮箱 App 都能正常用。首页文件名显示不全也修了。「关于」里加了免责声明。",
                                 current = true,
                             )
                             ChangeLogItem(
+                                "v1.3.4",
+                                "修复拉起邮箱 App 闪退、拉不起来的问题。",
+                            )
+                            ChangeLogItem(
                                 "v1.3.3",
-                                "新增发送方式三档切换：自动 / 只带压缩包 / 只填收件人，选过会记住。",
+                                "新增发送方式切换（已随 v1.3.5 移除）。",
                             )
                             ChangeLogItem(
                                 "v1.3.2",
