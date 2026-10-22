@@ -1,5 +1,21 @@
 # 工作报告生成器
 
+[![Release](https://img.shields.io/badge/下载-v1.0.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
+
+## ⬇️ 下载
+
+**Android App（推荐）**：
+[workreport-generator-v1.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.0.0/workreport-generator-v1.0.apk)
+（250 KB · 首次安装请在「安装未知应用」里放行一次）
+
+**网页版（免安装、离线可用）**：
+[`web/workreport-web.htm`](web/workreport-web.htm) —— 下载后用浏览器打开即可，无需联网。
+
+> 全部历史版本见 [Releases](https://github.com/ninoelvis/workreport-generator/releases)。
+
+---
+
 一个纯本地运行的 Android 小工具：填好本周工作内容，一键生成**加密 ZIP 周报**，
 自动把文件名复制到剪贴板，并自动拉起你设定的邮箱 App 把压缩包带进附件。
 
