@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -64,6 +65,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.factory()),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var showWordDialog by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Pair<Int, SensitiveWord>?>(null) }
     var confirmClear by remember { mutableStateOf(false) }
@@ -160,6 +162,31 @@ fun ProfileScreen(
                         lineHeight = 18.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (state.mailRecipient.isNotEmpty()) {
+                        OutlinedButton(
+                            onClick = {
+                                val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                                    as? android.content.ClipboardManager
+                                cm?.setPrimaryClip(
+                                    android.content.ClipData.newPlainText(
+                                        "recipient",
+                                        state.mailRecipient,
+                                    ),
+                                )
+                                viewModel.showMessage("收件人地址已复制")
+                            },
+                            modifier = Modifier.height(34.dp),
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            Text("复制收件人地址", fontSize = 12.sp)
+                        }
+                        Text(
+                            "如果邮箱 App 没自动填上收件人，用这个复制后到邮箱里粘贴即可。",
+                            fontSize = 11.5.sp,
+                            lineHeight = 17.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -298,7 +325,7 @@ fun ProfileScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("工作报告生成器 · 原生版", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
                     Text(
-                        "版本 1.3.1",
+                        "版本 1.3.2",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

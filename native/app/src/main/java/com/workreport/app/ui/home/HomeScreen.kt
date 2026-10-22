@@ -761,11 +761,12 @@ private fun sendGeneratedMail(
     recipient: String,
 ) {
     // 邮件只填主题、收件人、附件，正文留空
+    // 主题与压缩包名保持一致（旧版也是用 attach.getName() 当主题）
     val ok = MailHelper.launchWithAttachment(
         context = context,
         packageName = packageName.ifEmpty { null },
         file = result.file,
-        subject = result.title.ifEmpty { result.fileName },
+        subject = result.fileName,
         body = "",
         recipient = recipient.trim(),
     )

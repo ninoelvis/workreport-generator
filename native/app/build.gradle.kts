@@ -14,9 +14,9 @@ android {
         // 最低支持 Android 8.0 (API 26)
         minSdk = 26
         targetSdk = 34
-        versionCode = 10
+        versionCode = 11
         // 测试版：与正式版（1.2.1）区分开
-        versionName = "1.3.1"
+        versionName = "1.3.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

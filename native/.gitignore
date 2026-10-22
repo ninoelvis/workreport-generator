@@ -1,18 +1,11 @@
-# ===== 构建产物 =====
 build/
 .gradle/
 .kotlin/
-
-# ===== Android Studio =====
 .idea/
 *.iml
 local.properties
 captures/
-
-# ===== 签名私钥：绝不提交 =====
 *.keystore
 *.jks
-
-# ===== 其他 =====
 *.log
 .DS_Store

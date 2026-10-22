@@ -75,7 +75,10 @@ class HistoryViewModel(
                 context = ServiceLocator.context,
                 packageName = settings.preferredMailPackage.value.ifEmpty { null },
                 file = file,
-                subject = entity.displayName,
+                // 主题与压缩包名保持一致
+                subject = entity.fileName,
+                // 收件人取「我的」页配置好的地址
+                recipient = settings.mailRecipient.value,
             )
             onDone(ok)
         }

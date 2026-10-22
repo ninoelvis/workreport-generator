@@ -97,9 +97,13 @@ fun IntroDialog(
                     item {
                         IntroCard(title = "历史版本更新记录", icon = Icons.Filled.History) {
                             ChangeLogItem(
+                                "v1.3.2",
+                                "修复：填了收件人邮箱后，拉起邮箱 App 时收件人栏是空的。原因是 EXTRA_EMAIL 在附件通道（ACTION_SEND）下只有部分邮箱 App 会读。现在改为按目标邮箱 App 的实际能力自动选择通道——支持邮件 URI 的走 ACTION_SENDTO（收件人必定填上），Gmail 等会丢附件的仍走 ACTION_SEND 并把收件人写进 mailto 与 EXTRA_EMAIL 两处。「我的」页新增「复制收件人地址」按钮作为兜底。",
+                                current = true,
+                            )
+                            ChangeLogItem(
                                 "v1.3.1",
                                 "两个内容输入框的清除按钮加上二次确认，防止误删；生成后的「是否拉起邮箱 App 发送」弹窗里新增收件人邮箱输入框，填完自动保存，下次生成直接带上（也可在「我的」页修改），确认后再选择邮箱 App。",
-                                current = true,
                             )
                             ChangeLogItem(
                                 "v1.3.0",
