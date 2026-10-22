@@ -725,10 +725,14 @@ footer a{color:var(--t2)}
     }
   ],
   "disclaimer": "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。使用者应自行确保所填报的工作内容真实、合法，不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，软件作者不承担任何法律责任。",
-  "downloadPageUrl": "https://8myulcxbvrmfk.space.mcode.cn"
+  "downloadPageUrl": "https://ybbns2u3hmd64.space.mcode.cn"
 };
+  /* 取数顺序：同源 → GitHub raw（实时）→ jsDelivr CDN → 页面内嵌副本
+     注：jsDelivr 对 @main 分支的同步有分钟级延迟，仅作备用；
+     GitHub raw 推送后数秒内即可读到，是保证「版本信息不过期」的主力来源。 */
   var SOURCES = [
     './download-manifest.json',
+    'https://raw.githubusercontent.com/ninoelvis/workreport-generator/main/docs/download-manifest.json?t=' + Date.now(),
     'https://cdn.jsdelivr.net/gh/ninoelvis/workreport-generator@main/docs/download-manifest.json?t=' + Date.now()
   ];
 
