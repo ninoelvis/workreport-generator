@@ -34,6 +34,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -88,6 +90,10 @@ fun HomeScreen(
     var mailChoiceFor by remember { mutableStateOf<GenerateOutcome.Success?>(null) }
     /** 第二步弹窗里的「以后都这样做」勾选框 */
     var rememberChoice by remember { mutableStateOf(false) }
+    /** 清空「本周已完成工作梳理」的二次确认 */
+    var confirmClearDone by remember { mutableStateOf(false) }
+    /** 清空「下周工作计划」的二次确认 */
+    var confirmClearPlan by remember { mutableStateOf(false) }
     val autoSendMail by settings.autoSendMail.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.message) {
@@ -213,7 +219,7 @@ fun HomeScreen(
                         minLines = 5,
                         trailingIcon = {
                             if (state.doneWorks.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.clearDoneWorks() }) {
+                                IconButton(onClick = { confirmClearDone = true }) {
                                     Icon(
                                         Icons.Filled.Close,
                                         contentDescription = "清空本周已完成工作梳理",
@@ -233,7 +239,7 @@ fun HomeScreen(
                         minLines = 4,
                         trailingIcon = {
                             if (state.planWorks.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.clearPlanWorks() }) {
+                                IconButton(onClick = { confirmClearPlan = true }) {
                                     Icon(
                                         Icons.Filled.Close,
                                         contentDescription = "清空下周工作计划",
@@ -348,6 +354,8 @@ fun HomeScreen(
 
     // 第二步：确认是否拉起邮箱 App 发送
     mailChoiceFor?.let { result ->
+        // 弹窗内的收件人输入（默认值取已保存的）
+        var recipientInput by remember(result) { mutableStateOf(mailRecipient) }
         AlertDialog(
             onDismissRequest = { mailChoiceFor = null },
             title = { Text("已生成，是否直接拉起邮箱 App 发送？") },
@@ -370,14 +378,27 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                     )
-                    if (mailRecipient.isNotEmpty()) {
-                        Text(
-                            "收件人：${mailRecipient}",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = recipientInput,
+                        onValueChange = { recipientInput = it },
+                        label = { Text("收件人邮箱", fontSize = 12.sp) },
+                        placeholder = { Text("如：leader@example.com", fontSize = 12.sp) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        ),
+                    )
+                    Text(
+                        "填了会保存下来，下次自动带上；也可以在「我的」页修改。",
+                        fontSize = 11.5.sp,
+                        lineHeight = 17.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(6.dp))
                     Text(
                         "可以现在就把压缩包作为附件带入邮箱 App；也可以只把文件保存到本地，自己再发。",
                         fontSize = 13.sp,
@@ -401,10 +422,13 @@ fun HomeScreen(
             confirmButton = {
                 TextButton(onClick = {
                     mailChoiceFor = null
+                    // 收件人地址持久化保存
+                    settings.setMailRecipient(recipientInput)
                     if (rememberChoice) settings.setAutoSendMail(true)
                     if (preferredMailPackage.isNotEmpty()) {
-                        sendGeneratedMail(context, result, preferredMailPackage, mailRecipient)
+                        sendGeneratedMail(context, result, preferredMailPackage, recipientInput)
                     } else {
+                        // 还没选过邮箱 App → 先选 App，选完立刻发送
                         pendingMail = result
                         showMailPicker = true
                     }
@@ -413,6 +437,8 @@ fun HomeScreen(
             dismissButton = {
                 TextButton(onClick = {
                     mailChoiceFor = null
+                    // 收件人地址同样保存下来
+                    settings.setMailRecipient(recipientInput)
                     if (rememberChoice) settings.setAutoSendMail(false)
                 }) { Text("否，只保存到本地") }
             },
@@ -430,8 +456,45 @@ fun HomeScreen(
                 val pending = pendingMail
                 pendingMail = null
                 if (pending != null) {
-                    sendGeneratedMail(context, pending, pkg, mailRecipient)
+                    // ⚠️ 这里要读 StateFlow 的当前值，不能读 Compose state ——
+                    //    刚刚 setMailRecipient() 写入的值还没触发重组，state 里还是旧的
+                    sendGeneratedMail(context, pending, pkg, settings.mailRecipient.value)
                 }
+            },
+        )
+    }
+
+    // 清空两个文本框的二次确认
+    if (confirmClearDone) {
+        AlertDialog(
+            onDismissRequest = { confirmClearDone = false },
+            title = { Text("清空「本周已完成工作梳理」？") },
+            text = { Text("这个文本框里已输入的内容会被全部清空，且无法恢复。") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmClearDone = false
+                    viewModel.clearDoneWorks()
+                }) { Text("清空", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClearDone = false }) { Text("取消") }
+            },
+        )
+    }
+
+    if (confirmClearPlan) {
+        AlertDialog(
+            onDismissRequest = { confirmClearPlan = false },
+            title = { Text("清空「下周工作计划」？") },
+            text = { Text("这个文本框里已输入的内容会被全部清空，且无法恢复。") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmClearPlan = false
+                    viewModel.clearPlanWorks()
+                }) { Text("清空", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClearPlan = false }) { Text("取消") }
             },
         )
     }

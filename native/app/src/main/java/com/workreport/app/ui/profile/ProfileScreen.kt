@@ -298,7 +298,7 @@ fun ProfileScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("工作报告生成器 · 原生版", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
                     Text(
-                        "版本 1.3.0",
+                        "版本 1.3.1",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
