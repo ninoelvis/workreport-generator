@@ -725,7 +725,7 @@ footer a{color:var(--t2)}
     }
   ],
   "disclaimer": "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。使用者应自行确保所填报的工作内容真实、合法，不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，软件作者不承担任何法律责任。",
-  "downloadPageUrl": "https://ybbns2u3hmd64.space.mcode.cn"
+  "downloadPageUrl": "https://756wwpvsqctpz.space.mcode.cn"
 };
   /* 取数顺序：同源 → GitHub raw（实时）→ jsDelivr CDN → 页面内嵌副本
      注：jsDelivr 对 @main 分支的同步有分钟级延迟，仅作备用；
@@ -736,13 +736,33 @@ footer a{color:var(--t2)}
     'https://cdn.jsdelivr.net/gh/ninoelvis/workreport-generator@main/docs/download-manifest.json?t=' + Date.now()
   ];
 
+  /* 串行尝试各数据源，任一成功即渲染；后到的更高版本会覆盖刷新。
+     用「版本号比较」保证旧快照不会盖掉新数据。 */
+  var best = null;
+  function cmpVer(a, b) {
+    var pa = String(a || '0').split('.').map(Number);
+    var pb = String(b || '0').split('.').map(Number);
+    for (var i = 0; i < 3; i++) {
+      var d = (pa[i] || 0) - (pb[i] || 0);
+      if (d) return d;
+    }
+    return 0;
+  }
+  function accept(j, src) {
+    if (!j || !j.app) return;
+    if (!best || cmpVer(j.app.version, best.app.version) >= 0) {
+      best = j;
+      render(j, src);
+    }
+  }
   function load(i) {
-    if (i >= SOURCES.length) { render(EMBEDDED, '页面内嵌副本'); return; }
+    if (i >= SOURCES.length) { if (!best) { best = EMBEDDED; render(EMBEDDED, '页面内嵌副本'); } return; }
     try {
       fetch(SOURCES[i], { cache: 'no-cache' })
         .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
-        .then(function (j) { render(j, 'download-manifest.json'); })
-        .catch(function () { load(i + 1); });
+        .then(function (j) { accept(j, SOURCES[i].indexOf('raw.githubusercontent') > 0 ? 'GitHub raw（实时）' : 'download-manifest.json'); })
+        .catch(function () {})
+        .then(function () { load(i + 1); });
     } catch (e) { load(i + 1); }
   }
 
@@ -786,7 +806,9 @@ footer a{color:var(--t2)}
     txt('discText', d.disclaimer || '—');
     txt('footMeta', '数据更新于 ' + (d.updatedAt || '—'));
 
-    var pageUrl = d.downloadPageUrl || (location.protocol.indexOf('http') === 0 ? location.href : '');
+    /* 下载页地址直接取当前访问地址 —— 用户访问哪个地址，复制出去的就是哪个，
+       不依赖任何外部数据源，也就不会出现"链接指向旧地址"的问题。 */
+    var pageUrl = location.protocol.indexOf('http') === 0 ? location.href : (d.downloadPageUrl || '');
     href('pageUrl', pageUrl); txt('pageUrl', pageUrl || '—');
 
     buildLog('appLog', d.changelog || []);
