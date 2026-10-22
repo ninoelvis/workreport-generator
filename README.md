@@ -1,13 +1,13 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v1.0.2-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v1.1.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
 **Android App（推荐）**：
-[workreport-generator-v1.0.2.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.0.2/workreport-generator-v1.0.2.apk)
-（250 KB · 首次安装请在「安装未知应用」里放行一次 · 可直接覆盖安装 v1.0.1）
+[workreport-generator-v1.1.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.1.0/workreport-generator-v1.1.0.apk)
+（293 KB · 首次安装请在「安装未知应用」里放行一次 · 可直接覆盖安装 v1.0.2）
 
 **网页版（免安装、离线可用）**：
 [`web/workreport-web.htm`](web/workreport-web.htm) —— 下载后用浏览器打开即可，无需联网。
@@ -15,6 +15,7 @@
 > 全部历史版本见 [Releases](https://github.com/ninoelvis/workreport-generator/releases)。
 
 **更新记录**
+- `v1.1.0` 新增敏感词管理：顶栏 🛡️ 打开面板，可增删改敏感词库，长期保存，保存后立即生效
 - `v1.0.2` 修复「报告标题」修改后预览区不实时刷新的问题
 - `v1.0.1` 引导页新增源码仓库地址与一键复制
 - `v1.0.0` 正式版发布
@@ -39,6 +40,7 @@
 | 📋 | 自动复制文件名 | 生成成功的同时，文件名自动进入手机剪贴板 |
 | 📨 | 自动发邮件 | 自动拉起你设定的邮箱 App，压缩包作为附件带入写邮件界面 |
 | 👁️ | 实时预览 | 随时查看最终 Excel 效果，所见即所得 |
+| 🛡️ | 敏感词管理 | 顶栏 🛡️ 打开面板，自行增删改敏感词库；词库长期保存（卸载软件才清除），保存后立即生效 |
 | 🧹 | 分区清除 | 两个文本框各自可单独清空，「清除全部数据」一键重置 |
 | ✨ | 首次引导 | 首次启动展示功能介绍与版本更新记录 |
 | 🌗 | 深浅主题 | 跟随系统，可手动切换 |
