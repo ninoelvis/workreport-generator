@@ -999,6 +999,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         var titleInput = document.getElementById('reportTitle');
         titleInput.addEventListener('input', function() {
             titleInput.dataset.manual = '1';
+            refreshPreview();
             saveToStorage();
         });
 
@@ -1615,7 +1616,9 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
   <div class="intro-card">
     <h3><span class="panel-icon">🕒</span>历史版本更新记录</h3>
     <ul class="changelog">
-      <li class="current"><span class="ver">v6</span>新增首次启动功能介绍页与更新日志；合并功能重复的清除按钮；提供「重置全部本地数据」入口。</li>
+      <li class="current"><span class="ver">v1.0.2</span>修复「报告标题」修改后预览区不实时刷新的问题，改完标题立即可见。</li>
+      <li><span class="ver">v1.0</span>正式版发布到 GitHub：首页引导页新增「源码与更新记录」，可直接查看并一键复制仓库地址。（v6 为内部构建版本）</li>
+      <li><span class="ver">v6</span>新增首次启动功能介绍页与更新日志；合并功能重复的清除按钮；提供「重置全部本地数据」入口。</li>
       <li><span class="ver">v5</span>界面按飞书 / 钉钉风格重做：品牌栏、图标标签、信息统计卡片、图标按钮、浅深双主题。</li>
       <li><span class="ver">v4</span>邮箱选择列表只显示邮箱类应用，微信 / QQ / 微博等分享类应用不再出现。</li>
       <li><span class="ver">v3</span>发送邮箱可自行选择并持久化记住，之后随时可手动更换。</li>
