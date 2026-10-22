@@ -82,6 +82,7 @@ fun IntroDialog(
                         IntroCard(title = "功能介绍", icon = Icons.Filled.Star) {
                             IntroBullet("填姓名和时间", "自动算出周数、文件名和压缩包密码。")
                             IntroBullet("随手记工作", "做完一项记一条，汇总进「本周已完成工作梳理」。")
+                            IntroBullet("自动暂存", "填到一半退出也不丢，下次打开还在；生成压缩包后自动清除。")
                             IntroBullet("一键生成", "导出 Excel 并加密成 ZIP，存到手机「下载」目录。")
                             IntroBullet("自动发邮件", "拉起邮箱 App，主题和压缩包附件自动带好，收件人自己填。")
                             IntroBullet("敏感词替换", "「纪委」自动变「jw」，词库自己维护。")
@@ -93,9 +94,13 @@ fun IntroDialog(
                     item {
                         IntroCard(title = "历史版本更新记录", icon = Icons.Filled.History) {
                             ChangeLogItem(
+                                "v1.3.6",
+                                "新增草稿暂存：「工作记录」和「周报内容」填到一半退出 App 也不会丢，下次打开自动恢复；生成压缩包后自动清除。",
+                                current = true,
+                            )
+                            ChangeLogItem(
                                 "v1.3.5",
                                 "邮件不再自动填收件人，只带主题和附件，收件人在邮箱里自己填 —— 这样各家邮箱 App 都能正常用。首页文件名显示不全也修了。「关于」里加了免责声明。",
-                                current = true,
                             )
                             ChangeLogItem(
                                 "v1.3.4",

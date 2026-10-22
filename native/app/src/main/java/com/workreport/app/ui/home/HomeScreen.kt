@@ -132,6 +132,12 @@ fun HomeScreen(
         item {
             SectionCard(title = "填写周报", icon = "📝", hint = "填写本周工作内容") {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Text(
+                        "填的内容会自动暂存在本机，中途退出也不会丢；生成压缩包后自动清除。",
+                        fontSize = 11.5.sp,
+                        lineHeight = 17.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     LabeledField(
                         label = "👤 姓名",
                         value = state.userName,

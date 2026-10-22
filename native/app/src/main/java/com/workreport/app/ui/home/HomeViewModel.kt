@@ -3,6 +3,7 @@ package com.workreport.app.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.workreport.app.ServiceLocator
+import com.workreport.app.data.local.ReportDraft
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.repository.ReportRepository
 import com.workreport.app.domain.model.SensitiveWord
@@ -63,10 +64,21 @@ class HomeViewModel(
     private var lastAutoTitle: String = ""
 
     init {
+        // 恢复上次没填完的草稿 —— 用户中途退出 App 不该丢内容
+        val draft = settings.draft.value
         val currentRange = DateUtils.currentWeekRangeText()
+        _records.value = draft.records
+        titleManual = draft.titleManual
         _state.value = _state.value.copy(
             userName = settings.userName.value,
-            timeRange = currentRange,
+            timeRange = draft.timeRange.ifEmpty { currentRange },
+            // 标题没被手动改过的话，用自动标题，不恢复草稿里的旧标题
+            title = if (draft.titleManual) draft.title else "",
+            titleManual = draft.titleManual,
+            doneWorks = draft.doneWorks,
+            planWorks = draft.planWorks,
+            records = draft.records,
+            recordInput = draft.recordInput,
         )
         viewModelScope.launch {
             settings.userName.collect { name ->
@@ -100,22 +112,26 @@ class HomeViewModel(
         _state.value = _state.value.copy(timeRange = value)
         settings.setLastTimeRange(value)
         recompute(settings.sensitiveWords.value)
+        persistDraft()
     }
 
     fun onTitleChange(value: String) {
         titleManual = true
         _state.value = _state.value.copy(title = value, titleManual = true)
         recompute(settings.sensitiveWords.value)
+        persistDraft()
     }
 
     fun onDoneWorksChange(value: String) {
         _state.value = _state.value.copy(doneWorks = value)
         recompute(settings.sensitiveWords.value)
+        persistDraft()
     }
 
     fun onPlanWorksChange(value: String) {
         _state.value = _state.value.copy(planWorks = value)
         recompute(settings.sensitiveWords.value)
+        persistDraft()
     }
 
     /** 清空「本周已完成工作梳理」 */
@@ -123,6 +139,7 @@ class HomeViewModel(
         if (_state.value.doneWorks.isEmpty()) return
         _state.value = _state.value.copy(doneWorks = "")
         recompute(settings.sensitiveWords.value)
+        persistDraft()
         showMessage("已清空「本周已完成工作梳理」")
     }
 
@@ -131,11 +148,13 @@ class HomeViewModel(
         if (_state.value.planWorks.isEmpty()) return
         _state.value = _state.value.copy(planWorks = "")
         recompute(settings.sensitiveWords.value)
+        persistDraft()
         showMessage("已清空「下周工作计划」")
     }
 
     fun onRecordInputChange(value: String) {
         _state.value = _state.value.copy(recordInput = value)
+        persistDraft()
     }
 
     // ---------------- 工作记录 ----------------
@@ -145,12 +164,14 @@ class HomeViewModel(
         if (text.isEmpty()) return
         _records.value = _records.value + text
         _state.value = _state.value.copy(recordInput = "", records = _records.value)
+        persistDraft()
     }
 
     fun deleteRecord(index: Int) {
         if (index !in _records.value.indices) return
         _records.value = _records.value.toMutableList().also { it.removeAt(index) }
         _state.value = _state.value.copy(records = _records.value)
+        persistDraft()
     }
 
     /** 把工作记录汇总进「本周已完成工作梳理」 */
@@ -165,6 +186,7 @@ class HomeViewModel(
             .joinToString("\n")
         _state.value = _state.value.copy(doneWorks = merged)
         recompute(settings.sensitiveWords.value)
+        persistDraft()
         showMessage("已汇总 ${records.size} 条记录")
     }
 
@@ -190,6 +212,9 @@ class HomeViewModel(
                 )
             }.onSuccess { result ->
                 _state.value = _state.value.copy(generating = false)
+                // 周报已经产出，草稿不用再暂存了 —— 界面上的内容先留着给用户核对，
+                // 但下次重新打开是干净的一份。
+                settings.clearDraft()
                 onResult(
                     GenerateOutcome.Success(
                         fileName = result.fileName,
@@ -212,6 +237,28 @@ class HomeViewModel(
 
     fun consumeMessage() {
         _state.value = _state.value.copy(message = null)
+    }
+
+    // ---------------- 内部 ----------------
+
+    /**
+     * 把当前表单状态写进草稿。
+     *
+     * 每一次输入都会调用，所以用户中途退出 App、接电话、被系统杀进程都不丢内容。
+     */
+    private fun persistDraft() {
+        val s = _state.value
+        settings.saveDraft(
+            ReportDraft(
+                timeRange = s.timeRange,
+                title = s.title,
+                titleManual = s.titleManual || titleManual,
+                doneWorks = s.doneWorks,
+                planWorks = s.planWorks,
+                records = _records.value,
+                recordInput = s.recordInput,
+            ),
+        )
     }
 
     // ---------------- 内部：重算标题/周数/密码/预览 ----------------

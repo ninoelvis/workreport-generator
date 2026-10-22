@@ -96,6 +96,29 @@ class SettingsStore(context: Context) {
         _autoSendMail.value = value
     }
 
+    // ---------------- 首页表单草稿 ----------------
+
+    /**
+     * 首页填写到一半的草稿。每次输入都会存一份，下次打开自动恢复。
+     * 生成压缩包成功后由 [clearDraft] 清掉。
+     */
+    private val _draft = MutableStateFlow(loadDraft())
+    val draft: StateFlow<ReportDraft> = _draft.asStateFlow()
+
+    fun saveDraft(draft: ReportDraft) {
+        prefs.edit().putString(KEY_DRAFT, DraftCodec.encode(draft)).apply()
+        _draft.value = draft
+    }
+
+    /** 草稿已随周报产出，清掉 */
+    fun clearDraft() {
+        prefs.edit().remove(KEY_DRAFT).apply()
+        _draft.value = ReportDraft()
+    }
+
+    private fun loadDraft(): ReportDraft =
+        DraftCodec.decode(prefs.getString(KEY_DRAFT, null))
+
     // ---------------- 引导页 ----------------
 
     /** 是否已经看过功能介绍（首次启动会弹，之后可在「我的」页随时再看） */
@@ -127,6 +150,7 @@ class SettingsStore(context: Context) {
         _preferredMailPackage.value = ""
         _autoSendMail.value = false
         _lastTimeRange.value = ""
+        _draft.value = ReportDraft()
         // 引导页不随「清除数据」重置，否则清完又会被弹一次
     }
 
@@ -159,6 +183,8 @@ class SettingsStore(context: Context) {
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_SENSITIVE_WORDS = "sensitive_words"
         private const val KEY_MAIL_PACKAGE = "preferred_mail_package"
+        /** 草稿整体存成一个 JSON，字段编解码见 DraftCodec */
+        private const val KEY_DRAFT = "report_draft"
         private const val KEY_LAST_TIME_RANGE = "last_time_range"
         private const val KEY_INTRO_SHOWN = "intro_shown"
         private const val KEY_AUTO_SEND_MAIL = "auto_send_mail"
