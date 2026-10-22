@@ -32,6 +32,9 @@
   --danger: #F53F3F;
   --header-bg: #E8F0FE;
   --table-border: #C9CDD4;
+  --logo-bg-1: #FFFFFF;
+  --logo-bg-2: #EDF2FE;
+  --logo-border: rgba(51,112,255,.16);
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -69,6 +72,9 @@ html[data-theme="dark"] {
   --feishu-blue-light: #1E3A5F;
   --header-bg: #1E3A5F;
   --table-border: #4A4A4A;
+  --logo-bg-1: #2C2C2C;
+  --logo-bg-2: #21242E;
+  --logo-border: rgba(255,255,255,.10);
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -344,10 +350,12 @@ h1{
 }
 .app-logo{
   width:42px;height:42px;border-radius:11px;flex-shrink:0;
-  background:linear-gradient(135deg,#3370FF 0%,#6C9BFF 100%);
-  color:#fff;display:flex;align-items:center;justify-content:center;
-  font-size:21px;line-height:1;box-shadow:0 4px 14px rgba(51,112,255,.32);
+  background:linear-gradient(135deg,var(--logo-bg-1) 0%,var(--logo-bg-2) 100%);
+  border:1px solid var(--logo-border);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;box-shadow:0 3px 10px rgba(51,112,255,.18);
 }
+.app-logo .logo-svg{width:100%;height:100%;display:block}
 .app-title-wrap{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
 .app-header h1{
   text-align:left;font-size:19px;font-weight:600;margin:0;
@@ -545,6 +553,13 @@ a.repo-url:hover{border-color:var(--feishu-blue);background:var(--feishu-blue-li
 .sens-drawer-foot .btn-grow{flex:1;min-width:130px}
 .sens-count{font-size:11.5px;color:var(--text-tertiary);margin-right:auto;white-space:nowrap}
 
+.intro-tip{
+  margin:12px 0 0;padding:11px 13px;border-radius:var(--radius-md);
+  background:var(--feishu-blue-light);border:1px solid rgba(51,112,255,.22);
+  font-size:12px;line-height:1.85;color:var(--text-secondary);
+}
+.intro-tip b{color:var(--text-primary);font-weight:600}
+
 /* ===== 记录区 ===== */
 .record-section{border-left:3px solid var(--feishu-blue)}
 .record-count{
@@ -675,7 +690,73 @@ a.repo-url:hover{border-color:var(--feishu-blue);background:var(--feishu-blue-li
 </head>
 <body>
 <div class="app-header">
-<div class="app-logo">📄</div>
+<div class="app-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="232 222 552 566" class="logo-svg" aria-hidden="true"><defs><linearGradient id="lgStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#A855F7"/>
+      <stop offset="45%"  stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient><linearGradient id="lgScroll" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#F5F3FF"/>
+      <stop offset="55%"  stop-color="#EEF2FF"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient><linearGradient id="lgPen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#E0E7FF"/>
+      <stop offset="60%"  stop-color="#C7D2FE"/>
+      <stop offset="100%" stop-color="#BAE6FD"/>
+    </linearGradient></defs>
+  <clipPath id="roundRect"><rect x="0" y="0" width="1024" height="1024" rx="205" ry="205"/></clipPath>
+  <g clip-path="url(#roundRect)">
+    <rect width="1024" height="1024" fill="url(#gradBg)"/>
+    <ellipse cx="512" cy="560" rx="330" ry="300" fill="url(#glow)" filter="url(#soft)"/>
+    <ellipse cx="600" cy="330" rx="210" ry="150" fill="#67E8F9" opacity="0.16" filter="url(#soft)"/>
+  </g>
+
+  <g transform="translate(512 512) scale(1.12) translate(-512 -512)">
+    <!-- 外框（紫→蓝 渐变描边） -->
+    <rect x="265" y="255" width="430" height="500" rx="46" ry="46"
+          fill="none" stroke="url(#lgStroke)" stroke-width="23"/>
+    <!-- 左侧卷轴轴心（胶囊） -->
+    <rect x="265" y="255" width="88" height="500" rx="44" ry="44"
+          fill="url(#lgScroll)" stroke="url(#lgStroke)" stroke-width="23"/>
+    <!-- 顶部三小杠（紫） -->
+    <g fill="#8B5CF6">
+      <rect x="400" y="330" width="78"  height="24" rx="12" ry="12"/>
+      <rect x="493" y="330" width="78"  height="24" rx="12" ry="12"/>
+      <rect x="586" y="330" width="46"  height="24" rx="12" ry="12"/>
+    </g>
+    <!-- 正文横线（深灰蓝） -->
+    <g fill="#4A4E7A">
+      <rect x="400" y="404" width="232" height="26" rx="13" ry="13"/>
+      <rect x="400" y="456" width="172" height="26" rx="13" ry="13"/>
+      <rect x="400" y="508" width="122" height="26" rx="13" ry="13"/>
+      <rect x="400" y="560" width="88"  height="26" rx="13" ry="13"/>
+    </g>
+  </g>
+
+  <g transform="translate(512 512) scale(1.12) translate(-512 -512)">
+    <g transform="translate(556 692) rotate(45)">
+      <!-- 笔尖 -->
+      <path d="M 0 56 L -28 -12 L 28 -12 Z" fill="#2563EB" stroke="#1D4ED8"
+            stroke-width="7" stroke-linejoin="round"/>
+      <!-- 笔身 -->
+      <rect x="-28" y="-268" width="56" height="256" rx="18" ry="18"
+            fill="url(#lgPen)" stroke="#4F46E5" stroke-width="9"/>
+      <!-- 笔帽分隔线 -->
+      <g stroke="#4F46E5" stroke-width="7" stroke-linecap="round">
+        <line x1="-28" y1="-226" x2="28" y2="-226"/>
+        <line x1="-28" y1="-198" x2="28" y2="-198"/>
+      </g>
+    </g>
+  </g>
+
+  <g transform="translate(512 512) scale(1.12) translate(-512 -512)">
+    <path d="M 558 499
+             C 565.28 529.36 575.68 538.56 610 545
+             C 575.68 551.44 565.28 560.64 558 591
+             C 550.72 560.64 540.32 551.44 506 545
+             C 540.32 538.56 550.72 529.36 558 499 Z"
+          fill="#7C3AED"/>
+  </g>
+</svg></svg></div>
 <div class="app-title-wrap">
 <h1>工作报告生成器</h1>
 <div class="app-subtitle">自动生成加密周报 ZIP · 一键复制文件名 · 自动发送邮件</div>
@@ -1955,7 +2036,73 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
 <div class="intro-overlay" id="introOverlay" style="display:none">
 <div class="intro-inner">
   <div class="intro-hero">
-    <div class="app-logo">📄</div>
+    <div class="app-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="232 222 552 566" class="logo-svg" aria-hidden="true"><defs><linearGradient id="lgStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#A855F7"/>
+      <stop offset="45%"  stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient><linearGradient id="lgScroll" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#F5F3FF"/>
+      <stop offset="55%"  stop-color="#EEF2FF"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient><linearGradient id="lgPen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#E0E7FF"/>
+      <stop offset="60%"  stop-color="#C7D2FE"/>
+      <stop offset="100%" stop-color="#BAE6FD"/>
+    </linearGradient></defs>
+  <clipPath id="roundRect"><rect x="0" y="0" width="1024" height="1024" rx="205" ry="205"/></clipPath>
+  <g clip-path="url(#roundRect)">
+    <rect width="1024" height="1024" fill="url(#gradBg)"/>
+    <ellipse cx="512" cy="560" rx="330" ry="300" fill="url(#glow)" filter="url(#soft)"/>
+    <ellipse cx="600" cy="330" rx="210" ry="150" fill="#67E8F9" opacity="0.16" filter="url(#soft)"/>
+  </g>
+
+  <g transform="translate(512 512) scale(1.12) translate(-512 -512)">
+    <!-- 外框（紫→蓝 渐变描边） -->
+    <rect x="265" y="255" width="430" height="500" rx="46" ry="46"
+          fill="none" stroke="url(#lgStroke)" stroke-width="23"/>
+    <!-- 左侧卷轴轴心（胶囊） -->
+    <rect x="265" y="255" width="88" height="500" rx="44" ry="44"
+          fill="url(#lgScroll)" stroke="url(#lgStroke)" stroke-width="23"/>
+    <!-- 顶部三小杠（紫） -->
+    <g fill="#8B5CF6">
+      <rect x="400" y="330" width="78"  height="24" rx="12" ry="12"/>
+      <rect x="493" y="330" width="78"  height="24" rx="12" ry="12"/>
+      <rect x="586" y="330" width="46"  height="24" rx="12" ry="12"/>
+    </g>
+    <!-- 正文横线（深灰蓝） -->
+    <g fill="#4A4E7A">
+      <rect x="400" y="404" width="232" height="26" rx="13" ry="13"/>
+      <rect x="400" y="456" width="172" height="26" rx="13" ry="13"/>
+      <rect x="400" y="508" width="122" height="26" rx="13" ry="13"/>
+      <rect x="400" y="560" width="88"  height="26" rx="13" ry="13"/>
+    </g>
+  </g>
+
+  <g transform="translate(512 512) scale(1.12) translate(-512 -512)">
+    <g transform="translate(556 692) rotate(45)">
+      <!-- 笔尖 -->
+      <path d="M 0 56 L -28 -12 L 28 -12 Z" fill="#2563EB" stroke="#1D4ED8"
+            stroke-width="7" stroke-linejoin="round"/>
+      <!-- 笔身 -->
+      <rect x="-28" y="-268" width="56" height="256" rx="18" ry="18"
+            fill="url(#lgPen)" stroke="#4F46E5" stroke-width="9"/>
+      <!-- 笔帽分隔线 -->
+      <g stroke="#4F46E5" stroke-width="7" stroke-linecap="round">
+        <line x1="-28" y1="-226" x2="28" y2="-226"/>
+        <line x1="-28" y1="-198" x2="28" y2="-198"/>
+      </g>
+    </g>
+  </g>
+
+  <g transform="translate(512 512) scale(1.12) translate(-512 -512)">
+    <path d="M 558 499
+             C 565.28 529.36 575.68 538.56 610 545
+             C 575.68 551.44 565.28 560.64 558 591
+             C 550.72 560.64 540.32 551.44 506 545
+             C 540.32 538.56 550.72 529.36 558 499 Z"
+          fill="#7C3AED"/>
+  </g>
+</svg></svg></div>
     <div>
       <h2>工作报告生成器</h2>
       <p>填写本周工作内容，一键生成加密周报 ZIP，并自动复制文件名、发送邮件</p>
@@ -1979,7 +2126,8 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
   <div class="intro-card">
     <h3><span class="panel-icon">🕒</span>历史版本更新记录</h3>
     <ul class="changelog">
-      <li class="current"><span class="ver">v1.2.0</span>全新应用图标（卷轴+笔，适配 Android 自适应图标）；状态栏与导航栏颜色改为跟随页面主题，不再出现导航栏灰色、页面白色的割裂感。</li>
+      <li class="current"><span class="ver">v1.2.1</span>App 内顶栏图标也换成新的卷轴+笔图标（此前只改了桌面图标）；若桌面图标仍显示旧样式，是桌面缓存了图标，按下方说明清理即可。</li>
+      <li><span class="ver">v1.2.0</span>全新应用图标（卷轴+笔，适配 Android 自适应图标）；状态栏与导航栏颜色改为跟随页面主题，不再出现导航栏灰色、页面白色的割裂感。</li>
       <li><span class="ver">v1.1.0</span>新增敏感词管理：顶栏 🛡️ 打开面板，可增删改敏感词库，词库长期保存，保存后主页面立即生效。</li>
       <li><span class="ver">v1.0.2</span>修复「报告标题」修改后预览区不实时刷新的问题，改完标题立即可见。</li>
       <li><span class="ver">v1.0</span>正式版发布到 GitHub：首页引导页新增「源码与更新记录」，可直接查看并一键复制仓库地址。（v6 为内部构建版本）</li>
@@ -1990,6 +2138,13 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
       <li><span class="ver">v2</span>生成后自动复制文件名到剪贴板，并自动拉起阿里邮箱把压缩包作为附件带入。</li>
       <li><span class="ver">v1</span>初版：周报内容生成、加密 ZIP 导出、保存到系统下载目录。</li>
     </ul>
+    <div class="intro-tip">
+      <b>💡 桌面上的图标还是旧的？</b><br>
+      部分手机桌面会缓存应用图标，覆盖安装后不刷新新图（App 内部不受影响）。依次试：
+      ① <b>重启桌面</b>：长按桌面空白处 →「桌面设置」/「刷新桌面」；
+      ② <b>清桌面缓存</b>：小米「设置 → 应用设置 → 桌面 → 清除缓存」，或长按桌面空白处找「清理缓存」；
+      ③ 以上无效才考虑<b>卸载重装</b>——注意卸载会清空本地草稿与敏感词库，动手前请先把内容复制出去。
+    </div>
   </div>
 
   <div class="intro-card">
