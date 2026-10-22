@@ -910,6 +910,19 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
         var icon = document.getElementById('themeIcon');
         if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+        syncSystemBars();
+    }
+
+    // 把当前主题的页面背景色同步给原生，让状态栏 / 导航栏涂成同色，
+    // 避免出现「导航栏灰色 + 页面白色」的割裂感。网页版没有原生桥，自动跳过。
+    function syncSystemBars() {
+        if (!hasBridgeMethod('setSystemBarTheme')) return;
+        try {
+            var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg-page');
+            bg = (bg || '').trim();
+            if (!bg) bg = isDarkMode() ? '#1A1A1A' : '#F5F6F7';
+            window.AndroidBridge.setSystemBarTheme(bg, isDarkMode());
+        } catch(e) {}
     }
     function isDarkMode() {
         return document.documentElement.getAttribute('data-theme') === 'dark';
@@ -1966,7 +1979,8 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
   <div class="intro-card">
     <h3><span class="panel-icon">🕒</span>历史版本更新记录</h3>
     <ul class="changelog">
-      <li class="current"><span class="ver">v1.1.0</span>新增敏感词管理：顶栏 🛡️ 打开面板，可增删改敏感词库，词库长期保存，保存后主页面立即生效。</li>
+      <li class="current"><span class="ver">v1.2.0</span>全新应用图标（卷轴+笔，适配 Android 自适应图标）；状态栏与导航栏颜色改为跟随页面主题，不再出现导航栏灰色、页面白色的割裂感。</li>
+      <li><span class="ver">v1.1.0</span>新增敏感词管理：顶栏 🛡️ 打开面板，可增删改敏感词库，词库长期保存，保存后主页面立即生效。</li>
       <li><span class="ver">v1.0.2</span>修复「报告标题」修改后预览区不实时刷新的问题，改完标题立即可见。</li>
       <li><span class="ver">v1.0</span>正式版发布到 GitHub：首页引导页新增「源码与更新记录」，可直接查看并一键复制仓库地址。（v6 为内部构建版本）</li>
       <li><span class="ver">v6</span>新增首次启动功能介绍页与更新日志；合并功能重复的清除按钮；提供「重置全部本地数据」入口。</li>

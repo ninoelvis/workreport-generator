@@ -22,6 +22,8 @@ import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
+import android.view.Window;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -95,9 +97,69 @@ public class MainActivity extends Activity {
     private volatile byte[] pendingZipBytes;
     private volatile String pendingZipName;
 
+    /**
+     * 把状态栏与导航栏涂成和页面背景一样的颜色。
+     *
+     * 之前这两条系统栏是系统默认的灰色，页面却是白色/浅灰，视觉上很割裂。
+     * 页面主题可以在 App 内手动切换，所以颜色由网页侧通过 JS Bridge 传进来，
+     * 这里只负责把色值刷到系统栏，并按明暗决定系统图标用深色还是浅色。
+     */
+    private void applySystemBars(final int bgColor, final boolean dark) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Window window = getWindow();
+                    window.setStatusBarColor(bgColor);
+                    window.setNavigationBarColor(bgColor);
+
+                    int flags = 0;
+                    if (!dark) {
+                        // 浅色背景 → 系统图标用深色，否则看不清
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                        }
+                    }
+                    window.getDecorView().setSystemUiVisibility(flags);
+                } catch (Throwable ignored) {
+                    // 个别 ROM 上设置系统栏颜色会抛异常，忽略即可，不影响主功能
+                }
+            }
+        });
+    }
+
+    /** 解析 #RRGGBB / #AARRGGBB 形式的颜色 */
+    private static int parseHexColor(String hex, int fallback) {
+        if (hex == null) return fallback;
+        String s = hex.trim();
+        if (s.isEmpty()) return fallback;
+        if (s.startsWith("#")) s = s.substring(1);
+        try {
+            if (s.length() == 6) {
+                return (int) (0xFF000000L | Long.parseLong(s, 16));
+            } else if (s.length() == 8) {
+                return (int) Long.parseLong(s, 16);
+            } else if (s.length() == 3) {
+                String r = s.substring(0, 1), g = s.substring(1, 2), b = s.substring(2, 3);
+                return (int) (0xFF000000L
+                        | Long.parseLong(r + r, 16) << 16
+                        | Long.parseLong(g + g, 16) << 8
+                        | Long.parseLong(b + b, 16));
+            }
+        } catch (Exception ignored) {
+        }
+        return fallback;
+    }
+
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
+
+        // 状态栏 / 导航栏先给一个与页面一致的底色，避免启动瞬间闪白
+        applySystemBars(0xFFF5F6F7, false);
 
         WebView view = new WebView(this);
         this.webView = view;
@@ -157,6 +219,16 @@ public class MainActivity extends Activity {
     /* ==================== JS Bridge ==================== */
 
     private class AndroidBridge {
+
+        /**
+         * 网页侧把当前主题的背景色传过来，同步状态栏 / 导航栏颜色。
+         * dark = true 表示深色主题，此时系统图标用浅色。
+         */
+        @JavascriptInterface
+        public void setSystemBarTheme(String hexColor, boolean dark) {
+            int color = parseHexColor(hexColor, dark ? 0xFF1A1A1A : 0xFFF5F6F7);
+            applySystemBars(color, dark);
+        }
 
         /** 保存 base64 内容到系统「下载」目录（原有逻辑） */
         @JavascriptInterface
