@@ -78,14 +78,11 @@ a:hover{text-decoration:underline}
 /* ===== Hero ===== */
 .hero{text-align:center;padding:26px 0 22px}
 .hero h1{
-  font-size:28px;margin:0 0 12px;letter-spacing:.2px;font-weight:700;line-height:1.45;
-  text-wrap:balance;
+  font-size:clamp(16px,5.6vw,28px);
+  margin:0 0 12px;font-weight:700;line-height:1.4;letter-spacing:-.2px;
+  white-space:nowrap;
 }
-.hero h1 .nb{display:inline}
-@media (max-width:768px){
-  .hero h1{font-size:21px;line-height:1.5}
-  .hero h1 .nb{display:block}
-}
+@media (max-width:768px){ .hero h1{line-height:1.45;margin-bottom:10px} }
 .hero p.lead{
   font-size:15px;color:var(--t2);margin:0 auto;max-width:640px;line-height:1.9;
   text-wrap:pretty;
@@ -126,7 +123,7 @@ a:hover{text-decoration:underline}
 .tag.green{background:rgba(0,180,42,.12);color:var(--green)}
 
 /* ===== 三个版本卡片 ===== */
-.versions{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:26px}
+.versions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:16px;margin-bottom:26px}
 .vcard{
   background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);
   box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;
@@ -214,7 +211,7 @@ details.fold[open] > summary{border-bottom:1px solid var(--border)}
 .kv dt{color:var(--t3);white-space:nowrap}
 .kv dd{margin:0;word-break:break-all}
 .meta-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:1px;
   background:var(--border);border-radius:var(--r-md);overflow:hidden;margin:0 0 14px;
 }
 .meta{background:var(--bg-card);padding:11px 13px}
@@ -347,7 +344,7 @@ footer a{color:var(--t2)}
 
 <!-- ===== Hero ===== -->
 <section class="hero">
-  <h1><span class="nb">工作周报快速生成，</span>多版本可选。</h1>
+  <h1>工作周报快速生成，多版本可选。</h1>
   <p class="lead">快速生成加密压缩包，原生版 APP 可直接拉起邮箱 APP 发送周报，所有内容只存在本地，不发送到任何服务器。</p>
   <div class="badges">
     <span class="badge primary"><span class="dot"></span><span id="heroVer">原生版 —</span></span>
@@ -738,7 +735,7 @@ footer a{color:var(--t2)}
     }
   ],
   "disclaimer": "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。使用者应自行确保所填报的工作内容真实、合法，不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，软件作者不承担任何法律责任。",
-  "downloadPageUrl": "https://ncd85vw5zagl8.space.mcode.cn"
+  "downloadPageUrl": "https://bpeavirh2yctw.space.mcode.cn"
 };
   /* 取数顺序：同源 → GitHub raw（实时）→ jsDelivr CDN → 页面内嵌副本
      注：jsDelivr 对 @main 分支的同步有分钟级延迟，仅作备用；
