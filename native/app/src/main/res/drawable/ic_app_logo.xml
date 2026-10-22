@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App 内顶栏图标（卷轴+笔），与桌面图标同一套设计，纯原生矢量 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="42dp"
+    android:height="42dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+
+    <!-- 卷轴外框：紫蓝描边 -->
+    <path
+        android:pathData="M311,255 H649 A46,46 0 0 1 695,301 V709 A46,46 0 0 1 649,755 H311 A46,46 0 0 1 265,709 V301 A46,46 0 0 1 311,255 Z"
+        android:fillColor="#00000000"
+        android:strokeColor="#FF7C3AED"
+        android:strokeWidth="23" />
+
+    <!-- 左侧卷轴轴心 -->
+    <path
+        android:pathData="M309,255 H309 A44,44 0 0 1 353,299 V711 A44,44 0 0 1 309,755 H309 A44,44 0 0 1 265,711 V299 A44,44 0 0 1 309,255 Z"
+        android:fillColor="#FFF3F1FE"
+        android:strokeColor="#FF7C3AED"
+        android:strokeWidth="23" />
+
+    <!-- 顶部三小杠 -->
+    <path
+        android:pathData="M412,330 H466 A12,12 0 0 1 478,342 V342 A12,12 0 0 1 466,354 H412 A12,12 0 0 1 400,342 V342 A12,12 0 0 1 412,330 Z M505,330 H559 A12,12 0 0 1 571,342 V342 A12,12 0 0 1 559,354 H505 A12,12 0 0 1 493,342 V342 A12,12 0 0 1 505,330 Z M598,330 H620 A12,12 0 0 1 632,342 V342 A12,12 0 0 1 620,354 H598 A12,12 0 0 1 586,342 V342 A12,12 0 0 1 598,330 Z"
+        android:fillColor="#FF8B5CF6" />
+
+    <!-- 正文横线 -->
+    <path
+        android:pathData="M413,404 H619 A13,13 0 0 1 632,417 V417 A13,13 0 0 1 619,430 H413 A13,13 0 0 1 400,417 V417 A13,13 0 0 1 413,404 Z M413,456 H559 A13,13 0 0 1 572,469 V469 A13,13 0 0 1 559,482 H413 A13,13 0 0 1 400,469 V469 A13,13 0 0 1 413,456 Z M413,508 H509 A13,13 0 0 1 522,521 V521 A13,13 0 0 1 509,534 H413 A13,13 0 0 1 400,521 V521 A13,13 0 0 1 413,508 Z M413,560 H475 A13,13 0 0 1 488,573 V573 A13,13 0 0 1 475,586 H413 A13,13 0 0 1 400,573 V573 A13,13 0 0 1 413,560 Z"
+        android:fillColor="#FF4A4E7A" />
+
+    <!-- 笔身 -->
+    <path
+        android:pathData="M725.71,482.7 L765.3,522.29 L584.28,703.31 L544.69,663.72 Z"
+        android:fillColor="#FFDCE6FF"
+        android:strokeColor="#FF4F46E5"
+        android:strokeWidth="9" />
+
+    <!-- 笔帽分隔线 -->
+    <path
+        android:pathData="M696.01,512.39 L735.61,551.99 M676.21,532.19 L715.81,571.79"
+        android:fillColor="#00000000"
+        android:strokeColor="#FF4F46E5"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+
+    <!-- 笔尖 -->
+    <path
+        android:pathData="M516.4,731.6 L544.69,663.72 L584.28,703.31 Z"
+        android:fillColor="#FF2563EB"
+        android:strokeColor="#FF1D4ED8"
+        android:strokeWidth="7"
+        android:strokeLineJoin="miter" />
+
+    <!-- 星光 -->
+    <path
+        android:pathData="M558,499 C565.28,529.36 575.68,538.56 610,545 C575.68,551.44 565.28,560.64 558,591 C550.72,560.64 540.32,551.44 506,545 C540.32,538.56 550.72,529.36 558,499 Z"
+        android:fillColor="#FF7C3AED" />
+</vector>

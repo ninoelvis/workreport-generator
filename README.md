@@ -1,13 +1,19 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v1.1.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v1.3.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
-**Android App（推荐）**：
-[workreport-generator-v1.1.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.1.0/workreport-generator-v1.1.0.apk)
-（293 KB · 首次安装请在「安装未知应用」里放行一次 · 可直接覆盖安装 v1.0.2）
+**原生版 Android App（v1.3.0，推荐）**：
+[workreport-native-v1.3.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.0/workreport-native-v1.3.0.apk)
+（12 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版）
+
+源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
+
+**旧版 WebView App**：
+[workreport-generator-v1.2.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.2.1/workreport-generator-v1.2.1.apk)
+（460 KB · 仍可正常下载使用，功能与原生版一致）
 
 **网页版（免安装、离线可用）**：
 [`web/workreport-web.htm`](web/workreport-web.htm) —— 下载后用浏览器打开即可，无需联网。
@@ -15,7 +21,10 @@
 > 全部历史版本见 [Releases](https://github.com/ninoelvis/workreport-generator/releases)。
 
 **更新记录**
-- `v1.1.0` 新增敏感词管理：顶栏 🛡️ 打开面板，可增删改敏感词库，长期保存，保存后立即生效
+- `v1.3.0` **原生重写正式版**：整个 App 从 WebView 套壳改写为 Kotlin + Jetpack Compose 纯原生实现，不再加载任何网页资源。导出的 Excel 与加密 ZIP 与旧版**逐字节一致**（10/10 部件实测比对通过）。新增首次启动功能介绍页、收件人邮箱配置、生成后自动拉起邮箱 App 发送（可记住选择）、两个内容框的独立清除按钮；首页预览表格按 Excel 真实列宽重新对齐
+- `v1.2.1` App 内顶栏图标换成新图标
+- `v1.2.0` 全新应用图标（自适应图标）；状态栏与导航栏跟随主题
+- `v1.1.0` 新增敏感词管理：可增删改敏感词库，长期保存，保存后立即生效
 - `v1.0.2` 修复「报告标题」修改后预览区不实时刷新的问题
 - `v1.0.1` 引导页新增源码仓库地址与一键复制
 - `v1.0.0` 正式版发布
@@ -25,8 +34,12 @@
 一个纯本地运行的 Android 小工具：填好本周工作内容，一键生成**加密 ZIP 周报**，
 自动把文件名复制到剪贴板，并自动拉起你设定的邮箱 App 把压缩包带进附件。
 
-**完全离线可用** —— APK 没有申请 `INTERNET` 权限，系统层面就禁止联网。
-所有计算（Excel 生成 + AES 加密压缩）都在本机完成，数据不上传任何服务器。
+**完全离线可用** —— 所有计算（Excel 生成 + AES-256 加密压缩）都在本机完成，数据不上传任何服务器。
+原生版为后续在线功能预留了 `INTERNET` 权限，但当前版本**不会发起任何网络请求**。
+
+> 📱 **v1.3.0 起为纯原生实现**：`native/` 目录是完整可构建的 Gradle 工程
+> （Kotlin 2.0 + Compose BOM 2024.10 + Room + zip4j + OkHttp 预留），
+> 仓库根目录的 `app/` 是旧版 WebView 工程，两者导出的文件格式完全一致。
 
 ---
 

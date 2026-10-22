@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 历史报告与生成的加密 ZIP 存放目录 -->
+    <files-path name="reports" path="reports/" />
+    <cache-path name="cache_reports" path="reports/" />
+    <external-files-path name="ext_reports" path="reports/" />
+    <external-cache-path name="ext_cache_reports" path="reports/" />
+</paths>
