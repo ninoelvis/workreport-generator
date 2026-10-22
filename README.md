@@ -32,7 +32,7 @@
 
 ### 📥 官方下载页
 
-**https://8da2s9odk23ro.space.mcode.cn**
+**https://ncd85vw5zagl8.space.mcode.cn**
 
 统一入口：主推原生版 App，同时提供网页在线版与单文件离线版三个下载入口，
 并附各版本功能对照表、完整更新记录与免责声明。
