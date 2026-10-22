@@ -1,11 +1,13 @@
 package com.workreport.app.util
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
+import android.util.Log
 import androidx.core.content.FileProvider
 import com.workreport.app.domain.model.MailSendMode
 import java.io.File
@@ -28,6 +30,8 @@ data class MailApp(
  */
 object MailHelper {
 
+    private const val TAG = "MailHelper"
+
     /**
      * 阿里邮箱的包名。它有私有通道，可以一条 Intent 同时带齐收件人 + 主题 + 附件。
      * `com.alibaba.android.mail` 是历史包名，同样按阿里邮箱处理。
@@ -38,11 +42,24 @@ object MailHelper {
     )
 
     /**
-     * 阿里邮箱写邮件页的私有 action。
-     * 逆向 v4.12.8 得到：它只在 `MessageComposeOpen` 上声明，且该 filter 不带
-     * data / mimeType 约束，所以挂 `data = mailto:` 依然能精确命中。
+     * 阿里邮箱写邮件页的 Activity 全名。
+     *
+     * 逆向 v4.12.8 得到：收件人和附件的解析都发生在这个 Activity 挂载的
+     * `MessageComposeFragment` 里 —— 收件人读 `EXTRA_EMAIL` / mailto URI，
+     * 附件读 `clipData` / `EXTRA_STREAM`（**与 action 无关**）。
+     *
+     * ⚠️ 必须用 `setComponent` 直达，不能靠 IntentFilter 匹配：
+     *  - 它的 `ACTION_SEND` filter 只声明了 mimeType，而 Intent 一旦带 data URI
+     *    就改为按 scheme 匹配 → 匹配失败；
+     *  - 它的 `standard.MAIL` filter 什么都没声明，同样不接 data URI；
+     *  - `ACTION_SENDTO + mailto:` 会命中 `Welcome` 中转页，而 `Welcome` 转发时
+     *    只复制 TEXT/SUBJECT/EMAIL/CC/BCC 和 data，**不复制 EXTRA_STREAM/clipData**
+     *    → 附件必丢。
+     *
+     * 指定组件后系统不再做 IntentFilter 匹配，data 想带就带。
      */
-    private const val ALI_MAIL_ACTION = "com.alibaba.cloudmail.intent.action.standard.MAIL"
+    private const val ALI_MAIL_COMPOSE_ACTIVITY =
+        "com.alibaba.alimei.ui.library.activity.MessageComposeOpen"
 
     /** 明确排除的「只是能分享文件」的社交应用 */
     private val NON_MAIL_PACKAGES = setOf(
@@ -123,28 +140,27 @@ object MailHelper {
      *
      * ## 通道策略
      *
-     * Android 的两个标准通道各有各的标准字段：
+     * 两个标准通道各有各的标准字段：
      *
      * | 通道 | 附件 | 收件人 |
      * |------|------|--------|
      * | `ACTION_SEND` | ✅ 标准（`EXTRA_STREAM` + `clipData`） | ⚠️ 非标准，部分 App 忽略 `EXTRA_EMAIL` |
      * | `ACTION_SENDTO` | ⚠️ 非标准，多数 App 忽略 `EXTRA_STREAM` | ✅ 标准（`data = mailto:`） |
      *
-     * 通用情况下这两头没法在同一个 Intent 里都保证，所以由 [mode] 决定。
+     * ### ⚠️ 三条踩过的坑，改之前先看一眼
      *
-     * **但阿里邮箱有私有通道**（见 [launchAliMail]），能一条 Intent 同时带齐
-     * 收件人 + 主题 + 附件，所以优先走它。
+     * 1. **Intent 带 data URI 就按 scheme 匹配、忽略 mimeType。**
+     *    所以 `ACTION_SEND` 上挂 `data = mailto:xxx` 会匹配失败 —— 邮件 App 的
+     *    `SEND` filter 基本不声明 scheme。
+     * 2. **不要用 `intent.selector` 收窄候选。**
+     *    `Intent.createChooser()` 不会处理 target 的 selector，系统 ResolverActivity
+     *    处理带 selector 的 EXTRA_INTENT 时在新版 Android 上会 NPE —— 直接闪退。
+     * 3. **filter 既没声明 scheme 也没声明 mimeType 时，带 data URI 的 Intent 一律不匹配。**
+     *    所以想带 `data = mailto:` 就得用 `setComponent` 直达 Activity。
      *
-     * ### ⚠️ 为什么 `ACTION_SEND` 上不能直接 `setData(mailto:)`
+     * ### 阿里邮箱：一条 Intent 全部带上
      *
-     * Android 的 Intent 匹配规则是「**带了 data URI 就按 scheme 匹配、忽略 mimeType**」。
-     * 邮件 App 的 `SEND` filter 基本不声明 scheme，于是 `data = mailto:xxx` 会让
-     * 整条 Intent **匹配失败**（`ActivityNotFoundException`），最后落到 chooser 兜底，
-     * 收件人和附件两头都丢。
-     *
-     * 想既收窄候选到邮件 App、又保住 `SEND` 的 mimeType 匹配，正确做法是**用 selector**：
-     * 匹配走 selector（`ACTION_SENDTO` + `mailto:`），送达的仍是原始 `ACTION_SEND` Intent，
-     * `data` 保持为空 —— 附件通道完全不受影响。
+     * 逆向 `com.alibaba.cloudmail` v4.12.8 得到的结论见 [launchAliMailDirect]。
      *
      * @param recipient 收件人邮箱（可为空）
      * @param body      邮件正文。**默认留空** —— 主题、收件人、附件才是必需的。
@@ -160,47 +176,56 @@ object MailHelper {
         recipient: String = "",
         mode: MailSendMode = MailSendMode.AUTO,
     ): Boolean {
-        if (!file.exists()) return false
-        val uri: Uri = runCatching {
-            FileProvider.getUriForFile(context, context.packageName + ".fileprovider", file)
-        }.getOrNull() ?: return false
+        // 整条链路兜住异常 —— 拉起邮箱失败也不能让 App 崩
+        return runCatching {
+            if (!file.exists()) return@runCatching false
+            val uri: Uri = runCatching {
+                FileProvider.getUriForFile(context, context.packageName + ".fileprovider", file)
+            }.getOrNull() ?: return@runCatching false
 
-        val to = recipient.trim()
+            val to = recipient.trim()
 
-        // 阿里邮箱专用通道：收件人 + 主题 + 附件一次全带，优先尝试
-        if (to.isNotEmpty() && isAliMail(packageName)) {
-            if (launchAliMail(context, packageName, uri, subject, body, to)) return true
-        }
+            // 阿里邮箱：直达写邮件页，收件人 + 主题 + 附件一次全带
+            if (to.isNotEmpty() && isAliMail(packageName)) {
+                if (launchAliMailDirect(context, packageName, uri, subject, body, to)) {
+                    return@runCatching true
+                }
+            }
 
-        return when (mode) {
-            MailSendMode.RECIPIENT_FIRST -> launchRecipientFirst(context, packageName, uri, subject, body, to)
-            // AUTO 与 ATTACHMENT_FIRST 同走标准附件通道：
-            // 附件是本 App 的核心产出物，优先保证它真的挂上；收件人靠 EXTRA_EMAIL 尽力带上。
-            MailSendMode.AUTO, MailSendMode.ATTACHMENT_FIRST ->
-                launchAttachmentFirst(context, packageName, uri, subject, body, to)
+            when (mode) {
+                MailSendMode.RECIPIENT_FIRST ->
+                    launchRecipientFirst(context, packageName, uri, subject, body, to)
+                // AUTO 与 ATTACHMENT_FIRST 同走标准附件通道：
+                // 附件是本 App 的核心产出物，优先保证它真的挂上；收件人靠 EXTRA_EMAIL 尽力带上。
+                MailSendMode.AUTO, MailSendMode.ATTACHMENT_FIRST ->
+                    launchAttachmentFirst(context, packageName, uri, subject, body, to)
+            }
+        }.getOrElse { e ->
+            Log.e(TAG, "拉起邮件应用失败", e)
+            false
         }
     }
 
     /**
-     * 阿里邮箱专用通道。
+     * 阿里邮箱专用通道：**用 `setComponent` 直达写邮件页**。
      *
      * 逆向 `com.alibaba.cloudmail` v4.12.8 得到的结论：
      *
-     *  - 写邮件页 `MessageComposeOpen` 除了标准通道，还声明了**私有 action**
-     *    `com.alibaba.cloudmail.intent.action.standard.MAIL`，且该 intent-filter
-     *    **不带 data / mimeType 约束** —— 所以挂 `data = mailto:xxx` 不会破坏匹配。
-     *  - 它的收件人解析有两条路：mailto URI 的 `getSchemeSpecificPart()`，
-     *    以及 extras 里的 `EXTRA_EMAIL`（读法是 `bundle.get()` 再强转 `String[]`）。
-     *    两者都提供，收件人必定填上。
-     *  - 主题读 `EXTRA_SUBJECT`；附件按 `clipData` → `EXTRA_STREAM(ArrayList)` →
-     *    `EXTRA_STREAM`(单个 Uri) 的顺序取，**这一段与 action 无关**。
+     *  - 收件人、主题、附件的解析都发生在 `MessageComposeOpen` 挂载的
+     *    `MessageComposeFragment` 里；
+     *  - 收件人有两条路：mailto URI 的 `getSchemeSpecificPart()`，以及 extras 里的
+     *    `EXTRA_EMAIL`（读法是 `bundle.get()` 后强转 `String[]`）—— 两条都给，必定填上；
+     *  - 主题读 `EXTRA_SUBJECT`；
+     *  - 附件按 `clipData` → `EXTRA_STREAM(ArrayList)` → `EXTRA_STREAM`(单个 Uri) 的顺序取，
+     *    **且这一段与 action 无关**。
      *
-     * 所以一条 Intent 就能同时带上收件人、主题和附件。
+     * 为什么必须 `setComponent`：它的 filter 都不接受带 data URI 的 Intent（见类注释），
+     * 而 `ACTION_SENDTO + mailto:` 会命中 `Welcome` 中转页 —— `Welcome` 转发时只复制
+     * TEXT/SUBJECT/EMAIL/CC/BCC 和 data，**不复制 EXTRA_STREAM / clipData** → 附件必丢。
      *
-     * ⚠️ 反面教材：`ACTION_SENDTO + mailto:` 在阿里邮箱里命中的是 `Welcome` 中转页，
-     * 它转发 Intent 时会**丢掉附件** —— 这正是上一版「附件没带进去」的病根。
+     * 指定组件后系统不再做 IntentFilter 匹配，data 想带就带。
      */
-    private fun launchAliMail(
+    private fun launchAliMailDirect(
         context: Context,
         packageName: String?,
         uri: Uri,
@@ -208,18 +233,30 @@ object MailHelper {
         body: String,
         to: String,
     ): Boolean {
-        val intent = Intent(ALI_MAIL_ACTION).apply {
+        val pkg = packageName ?: return false
+        val component = ComponentName(pkg, ALI_MAIL_COMPOSE_ACTIVITY)
+
+        // 先确认这个 Activity 确实存在（版本升级可能改类名），免得白跑一趟
+        val exists = runCatching {
+            context.packageManager.getActivityInfo(component, 0) != null
+        }.getOrDefault(false)
+        if (!exists) {
+            Log.w(TAG, "阿里邮箱写邮件页不存在，退回标准通道: $component")
+            return false
+        }
+
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            this.component = component
             // 收件人：mailto URI（schemeSpecificPart）+ EXTRA_EMAIL 双保险
             data = Uri.parse("mailto:$to")
             putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
-            if (subject.isNotEmpty()) putExtra(Intent.EXTRA_SUBJECT, subject)
-            if (body.isNotEmpty()) putExtra(Intent.EXTRA_TEXT, body)
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, body)
             // 附件：clipData 与 EXTRA_STREAM 两种形式都给
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             clipData = android.content.ClipData.newRawUri("attachment", uri)
         }
-        if (!packageName.isNullOrEmpty()) intent.setPackage(packageName)
         return startActivity(context, intent)
     }
 
@@ -230,7 +267,7 @@ object MailHelper {
     /**
      * 附件优先：`ACTION_SEND` 通道，压缩包必带，收件人靠 `EXTRA_EMAIL` 尽力带上。
      *
-     * 兜底链：完整版（含 selector 收窄候选）→ 纯净版（不带 selector，兼容性最高）→ 系统 chooser。
+     * 兜底链：定向到指定 App → 系统选择器。
      */
     private fun launchAttachmentFirst(
         context: Context,
@@ -240,33 +277,31 @@ object MailHelper {
         body: String,
         to: String,
     ): Boolean {
-        fun build(withSelector: Boolean): Intent = Intent(Intent.ACTION_SEND).apply {
+        val intent = Intent(Intent.ACTION_SEND).apply {
             type = "application/zip"
             putExtra(Intent.EXTRA_STREAM, uri)
+            // SUBJECT / TEXT 始终放（正文为空就放空串）：
+            // 有些邮箱 App 转发 Intent 时会直接 .toString()，缺 key 会 NPE
             putExtra(Intent.EXTRA_SUBJECT, subject)
-            putExtra(Intent.EXTRA_TITLE, subject)
-            if (body.isNotEmpty()) putExtra(Intent.EXTRA_TEXT, body)
+            putExtra(Intent.EXTRA_TEXT, body)
             if (to.isNotEmpty()) putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             clipData = android.content.ClipData.newRawUri("attachment", uri)
-            if (withSelector && to.isNotEmpty()) {
-                // 匹配走 selector：只让邮件类 App 出现在候选里；
-                // 送达的仍是这条 ACTION_SEND，data 保持为空，附件通道不受影响。
-                selector = Intent(Intent.ACTION_SENDTO).setData(Uri.parse("mailto:"))
-            }
         }
+        if (!packageName.isNullOrEmpty()) intent.setPackage(packageName)
+        if (startActivity(context, intent)) return true
 
-        val main = build(withSelector = true)
-        if (!packageName.isNullOrEmpty()) main.setPackage(packageName)
-        if (startActivity(context, main)) return true
-
-        // 兜底 1：去掉 selector 的纯净版 —— 兼容性最高，附件照样带
-        val plain = build(withSelector = false)
-        if (!packageName.isNullOrEmpty()) plain.setPackage(packageName)
-        if (startActivity(context, plain)) return true
-
-        // 兜底 2：系统选择器
-        return startChooser(context, plain)
+        // 兜底：系统选择器。用一份干净的 Intent（不带 setPackage），
+        // 否则 chooser 可能因为候选为空而什么都列不出来。
+        return startChooser(context, Intent(Intent.ACTION_SEND).apply {
+            type = "application/zip"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, body)
+            if (to.isNotEmpty()) putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            clipData = android.content.ClipData.newRawUri("attachment", uri)
+        })
     }
 
     /**
@@ -289,8 +324,9 @@ object MailHelper {
 
         fun build(withAttachment: Boolean): Intent = Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse("mailto:$to")
-            if (subject.isNotEmpty()) putExtra(Intent.EXTRA_SUBJECT, subject)
-            if (body.isNotEmpty()) putExtra(Intent.EXTRA_TEXT, body)
+            // SUBJECT / TEXT 始终放（正文为空就放空串），理由同上
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, body)
             // 双保险：部分 App 只认 EXTRA_EMAIL
             putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
             if (withAttachment) {
@@ -313,13 +349,14 @@ object MailHelper {
     }
 
     /**
-     * 启动 Activity；失败就返回 false，由调用方决定走哪条兜底。
+     * 启动 Activity；任何异常都吞掉并返回 false，由调用方决定兜底。
      */
     private fun startActivity(context: Context, intent: Intent): Boolean {
         return try {
             context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             true
         } catch (e: Exception) {
+            Log.w(TAG, "启动邮件 Activity 失败: ${intent.action}", e)
             false
         }
     }
@@ -334,6 +371,7 @@ object MailHelper {
             context.startActivity(chooser)
             true
         } catch (e: Exception) {
+            Log.w(TAG, "系统选择器启动失败", e)
             false
         }
     }

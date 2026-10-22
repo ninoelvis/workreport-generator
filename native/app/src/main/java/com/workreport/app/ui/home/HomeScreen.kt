@@ -780,15 +780,21 @@ private fun sendGeneratedMail(
 ) {
     // 邮件只填主题、收件人、附件，正文留空
     // 主题与压缩包名保持一致（旧版也是用 attach.getName() 当主题）
-    val ok = MailHelper.launchWithAttachment(
-        context = context,
-        packageName = packageName.ifEmpty { null },
-        file = result.file,
-        subject = result.fileName,
-        body = "",
-        recipient = recipient.trim(),
-        mode = mode,
-    )
+    // 双保险：MailHelper 内部已经兜过异常，这里再兜一层，绝不让 App 因为发邮件崩掉
+    val ok = runCatching {
+        MailHelper.launchWithAttachment(
+            context = context,
+            packageName = packageName.ifEmpty { null },
+            file = result.file,
+            subject = result.fileName,
+            body = "",
+            recipient = recipient.trim(),
+            mode = mode,
+        )
+    }.getOrElse { e ->
+        android.util.Log.e("MailHelper", "发送邮件失败", e)
+        false
+    }
     if (!ok) {
         android.widget.Toast.makeText(
             context,

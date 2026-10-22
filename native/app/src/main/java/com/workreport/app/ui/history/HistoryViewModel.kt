@@ -72,17 +72,23 @@ class HistoryViewModel(
         viewModelScope.launch {
             val file = File(entity.filePath)
             val mode = settings.mailSendMode.value
-            val ok = com.workreport.app.util.MailHelper.launchWithAttachment(
-                context = ServiceLocator.context,
-                packageName = settings.preferredMailPackage.value.ifEmpty { null },
-                file = file,
-                // 主题与压缩包名保持一致
-                subject = entity.fileName,
-                // 收件人取「我的」页配置好的地址
-                recipient = settings.mailRecipient.value,
-                // 发送方式与首页一致（附件优先 / 收件人优先）
-                mode = mode,
-            )
+            // 双保险：异常一律吞掉，不能让 App 因为发邮件崩掉
+            val ok = runCatching {
+                com.workreport.app.util.MailHelper.launchWithAttachment(
+                    context = ServiceLocator.context,
+                    packageName = settings.preferredMailPackage.value.ifEmpty { null },
+                    file = file,
+                    // 主题与压缩包名保持一致
+                    subject = entity.fileName,
+                    // 收件人取「我的」页配置好的地址
+                    recipient = settings.mailRecipient.value,
+                    // 发送方式与首页一致（自动 / 附件优先 / 收件人优先）
+                    mode = mode,
+                )
+            }.getOrElse { e ->
+                android.util.Log.e("MailHelper", "发送邮件失败", e)
+                false
+            }
             onDone(ok)
         }
     }
