@@ -621,17 +621,17 @@ var EMBEDDED = {
 
     /* --- 下载链接（全部指向固定名资源，版本升级后链接保持不变） --- */
     href('dlApk', a.apkUrl); txt('dlApk', '⬇️ 下载 APK 安装包');
-    href('dlApkVer', a.apkVersionedUrl);
-    href('dlMirror', a.apkMirrorUrl);
-    href('dlSource', a.sourceUrl);
-    href('dlRel', r.releases);
+    href('dlApkVer', a.apkVersionedUrl); txt('dlApkVer', '固定版本直链 v' + a.version);
+    href('dlMirror', a.apkMirrorUrl); txt('dlMirror', '国内镜像');
+    href('dlSource', a.sourceUrl); txt('dlSource', '📦 源码包 v' + a.version);
+    href('dlRel', r.releases); txt('dlRel', 'Releases');
     href('dlOnline', w.onlineUrl);
     href('dlSingle', w.singleFileUrl);
     href('dlOffline', w.offlineZipUrl);
-    href('dlRepoFile', w.repoFileUrl);
-    href('repoUrl', r.url);
-    href('repoNative', r.nativeDir);
-    href('repoReleases', r.releases);
+    href('dlRepoFile', w.repoFileUrl); txt('dlRepoFile', '仓库内文件');
+    href('repoUrl', r.url); txt('repoUrl', r.url);
+    href('repoNative', r.nativeDir); txt('repoNative', 'native/ 工程目录');
+    href('repoReleases', r.releases); txt('repoReleases', 'Releases');
     href('footRepo', r.url);
     href('dlChangelog', r.url ? r.url + '/blob/main/docs/更新记录.md' : '#');
     txt('certLine', a.certSha256 ? 'SHA-256 ' + a.certSha256 : '—');
