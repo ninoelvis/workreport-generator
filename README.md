@@ -1,29 +1,47 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v1.3.2-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v1.3.7-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
-**原生版 Android App（v1.3.0，推荐）**：
-[workreport-native-v1.3.2.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.2/workreport-native-v1.3.2.apk)
+**原生版 Android App（v1.3.7，推荐）**：
+[workreport-native-v1.3.7.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.7/workreport-native-v1.3.7.apk)
 （12 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版）
 
 源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
+[工程源码包 v1.3.7](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.7/workreport-native-source-v1.3.7.zip)
 
 **旧版 WebView App**：
 [workreport-generator-v1.2.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.2.1/workreport-generator-v1.2.1.apk)
 （460 KB · 仍可正常下载使用，功能与原生版一致）
 
-**网页版（免安装、离线可用）**：
-[`web/workreport-web.htm`](web/workreport-web.htm) —— 下载后用浏览器打开即可，无需联网。
+**网页版（免安装，浏览器直接用）** —— 与原生版功能对齐，输出格式完全一致：
+
+| 版本 | 入口 |
+|---|---|
+| 🌐 **在线版**（iPhone 推荐） | https://glzdekjuw015y.space.mcode.cn |
+| 📄 **单文件版** | [`web/workreport-web.htm`](web/workreport-web.htm) ｜ [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.7/workreport-web-v1.2.htm) |
+| 🗜️ **离线包**（HTML + 使用说明） | [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.7/workreport-web-offline-v1.2.zip) |
+
+网页版已适配 **iPhone Safari / Edge / 电脑端浏览器**：iPhone 上生成后点「分享 / 发送」
+可直接调起系统分享面板发到「邮件」App、存到「文件」或发微信；剪贴板、下载都有降级兜底。
+单文件完全自包含（零外链资源），下载后双击用浏览器打开即可，无需联网。
 
 > 全部历史版本见 [Releases](https://github.com/ninoelvis/workreport-generator/releases)。
 
 **更新记录**
-- `v1.3.2` 修复填了收件人邮箱但拉起邮箱 App 后收件人栏是空的（按邮箱 App 能力自动选择 ACTION_SENDTO / ACTION_SEND 通道）；邮件主题改为与压缩包名完全一致；历史报告二次发送也带上收件人
-- `v1.3.1` 两个内容输入框的清除按钮加上二次确认，防止误删；生成后的「是否拉起邮箱 App 发送」弹窗里新增收件人邮箱输入框，填完自动保存，下次生成直接带上（也可在「我的」页修改），确认后再选择邮箱 App
-- `v1.3.0` **原生重写正式版**：整个 App 从 WebView 套壳改写为 Kotlin + Jetpack Compose 纯原生实现，不再加载任何网页资源。导出的 Excel 与加密 ZIP 与旧版**逐字节一致**（10/10 部件实测比对通过）。新增首次启动功能介绍页、收件人邮箱配置、生成后自动拉起邮箱 App 发送（可记住选择）、两个内容框的独立清除按钮；首页预览表格按 Excel 真实列宽重新对齐
+
+*原生版 App*
+
+- `v1.3.7` 邮件发送改回旧版验证过的**标准 `ACTION_SEND` 通道**（`EXTRA_STREAM` + `clipData` + 主题，邮件正文留空），撤销 v1.3.3 起为阿里邮箱做的专用通道 —— 专用通道在部分机型上会「点发送即闪退」或邮箱 App 根本拉不起来。现在各家邮箱 App 统一走同一条通道，附件一定带得上；主题与压缩包名完全一致
+- `v1.3.6` 首页表单新增**草稿暂存**：填一半退出，下次打开自动恢复（生成成功后才清空）
+- `v1.3.5` 按需求**彻底移除「自动带入收件人」功能**，邮件只带**主题 + 附件**，收件人由你在邮箱 App 里自己填（各家邮箱的收件人字段实现差异太大，逐个适配不可行）。同时修复首页文件名显示不全，「关于」页加入免责声明
+- `v1.3.4` 修复 v1.3.3 引入的「点发送闪退 / 邮箱 App 拉不起来」
+- `v1.3.3` 新增阿里邮箱专用通道（已于 v1.3.7 撤销）
+- `v1.3.2` 修复填了收件人邮箱但拉起邮箱 App 后收件人栏是空的（收件人功能已于 v1.3.5 移除）
+- `v1.3.1` 两个内容输入框的清除按钮加上二次确认，防止误删；生成后弹窗新增收件人邮箱输入框（已于 v1.3.5 移除）
+- `v1.3.0` **原生重写正式版**：整个 App 从 WebView 套壳改写为 Kotlin + Jetpack Compose 纯原生实现，不再加载任何网页资源。导出的 Excel 与加密 ZIP 与旧版**逐字节一致**（10/10 部件实测比对通过）。新增首次启动功能介绍页、生成后自动拉起邮箱 App 发送、两个内容框的独立清除按钮；首页预览表格按 Excel 真实列宽重新对齐
 - `v1.2.1` App 内顶栏图标换成新图标
 - `v1.2.0` 全新应用图标（自适应图标）；状态栏与导航栏跟随主题
 - `v1.1.0` 新增敏感词管理：可增删改敏感词库，长期保存，保存后立即生效
@@ -31,10 +49,15 @@
 - `v1.0.1` 引导页新增源码仓库地址与一键复制
 - `v1.0.0` 正式版发布
 
+*网页版*
+
+- `网页版 v1.2` 引导页大幅精简（更新记录 11 条 → 2 条）；新增**原生版 App 下载入口**与**免责声明**；修复「分享 / 发送」「复制密码」按钮点了没反应（新增的全局函数漏了导出到 `window`）
+- `网页版 v1.1` 跨平台适配：**iPhone Safari / Edge / 电脑端浏览器**通用。新增 iOS 16px 输入框字号（避免聚焦时整页被放大）、`100dvh`、刘海屏安全区、触屏 hover 修正、弹窗可滚动；新增**系统分享**（iPhone 直接发到「邮件」App）；剪贴板与下载加降级兜底
+
 ---
 
-一个纯本地运行的 Android 小工具：填好本周工作内容，一键生成**加密 ZIP 周报**，
-自动把文件名复制到剪贴板，并自动拉起你设定的邮箱 App 把压缩包带进附件。
+一个纯本地运行的小工具：填好本周工作内容，一键生成**加密 ZIP 周报**，
+自动把文件名复制到剪贴板，并可把压缩包作为附件带进邮箱 App。
 
 **完全离线可用** —— 所有计算（Excel 生成 + AES-256 加密压缩）都在本机完成，数据不上传任何服务器。
 原生版为后续在线功能预留了 `INTERNET` 权限，但当前版本**不会发起任何网络请求**。
@@ -62,8 +85,8 @@
 
 ### 隐私
 
-- 不申请网络权限，不联网，不上传任何数据
-- 所有输入只存在手机本地（WebView localStorage）
+- 不申请相机等无关权限；`INTERNET` 仅作预留，当前版本**不发起任何网络请求**
+- 所有输入只存在本机（原生版用 Room 数据库，网页版用 localStorage）
 - 首次启动时姓名留空，填写后自动保存
 
 ---
@@ -81,7 +104,8 @@
 │   │   │   └── AttachProvider.java # 把加密 ZIP 以 content:// 共享给邮件 App
 │   │   └── res/                  # 图标与主题
 │   └── ...
-├── web/workreport-web.htm        # 网页版（离线，浏览器直接打开）
+├── web/workreport-web.htm        # 网页版单文件（离线，浏览器直接打开，自包含）
+├── web/                           # 网页版在 Releases 里另附离线包
 ├── keystore/                     # 签名证书（★ 不提交到 git，见该目录 README）
 ├── docs/更新记录.md
 ├── build.sh                      # 一键构建脚本
