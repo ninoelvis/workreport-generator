@@ -1,0 +1,39 @@
+# ===== 构建产物 =====
+build/
+dist/
+out/
+*.apk
+*.aab
+*.idsig
+
+# ===== 工具链（体积大，脚本会自动下载） =====
+tools/
+
+# ===== ★ 签名私钥：绝不提交 ★ =====
+# 私钥泄露 = 任何人都能伪造你的应用更新包。
+# 请把 keystore/release.keystore 放在本地，不要推送到仓库。
+*.keystore
+*.jks
+!keystore/README.md
+!keystore/.gitkeep
+
+# ===== Android Studio / IntelliJ =====
+.idea/
+*.iml
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ===== Gradle =====
+.gradle/
+gradle-app.setting
+
+# ===== 发布附件（走 GitHub Release，不进 git 历史） =====
+releases/*.apk
+releases/*.zip
+
+# ===== 系统 =====
+.DS_Store
+Thumbs.db
+*.log

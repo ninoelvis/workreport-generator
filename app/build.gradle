@@ -1,0 +1,37 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.workreport.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.workreport.app"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("../keystore/release.keystore")
+            storePassword System.getenv("KEYSTORE_PASS") ?: "workreport2026"
+            keyAlias System.getenv("KEY_ALIAS") ?: "workreport"
+            keyPassword System.getenv("KEY_PASS") ?: System.getenv("KEYSTORE_PASS") ?: "workreport2026"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
