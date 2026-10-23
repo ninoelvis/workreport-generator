@@ -6,6 +6,8 @@ import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.repository.ReportRepository
+import com.workreport.app.export.EncryptedZipReader
+import com.workreport.app.export.XlsxContentReader
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,8 +15,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
+
+/**
+ * 某一份历史报告的预览状态。
+ *
+ * loading 时正在解密压缩包；content 有值表示已拿到完整内容；
+ * error 非空表示压缩包读不出来（多半是被用户删掉了）。
+ */
+data class PreviewState(
+    val loading: Boolean = false,
+    val content: XlsxContentReader.Content? = null,
+    val error: String? = null,
+)
 
 data class HistoryUiState(
     val keyword: String = "",
@@ -41,6 +57,10 @@ class HistoryViewModel(
 
     val preferredMailPackage: StateFlow<String> = settings.preferredMailPackage
 
+    /** 每份报告的预览状态，按报告 id 存 */
+    private val _previews = MutableStateFlow<Map<Long, PreviewState>>(emptyMap())
+    val previews: StateFlow<Map<Long, PreviewState>> = _previews.asStateFlow()
+
     init {
         viewModelScope.launch {
             repository.observeAll().collect { all ->
@@ -52,6 +72,51 @@ class HistoryViewModel(
                 _uiState.value = _uiState.value.copy(reports = list)
             }
         }
+    }
+
+    /**
+     * 加载某份历史报告的完整内容。
+     *
+     * 新版生成的报告在数据库里存了完整内容，直接用；
+     * 旧版生成的没有存，就去把加密压缩包解开、读里面的 xlsx —— 密码就是本周周四，
+     * 数据库里本来就有，所以是「自动带入」的。
+     */
+    fun loadPreview(entity: ReportEntity) {
+        if (_previews.value[entity.id]?.content != null) return
+
+        if (entity.hasFullContent) {
+            setPreview(
+                entity.id,
+                PreviewState(
+                    content = XlsxContentReader.Content(
+                        title = entity.reportTitle,
+                        timeRange = entity.timeRange,
+                        doneWorks = entity.doneWorks,
+                        planWorks = entity.planWorks,
+                    ),
+                ),
+            )
+            return
+        }
+
+        setPreview(entity.id, PreviewState(loading = true))
+        viewModelScope.launch {
+            val content = withContext(Dispatchers.IO) {
+                EncryptedZipReader.readContent(File(entity.filePath), entity.password)
+            }
+            setPreview(
+                entity.id,
+                if (content != null) {
+                    PreviewState(content = content)
+                } else {
+                    PreviewState(error = "读不出压缩包了 —— 可能文件已被删除或移动。")
+                },
+            )
+        }
+    }
+
+    private fun setPreview(id: Long, state: PreviewState) {
+        _previews.value = _previews.value + (id to state)
     }
 
     fun onKeywordChange(value: String) {

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +62,7 @@ fun HistoryScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val preferredMail by viewModel.preferredMailPackage.collectAsStateWithLifecycle()
+    val previews by viewModel.previews.collectAsStateWithLifecycle()
     var mailPickerFor by remember { mutableStateOf<ReportEntity?>(null) }
     var deleteTarget by remember { mutableStateOf<ReportEntity?>(null) }
     var toast by remember { mutableStateOf<String?>(null) }
@@ -133,8 +135,11 @@ fun HistoryScreen(
                     ReportCard(
                         report = report,
                         previewExpanded = previewId == report.id,
+                        previewState = previews[report.id] ?: PreviewState(),
                         onTogglePreview = {
-                            previewId = if (previewId == report.id) null else report.id
+                            val expanding = previewId != report.id
+                            previewId = if (expanding) report.id else null
+                            if (expanding) viewModel.loadPreview(report)
                         },
                         onDownload = {
                             viewModel.downloadAgain(report) { ok ->
@@ -211,6 +216,7 @@ fun HistoryScreen(
 private fun ReportCard(
     report: ReportEntity,
     previewExpanded: Boolean,
+    previewState: PreviewState,
     onTogglePreview: () -> Unit,
     onDownload: () -> Unit,
     onMail: () -> Unit,
@@ -294,36 +300,77 @@ private fun ReportCard(
             // 展开：直接看到压缩包里那份 Excel 的样子
             if (previewExpanded) {
                 Spacer(Modifier.height(12.dp))
-                if (report.hasFullContent) {
-                    PreviewTable(
-                        title = report.reportTitle.ifBlank { report.displayName },
-                        timeRange = report.timeRange,
-                        doneWorks = report.doneWorks,
-                        planWorks = report.planWorks,
-                    )
-                } else {
-                    // 旧版本生成的记录没有存完整内容，只能提示一下
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(12.dp),
-                    ) {
+                when {
+                    previewState.loading -> {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                "正在解压压缩包、读取里面的 Excel…",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    previewState.content != null -> {
+                        val content = previewState.content
+                        PreviewTable(
+                            title = content.title.ifBlank { report.displayName },
+                            timeRange = content.timeRange,
+                            doneWorks = content.doneWorks,
+                            planWorks = content.planWorks,
+                        )
+                        Spacer(Modifier.height(6.dp))
                         Text(
-                            "这份报告由旧版本创建，只保留了内容摘要，没法还原完整预览。",
-                            fontSize = 11.5.sp,
-                            lineHeight = 17.sp,
+                            "解压密码：${report.password}（压缩包里的 Excel 就是上面这份）",
+                            fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (report.contentPreview.isNotBlank()) {
-                            Spacer(Modifier.height(6.dp))
+                    }
+
+                    else -> {
+                        // 解不开时的兜底：至少把摘要显示出来
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .padding(12.dp),
+                        ) {
                             Text(
-                                report.contentPreview,
+                                previewState.error ?: "这份报告没法预览完整内容。",
                                 fontSize = 11.5.sp,
                                 lineHeight = 17.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
+                            val fallback = report.contentPreview.ifBlank { report.doneWorks }
+                            if (fallback.isNotBlank()) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    "以下为当时保存的内容摘要：",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Spacer(Modifier.height(3.dp))
+                                Text(
+                                    fallback,
+                                    fontSize = 11.5.sp,
+                                    lineHeight = 17.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                         }
                     }
                 }

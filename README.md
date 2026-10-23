@@ -1,16 +1,16 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v1.3.9-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v1.3.10-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
-**原生版 Android App（v1.3.9，推荐）**：
-[workreport-native-v1.3.9.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.9/workreport-native-v1.3.9.apk)
+**原生版 Android App（v1.3.10，推荐）**：
+[workreport-native-v1.3.10.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.10/workreport-native-v1.3.10.apk)
 （12 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版）
 
 源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
-[工程源码包 v1.3.9](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.9/workreport-native-source-v1.3.9.zip)
+[工程源码包 v1.3.10](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.10/workreport-native-source-v1.3.10.zip)
 
 **旧版 WebView App**：
 [workreport-generator-v1.2.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.2.1/workreport-generator-v1.2.1.apk)
@@ -21,8 +21,8 @@
 | 版本 | 入口 |
 |---|---|
 | 🌐 **在线版**（iPhone 推荐） | https://glzdekjuw015y.space.mcode.cn |
-| 📄 **单文件版** | [`web/workreport-web.htm`](web/workreport-web.htm) ｜ [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.9/workreport-web-v1.2.htm) |
-| 🗜️ **离线包**（HTML + 使用说明） | [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.9/workreport-web-offline-v1.2.zip) |
+| 📄 **单文件版** | [`web/workreport-web.htm`](web/workreport-web.htm) ｜ [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.10/workreport-web-v1.2.htm) |
+| 🗜️ **离线包**（HTML + 使用说明） | [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.10/workreport-web-offline-v1.2.zip) |
 
 网页版已适配 **iPhone Safari / Edge / 电脑端浏览器**：iPhone 上生成后点「分享 / 发送」
 可直接调起系统分享面板发到「邮件」App、存到「文件」或发微信；剪贴板、下载都有降级兜底。
@@ -43,6 +43,7 @@
 
 *原生版 App*
 
+- `v1.3.10` 历史报告预览改成**真的把压缩包解开**（自动带上解压密码），**以前生成的报告也能看全表格**，不再只显示摘要
 - `v1.3.9` 历史报告新增**「查看内容」**：点开就能看到压缩包里那份 Excel 长什么样（表格、合并单元格、列宽跟导出完全一致），不用手动解压；卡片上也会直接显示「本周完成」摘要
 - `v1.3.8` 新增**快捷记录模板**：常写的重复内容存成模板，首页「工作记录」和「下周工作计划」两处各配一套、点一下就插入；「我的」页改成设置首页，每个配置项点进去单独编辑；引导页改为整页全屏（原先是弹窗，顶部会露出一条系统灰底），各分区可展开收起
 - `v1.3.7` 邮件发送改回旧版验证过的**标准 `ACTION_SEND` 通道**（`EXTRA_STREAM` + `clipData` + 主题，邮件正文留空），撤销 v1.3.3 起为阿里邮箱做的专用通道 —— 专用通道在部分机型上会「点发送即闪退」或邮箱 App 根本拉不起来。现在各家邮箱 App 统一走同一条通道，附件一定带得上；主题与压缩包名完全一致

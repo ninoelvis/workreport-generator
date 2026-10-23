@@ -2,7 +2,7 @@
 
 完全重写的 **纯原生 Android** 版本：Kotlin + Jetpack Compose，**不包含任何 WebView、HTML、JS 网页文件**。
 
-> 当前版本 **v1.3.9**（正式版）。
+> 当前版本 **v1.3.10**（正式版）。
 > 包名与签名与旧版一致（`com.workreport.app`），因此**可以直接覆盖安装**，本地数据不会丢。
 
 ---
