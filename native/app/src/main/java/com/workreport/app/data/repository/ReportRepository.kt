@@ -66,6 +66,10 @@ class ReportRepository(
                 month = result.month,
                 weekNum = result.weekNum,
                 contentPreview = doneWorks.take(120),
+                reportTitle = title,
+                timeRange = timeRangeText,
+                doneWorks = doneWorks,
+                planWorks = planWorks,
             ),
         )
         result

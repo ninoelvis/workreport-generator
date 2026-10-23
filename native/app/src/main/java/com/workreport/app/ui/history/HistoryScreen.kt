@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.ui.common.EmptyState
+import com.workreport.app.ui.common.PreviewTable
 import com.workreport.app.util.MailHelper
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -61,6 +64,8 @@ fun HistoryScreen(
     var mailPickerFor by remember { mutableStateOf<ReportEntity?>(null) }
     var deleteTarget by remember { mutableStateOf<ReportEntity?>(null) }
     var toast by remember { mutableStateOf<String?>(null) }
+    /** 当前展开预览的历史报告（同一时刻只展开一张） */
+    var previewId by remember { mutableStateOf<Long?>(null) }
 
     Column(
         modifier = Modifier
@@ -127,6 +132,10 @@ fun HistoryScreen(
                 items(state.reports, key = { it.id }) { report ->
                     ReportCard(
                         report = report,
+                        previewExpanded = previewId == report.id,
+                        onTogglePreview = {
+                            previewId = if (previewId == report.id) null else report.id
+                        },
                         onDownload = {
                             viewModel.downloadAgain(report) { ok ->
                                 toast = if (ok) "已再次保存到「下载」目录" else "保存失败，请检查存储权限"
@@ -201,6 +210,8 @@ fun HistoryScreen(
 @Composable
 private fun ReportCard(
     report: ReportEntity,
+    previewExpanded: Boolean,
+    onTogglePreview: () -> Unit,
     onDownload: () -> Unit,
     onMail: () -> Unit,
     onDelete: () -> Unit,
@@ -229,7 +240,39 @@ private fun ReportCard(
                 MetaChip("📦", formatSize(report.sizeBytes))
             }
             Spacer(Modifier.height(10.dp))
+
+            // 内容摘要：直接在卡片上就能瞄一眼，不用点进去
+            val summary = report.doneWorks.ifBlank { report.contentPreview }
+            if (summary.isNotBlank()) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Text(
+                        "本周完成",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        summary.replace("\n", " · "),
+                        fontSize = 11.5.sp,
+                        lineHeight = 17.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+            }
+
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SmallAction(
+                    icon = if (previewExpanded) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    label = if (previewExpanded) "收起内容" else "查看内容",
+                    modifier = Modifier.weight(1f),
+                    onClick = onTogglePreview,
+                )
                 SmallAction(Icons.Filled.Download, "再次下载", Modifier.weight(1f), onDownload)
                 SmallAction(Icons.Filled.Mail, "发送邮件", Modifier.weight(1f), onMail)
                 IconButton(
@@ -245,6 +288,44 @@ private fun ReportCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
                     )
+                }
+            }
+
+            // 展开：直接看到压缩包里那份 Excel 的样子
+            if (previewExpanded) {
+                Spacer(Modifier.height(12.dp))
+                if (report.hasFullContent) {
+                    PreviewTable(
+                        title = report.reportTitle.ifBlank { report.displayName },
+                        timeRange = report.timeRange,
+                        doneWorks = report.doneWorks,
+                        planWorks = report.planWorks,
+                    )
+                } else {
+                    // 旧版本生成的记录没有存完整内容，只能提示一下
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(12.dp),
+                    ) {
+                        Text(
+                            "这份报告由旧版本创建，只保留了内容摘要，没法还原完整预览。",
+                            fontSize = 11.5.sp,
+                            lineHeight = 17.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        if (report.contentPreview.isNotBlank()) {
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                report.contentPreview,
+                                fontSize = 11.5.sp,
+                                lineHeight = 17.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
                 }
             }
         }

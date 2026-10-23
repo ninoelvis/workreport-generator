@@ -48,7 +48,9 @@ object ServiceLocator {
                 requireContext(),
                 ReportDatabase::class.java,
                 ReportDatabase.NAME,
-            ).build().also { dbInstance = it }
+            )
+                .addMigrations(ReportDatabase.MIGRATION_1_2)
+                .build().also { dbInstance = it }
         }
 
     val settings: SettingsStore
