@@ -3,6 +3,7 @@ package com.workreport.app.ui.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.workreport.app.ServiceLocator
+import com.workreport.app.data.local.ReportDraft
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.repository.ReportRepository
@@ -117,6 +118,48 @@ class HistoryViewModel(
 
     private fun setPreview(id: Long, state: PreviewState) {
         _previews.value = _previews.value + (id to state)
+    }
+
+    /**
+     * 把一份历史报告的内容载回首页，供二次编辑。
+     *
+     * 新版生成的记录在数据库里存了完整内容，直接用；
+     * 旧版生成的没有存，就去把加密压缩包解开读出来（密码本来就有）。
+     *
+     * 载回后写进草稿并通知首页重新读取。
+     */
+    fun loadIntoHome(entity: ReportEntity, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val content = if (entity.hasFullContent) {
+                XlsxContentReader.Content(
+                    title = entity.reportTitle,
+                    timeRange = entity.timeRange,
+                    doneWorks = entity.doneWorks,
+                    planWorks = entity.planWorks,
+                )
+            } else {
+                withContext(Dispatchers.IO) {
+                    EncryptedZipReader.readContent(File(entity.filePath), entity.password)
+                }
+            }
+
+            if (content == null) {
+                onDone(false)
+                return@launch
+            }
+
+            settings.saveDraft(
+                ReportDraft.fromContent(
+                    title = content.title,
+                    timeRange = content.timeRange,
+                    doneWorks = content.doneWorks,
+                    planWorks = content.planWorks,
+                ),
+            )
+            // 首页可能还活着（切 Tab 不一定重建 ViewModel），通知它重新读草稿
+            ServiceLocator.notifyDraftReloaded()
+            onDone(true)
+        }
     }
 
     fun onKeywordChange(value: String) {

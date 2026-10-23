@@ -26,4 +26,30 @@ data class ReportDraft(
     val records: List<String> = emptyList(),
     /** 「工作记录」输入框里还没提交的文字 */
     val recordInput: String = "",
-)
+) {
+    companion object {
+        /**
+         * 用一份历史报告的内容生成草稿。
+         *
+         * 「本周已完成工作梳理」是多行文本，回填到首页时拆回「工作记录」列表 ——
+         * 用户看到的就是熟悉的逐条记录，而不是一整块文本。
+         */
+        fun fromContent(
+            title: String,
+            timeRange: String,
+            doneWorks: String,
+            planWorks: String,
+        ): ReportDraft = ReportDraft(
+            timeRange = timeRange,
+            title = title,
+            // 有标题就当成用户手动设过的，别被自动标题覆盖
+            titleManual = title.isNotEmpty(),
+            doneWorks = doneWorks,
+            planWorks = planWorks,
+            records = doneWorks.split("\n")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() },
+            recordInput = "",
+        )
+    }
+}

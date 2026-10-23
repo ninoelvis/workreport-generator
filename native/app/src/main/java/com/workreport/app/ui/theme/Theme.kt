@@ -7,7 +7,10 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -67,6 +70,42 @@ private val AppTypography = Typography(
 )
 
 /**
+ * Excel 预览表的专用配色。
+ *
+ * 预览表要还原 Excel 的观感（表头是浅蓝底），但硬编码浅色在深色模式下会
+ * 出现「深底深字」看不清的情况，所以按深浅两套分别给色。
+ */
+data class PreviewColors(
+    /** 表头行底色 */
+    val headerBg: Color,
+    /** 表头行文字色 */
+    val headerInk: Color,
+    /** 标题行（A1 合并格）文字色 */
+    val titleInk: Color,
+    /** 表格边框色：深色模式下默认的 outline 太淡，表格结构会糊掉 */
+    val border: Color,
+)
+
+private val LightPreviewColors = PreviewColors(
+    headerBg = Color(0xFFB5C6EA),
+    headerInk = Color(0xFF1F2329),
+    titleInk = TextPrimaryLight,
+    border = BorderLight,
+)
+
+private val DarkPreviewColors = PreviewColors(
+    // 深色模式用沉下去的蓝灰做表头，避免一整块亮色刺眼
+    headerBg = Color(0xFF39456B),
+    headerInk = Color(0xFFE6EAF6),
+    titleInk = TextPrimaryDark,
+    // 默认的 BorderDark（3E3E3E）在卡片底色上看不出表格轮廓，这里提亮到能看出轮廓
+    border = Color(0xFF757575),
+)
+
+/** 供预览表取用的配色 */
+val LocalPreviewColors = staticCompositionLocalOf { LightPreviewColors }
+
+/**
  * 应用主题。
  *
  * @param themeMode 手动指定浅色/深色，或跟随系统
@@ -98,9 +137,13 @@ fun WorkReportTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colors,
-        typography = AppTypography,
-        content = content,
-    )
+    CompositionLocalProvider(
+        LocalPreviewColors provides if (darkTheme) DarkPreviewColors else LightPreviewColors,
+    ) {
+        MaterialTheme(
+            colorScheme = colors,
+            typography = AppTypography,
+            content = content,
+        )
+    }
 }

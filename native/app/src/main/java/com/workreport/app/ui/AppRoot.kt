@@ -122,7 +122,17 @@ fun AppRoot() {
                 )
             }
             composable(TopLevelDestination.HISTORY.route) {
-                HistoryScreen()
+                HistoryScreen(
+                    onGoHome = {
+                        navController.navigate(TopLevelDestination.HOME.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                )
             }
             composable(TopLevelDestination.PROFILE.route) {
                 ProfileScreen(

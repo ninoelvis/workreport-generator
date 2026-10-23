@@ -73,21 +73,7 @@ class HomeViewModel(
 
     init {
         // 恢复上次没填完的草稿 —— 用户中途退出 App 不该丢内容
-        val draft = settings.draft.value
-        val currentRange = DateUtils.currentWeekRangeText()
-        _records.value = draft.records
-        titleManual = draft.titleManual
-        _state.value = _state.value.copy(
-            userName = settings.userName.value,
-            timeRange = draft.timeRange.ifEmpty { currentRange },
-            // 标题没被手动改过的话，用自动标题，不恢复草稿里的旧标题
-            title = if (draft.titleManual) draft.title else "",
-            titleManual = draft.titleManual,
-            doneWorks = draft.doneWorks,
-            planWorks = draft.planWorks,
-            records = draft.records,
-            recordInput = draft.recordInput,
-        )
+        restoreDraft()
         viewModelScope.launch {
             settings.userName.collect { name ->
                 _state.value = _state.value.copy(userName = name)
@@ -107,6 +93,37 @@ class HomeViewModel(
                 MailHelper.resolveMailApps(ServiceLocator.context)
             }
         }
+        // 历史报告「编辑并回填」后，重新读一次草稿
+        viewModelScope.launch {
+            ServiceLocator.draftReload.collect {
+                restoreDraft()
+            }
+        }
+    }
+
+    /**
+     * 从草稿恢复首页内容。
+     *
+     * 首次打开时恢复上次没填完的内容；
+     * 历史报告「编辑并回填」后也会再调一次。
+     */
+    private fun restoreDraft() {
+        val draft = settings.draft.value
+        val currentRange = DateUtils.currentWeekRangeText()
+        _records.value = draft.records
+        titleManual = draft.titleManual
+        _state.value = _state.value.copy(
+            userName = settings.userName.value,
+            timeRange = draft.timeRange.ifEmpty { currentRange },
+            // 标题没被手动改过的话，用自动标题，不恢复草稿里的旧标题
+            title = if (draft.titleManual) draft.title else "",
+            titleManual = draft.titleManual,
+            doneWorks = draft.doneWorks,
+            planWorks = draft.planWorks,
+            records = draft.records,
+            recordInput = draft.recordInput,
+        )
+        recompute(settings.sensitiveWords.value)
     }
 
     // ---------------- 输入 ----------------
@@ -243,9 +260,18 @@ class HomeViewModel(
                     sensitiveWords = settings.sensitiveWords.value,
                 )
             }.onSuccess { result ->
-                _state.value = _state.value.copy(generating = false)
-                // 周报已经产出，草稿不用再暂存了 —— 界面上的内容先留着给用户核对，
-                // 但下次重新打开是干净的一份。
+                // 周报已经产出：把「工作记录」和「周报内容」清空，
+                // 下次打开就是干净的一份，不用再手动删。
+                // 姓名、工作时间、标题属于「设置」不是「内容」，保留着方便连续写。
+                _records.value = emptyList()
+                _state.value = _state.value.copy(
+                    generating = false,
+                    doneWorks = "",
+                    planWorks = "",
+                    records = emptyList(),
+                    recordInput = "",
+                )
+                recompute(settings.sensitiveWords.value)
                 settings.clearDraft()
                 onResult(
                     GenerateOutcome.Success(

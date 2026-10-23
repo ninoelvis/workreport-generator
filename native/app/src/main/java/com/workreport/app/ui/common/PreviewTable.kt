@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.workreport.app.ui.theme.LocalPreviewColors
 
 /**
  * Excel 效果预览表。
@@ -68,9 +69,12 @@ fun PreviewTable(
     planWorks: String,
     modifier: Modifier = Modifier,
 ) {
-    val border = MaterialTheme.colorScheme.outline
-    val headerBg = Color(0xFFB5C6EA)
-    val ink = Color(0xFF1F2329)
+    // 表头、标题与边框的颜色跟随深浅色主题，
+    // 避免深色模式下出现「深底深字」以及表格轮廓糊掉
+    val previewColors = LocalPreviewColors.current
+    val border = previewColors.border
+    val headerBg = previewColors.headerBg
+    val headerInk = previewColors.headerInk
 
     Column(
         modifier = modifier
@@ -90,7 +94,7 @@ fun PreviewTable(
                 title.ifEmpty { "-" },
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = ink,
+                color = previewColors.titleInk,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -118,7 +122,7 @@ fun PreviewTable(
                         fontSize = 8.5.sp,
                         lineHeight = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = ink,
+                        color = headerInk,
                         textAlign = TextAlign.Center,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,

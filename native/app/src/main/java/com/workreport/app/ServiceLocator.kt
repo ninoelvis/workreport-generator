@@ -6,6 +6,9 @@ import com.workreport.app.data.local.ReportDatabase
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.repository.ReportRepository
 import com.workreport.app.data.remote.ApiClient
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 /**
  * 轻量依赖容器。
@@ -34,6 +37,21 @@ object ServiceLocator {
 
     fun init(context: Context) {
         appContext = context.applicationContext
+    }
+
+    /**
+     * 「首页需要重新读取草稿」的信号。
+     *
+     * 历史报告的「编辑并回填」会把内容写回草稿，此时首页可能还活着（切 Tab 不一定
+     * 重建 ViewModel），所以要通知它重新读一次。replay = 1 保证信号不丢。
+     */
+    private val _draftReload = MutableSharedFlow<Unit>(replay = 1, extraBufferCapacity = 1)
+
+    val draftReload: SharedFlow<Unit> = _draftReload.asSharedFlow()
+
+    /** 通知首页：草稿变了，重新读一次 */
+    fun notifyDraftReloaded() {
+        _draftReload.tryEmit(Unit)
     }
 
     /** 应用上下文（只读，供需要 Context 的工具类使用） */

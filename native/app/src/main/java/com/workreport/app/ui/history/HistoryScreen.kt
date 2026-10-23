@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
@@ -31,6 +32,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +60,9 @@ import java.util.Locale
 
 @Composable
 fun HistoryScreen(
+    /** 载回首页后切回「首页」Tab */
+    onGoHome: () -> Unit = {},
+
     viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.factory()),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -68,6 +73,10 @@ fun HistoryScreen(
     var toast by remember { mutableStateOf<String?>(null) }
     /** 当前展开预览的历史报告（同一时刻只展开一张） */
     var previewId by remember { mutableStateOf<Long?>(null) }
+    /** 待载入首页的历史报告（等用户二次确认） */
+    var loadTarget by remember { mutableStateOf<ReportEntity?>(null) }
+    /** 载入过程中的报告（用于置灰按钮、防止重复点） */
+    var loadingId by remember { mutableStateOf<Long?>(null) }
 
     Column(
         modifier = Modifier
@@ -141,6 +150,9 @@ fun HistoryScreen(
                             previewId = if (expanding) report.id else null
                             if (expanding) viewModel.loadPreview(report)
                         },
+                        canLoadIntoHome = previews[report.id]?.content != null,
+                        loadingIntoHome = loadingId == report.id,
+                        onLoadIntoHome = { loadTarget = report },
                         onDownload = {
                             viewModel.downloadAgain(report) { ok ->
                                 toast = if (ok) "已再次保存到「下载」目录" else "保存失败，请检查存储权限"
@@ -182,6 +194,36 @@ fun HistoryScreen(
         )
     }
 
+    // 载入首页的二次确认
+    loadTarget?.let { report ->
+        AlertDialog(
+            onDismissRequest = { loadTarget = null },
+            title = { Text("把这份报告载入首页编辑？") },
+            text = {
+                Text(
+                    "首页现在填写的内容会被这份报告替换。\n\n" +
+                        "载入后可以随便改，改完重新生成会新增一条记录，原来的记录不受影响。",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    loadTarget = null
+                    loadingId = report.id
+                    viewModel.loadIntoHome(report) { ok ->
+                        loadingId = null
+                        if (ok) {
+                            toast = "已载入，去首页改完重新生成就行"
+                            onGoHome()
+                        } else {
+                            toast = "读不出这份报告的内容，载入失败"
+                        }
+                    }
+                }) { Text("载入并去首页") }
+            },
+            dismissButton = { TextButton(onClick = { loadTarget = null }) { Text("再想想") } },
+        )
+    }
+
     // 删除确认
     deleteTarget?.let { report ->
         AlertDialog(
@@ -218,6 +260,10 @@ private fun ReportCard(
     previewExpanded: Boolean,
     previewState: PreviewState,
     onTogglePreview: () -> Unit,
+    /** 内容已读到，可以载入首页 */
+    canLoadIntoHome: Boolean,
+    loadingIntoHome: Boolean,
+    onLoadIntoHome: () -> Unit,
     onDownload: () -> Unit,
     onMail: () -> Unit,
     onDelete: () -> Unit,
@@ -338,6 +384,31 @@ private fun ReportCard(
                             fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        Spacer(Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = onLoadIntoHome,
+                            modifier = Modifier.fillMaxWidth().height(40.dp),
+                            enabled = canLoadIntoHome && !loadingIntoHome,
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            if (loadingIntoHome) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text("正在载入…", fontSize = 12.5.sp)
+                            } else {
+                                Icon(
+                                    Icons.Filled.Edit,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(15.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("载入首页继续编辑", fontSize = 12.5.sp)
+                            }
+                        }
                     }
 
                     else -> {
