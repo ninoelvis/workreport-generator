@@ -49,7 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,12 +56,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.workreport.app.R
 import com.workreport.app.ServiceLocator
 import com.workreport.app.ui.common.FieldLabel
 import com.workreport.app.ui.common.InfoStatRow
 import com.workreport.app.ui.common.LabeledField
+import com.workreport.app.ui.common.AppTopBar
 import com.workreport.app.ui.common.SectionCard
+import com.workreport.app.ui.common.ShortcutChips
 import com.workreport.app.util.MailApp
 import com.workreport.app.util.MailHelper
 import android.widget.Toast
@@ -70,9 +70,13 @@ import android.widget.Toast
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory()),
+    /** 跳到「我的 → 快捷记录模板」配置 */
+    onOpenShortcuts: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val mailApps by viewModel.mailApps.collectAsStateWithLifecycle()
+    val workShortcuts by viewModel.workShortcuts.collectAsStateWithLifecycle()
+    val planShortcuts by viewModel.planShortcuts.collectAsStateWithLifecycle()
     var errorDialog by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
@@ -111,7 +115,12 @@ fun HomeScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { AppHeader() }
+        item {
+            AppTopBar(
+                title = "工作报告生成器",
+                subtitle = "自动生成加密周报 ZIP · 一键复制文件名 · 自动发送邮件",
+            )
+        }
 
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -191,6 +200,13 @@ fun HomeScreen(
                         }
                     }
 
+                    ShortcutChips(
+                        templates = workShortcuts,
+                        onPick = { viewModel.insertWorkShortcut(it.text) },
+                        onManage = onOpenShortcuts,
+                        hint = "点一下就把这条内容加进下面的记录列表。",
+                    )
+
                     if (state.records.isEmpty()) {
                         Text(
                             "还没有记录",
@@ -260,6 +276,13 @@ fun HomeScreen(
                                 }
                             }
                         },
+                    )
+
+                    ShortcutChips(
+                        templates = planShortcuts,
+                        onPick = { viewModel.appendPlanShortcut(it.text) },
+                        onManage = onOpenShortcuts,
+                        hint = "点一下就在上面追加一行，不会覆盖已写的内容。",
                     )
                 }
             }
@@ -491,47 +514,6 @@ fun HomeScreen(
             text = { Text(message) },
             confirmButton = { TextButton(onClick = { errorDialog = null }) { Text("知道了") } },
         )
-    }
-}
-
-/** 顶部品牌栏 */
-@Composable
-private fun AppHeader() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(top = 8.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(11.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_app_logo),
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-            )
-        }
-        Spacer(Modifier.width(10.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                "工作报告生成器",
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Text(
-                "自动生成加密周报 ZIP · 一键复制文件名 · 自动发送邮件",
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
     }
 }
 

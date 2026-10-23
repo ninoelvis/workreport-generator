@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.ReportDraft
 import com.workreport.app.data.local.SettingsStore
+import com.workreport.app.domain.model.ShortcutSlot
+import com.workreport.app.domain.model.ShortcutTemplate
 import com.workreport.app.data.repository.ReportRepository
 import com.workreport.app.domain.model.SensitiveWord
 import com.workreport.app.util.DateUtils
@@ -56,6 +58,12 @@ class HomeViewModel(
     private val _records = MutableStateFlow<List<String>>(emptyList())
 
     /** 本机可用的邮件应用（首次生成时让用户选，之后记住） */
+    /** 「工作记录」区的快捷模板 */
+    val workShortcuts: StateFlow<List<ShortcutTemplate>> = settings.shortcuts(ShortcutSlot.WORK)
+
+    /** 「下周工作计划」区的快捷模板 */
+    val planShortcuts: StateFlow<List<ShortcutTemplate>> = settings.shortcuts(ShortcutSlot.PLAN)
+
     private val _mailApps = MutableStateFlow<List<MailApp>>(emptyList())
     val mailApps: StateFlow<List<MailApp>> = _mailApps.asStateFlow()
 
@@ -171,6 +179,30 @@ class HomeViewModel(
         if (index !in _records.value.indices) return
         _records.value = _records.value.toMutableList().also { it.removeAt(index) }
         _state.value = _state.value.copy(records = _records.value)
+        persistDraft()
+    }
+
+    /**
+     * 快捷插入一条「工作记录」：直接进列表，不用再点「添加」。
+     */
+    fun insertWorkShortcut(text: String) {
+        val body = text.trim()
+        if (body.isEmpty()) return
+        _records.value = _records.value + body
+        _state.value = _state.value.copy(records = _records.value)
+        persistDraft()
+    }
+
+    /**
+     * 快捷插入「下周工作计划」：在已有内容后面追加一行，不覆盖原内容。
+     */
+    fun appendPlanShortcut(text: String) {
+        val body = text.trim()
+        if (body.isEmpty()) return
+        val current = _state.value.planWorks
+        val next = if (current.isBlank()) body else current.trimEnd() + "\n" + body
+        _state.value = _state.value.copy(planWorks = next)
+        recompute(settings.sensitiveWords.value)
         persistDraft()
     }
 

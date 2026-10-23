@@ -6,6 +6,8 @@ import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.local.ThemeMode
 import com.workreport.app.domain.model.SensitiveWord
+import com.workreport.app.domain.model.ShortcutSlot
+import com.workreport.app.domain.model.ShortcutTemplate
 import com.workreport.app.util.MailApp
 import com.workreport.app.util.MailHelper
 import com.workreport.app.util.PinyinTable
@@ -28,6 +30,10 @@ data class ProfileUiState(
     val mailApps: List<MailApp> = emptyList(),
     /** 是否每次生成后都直接拉起邮箱 App 发送（不再询问） */
     val autoSendMail: Boolean = false,
+    /** 「本周工作记录」快捷模板 */
+    val workShortcuts: List<ShortcutTemplate> = emptyList(),
+    /** 「下周工作计划」快捷模板 */
+    val planShortcuts: List<ShortcutTemplate> = emptyList(),
     val message: String? = null,
 )
 
@@ -50,6 +56,16 @@ class ProfileViewModel(
         }
         viewModelScope.launch {
             settings.autoSendMail.collect { _state.value = _state.value.copy(autoSendMail = it) }
+        }
+        viewModelScope.launch {
+            settings.shortcuts(ShortcutSlot.WORK).collect {
+                _state.value = _state.value.copy(workShortcuts = it)
+            }
+        }
+        viewModelScope.launch {
+            settings.shortcuts(ShortcutSlot.PLAN).collect {
+                _state.value = _state.value.copy(planShortcuts = it)
+            }
         }
         viewModelScope.launch {
             settings.preferredMailPackage.collect { pkg ->
@@ -95,6 +111,36 @@ class ProfileViewModel(
 
     fun setThemeMode(mode: ThemeMode) {
         settings.setThemeMode(mode)
+    }
+
+    // ---------------- 快捷记录模板 ----------------
+
+    /** 新增一条快捷模板 */
+    fun addShortcut(slot: ShortcutSlot, text: String) {
+        val body = text.trim()
+        if (body.isEmpty()) {
+            showMessage("模板内容不能为空")
+            return
+        }
+        settings.addShortcut(slot, body)
+        showMessage("已添加模板")
+    }
+
+    /** 修改快捷模板 */
+    fun updateShortcut(slot: ShortcutSlot, id: String, text: String) {
+        val body = text.trim()
+        if (body.isEmpty()) {
+            showMessage("模板内容不能为空")
+            return
+        }
+        settings.updateShortcut(slot, id, body)
+        showMessage("已保存")
+    }
+
+    /** 删除快捷模板 */
+    fun removeShortcut(slot: ShortcutSlot, id: String) {
+        settings.removeShortcut(slot, id)
+        showMessage("已删除模板")
     }
 
     // ---------------- 敏感词库 ----------------

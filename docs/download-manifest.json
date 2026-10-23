@@ -3,16 +3,16 @@
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "1.3.7",
-    "versionCode": 16,
-    "releasedAt": "2026-10-22",
-    "sizeBytes": 11912569,
-    "sizeText": "11.9 MB",
-    "sha256": "3dae5eb40b3f1069d243cf17e50676030074d3c9cf248e0dd40e6e8289c6c58c",
+    "version": "1.3.8",
+    "versionCode": 17,
+    "releasedAt": "2026-10-23",
+    "sizeBytes": 11945337,
+    "sizeText": "11.4 MB",
+    "sha256": "5ddf0d124366d3c6c6eb3745eb3bb362fe6e2094220fa55a76073dc99b86e8eb",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.7/workreport-native-v1.3.7.apk",
-    "apkMirrorUrl": "https://a8k5gsxka50ew.space.mcode.cn/workreport-native-v1.3.7.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.7/workreport-native-source-v1.3.7.zip",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.8/workreport-native-v1.3.8.apk",
+    "apkMirrorUrl": "https://a8k5gsxka50ew.space.mcode.cn/workreport-native-v1.3.8.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.8/workreport-native-source-v1.3.8.zip",
     "minAndroid": "Android 8.0 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf"
@@ -20,8 +20,8 @@
   "web": {
     "version": "v1.2",
     "onlineUrl": "https://glzdekjuw015y.space.mcode.cn",
-    "singleFileUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.7/workreport-web-v1.2.htm",
-    "offlineZipUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.7/workreport-web-offline-v1.2.zip",
+    "singleFileUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.8/workreport-web-v1.2.htm",
+    "offlineZipUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.8/workreport-web-offline-v1.2.zip",
     "repoFileUrl": "https://github.com/ninoelvis/workreport-generator/blob/main/web/workreport-web.htm"
   },
   "repo": {
@@ -31,10 +31,22 @@
   },
   "changelog": [
     {
+      "version": "v1.3.8",
+      "date": "2026-10-23",
+      "title": "快捷记录模板 · 「我的」页分页面 · 引导页全屏重做",
+      "current": true,
+      "items": [
+        "新增「快捷记录模板」：常写的重复内容存成模板，首页点一下就插入，不用每次手敲",
+        "「本周工作记录」与「下周工作计划」两套模板分开配置，互不影响",
+        "「我的」页改成设置首页：个人信息、快捷记录模板、敏感词库、外观、邮件设置、数据管理、关于，各点进去单独编辑",
+        "引导页改为整页全屏展示（原先是弹窗，顶部会露出一条系统灰底），各分区可展开收起"
+      ]
+    },
+    {
       "version": "v1.3.7",
       "date": "2026-10-22",
       "title": "邮件发送回归标准通道",
-      "current": true,
+      "current": false,
       "items": [
         "撤销 v1.3.3 起为阿里邮箱增加的专用发送通道，恢复 WebView 旧版即已验证的标准 ACTION_SEND 通道（EXTRA_STREAM + clipData + 主题，正文留空）",
         "修复专用通道在部分机型上「点击发送即闪退」与「邮箱 App 无法拉起」的问题",
@@ -50,7 +62,8 @@
         "表单内容在每次输入后暂存至本机，下次打开自动恢复",
         "生成压缩包成功后才清除草稿，界面内容保留供当场核对",
         "采用 SharedPreferences + Base64 纯 Kotlin 编解码，不依赖 Android 的 org.json 空壳"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.3.5",
@@ -60,7 +73,8 @@
         "按需求彻底移除「自动带入收件人」，邮件仅携带主题与附件，收件人由使用者于邮箱 App 内自行填写",
         "修复首页文件名显示不全的问题（改为独占一行并允许折行）",
         "「关于」页加入免责声明"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.3.4",
@@ -69,7 +83,8 @@
       "items": [
         "修复 v1.3.3 引入的「点击发送闪退」与「邮箱 App 无法拉起」",
         "根因为 intent.selector 搭配 Intent.createChooser() 触发系统 ResolverActivity NPE，以及 filter 未声明 scheme/mimeType 导致带 data URI 的 Intent 匹配失败"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.3.3",
@@ -78,7 +93,8 @@
       "items": [
         "逆向 com.alibaba.cloudmail v4.12.8 后为其增加专用发送通道",
         "该通道已于 v1.3.7 撤销"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.3.2",
@@ -88,7 +104,8 @@
         "修复填写收件人邮箱但拉起邮箱 App 后收件人栏为空的问题",
         "邮件主题改为与压缩包名完全一致，历史报告二次发送亦携带收件人",
         "注：收件人功能已于 v1.3.5 移除"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.3.1",
@@ -98,7 +115,8 @@
         "两个内容输入框的清除按钮增加二次确认，防止误删",
         "生成后的确认弹窗中新增收件人邮箱输入框并自动保存",
         "注：收件人功能已于 v1.3.5 移除"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.3.0",
@@ -110,7 +128,8 @@
         "交叉验证抓出并修复 3 个真实缺陷：Date 强转 Calendar、周日起始偏移一天、字符串模板标识符解析",
         "新增首次启动引导页、生成后拉起邮箱 App 发送、内容框独立清除；首页预览按 Excel 真实列宽重新对齐",
         "单元测试 51 条全部通过"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.2.1",
@@ -118,7 +137,8 @@
       "title": "顶栏图标",
       "items": [
         "App 内顶栏图标替换为新的卷轴+笔图标，深色主题下自动切换"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.2.0",
@@ -127,7 +147,8 @@
       "items": [
         "全新应用图标（适配 Android 自适应图标）",
         "状态栏与导航栏颜色跟随页面主题"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.1.0",
@@ -135,7 +156,8 @@
       "title": "敏感词管理",
       "items": [
         "顶栏可打开管理面板，自行增删改敏感词库，词库长期保存，保存后立即生效"
-      ]
+      ],
+      "current": false
     },
     {
       "version": "v1.0.0",
@@ -146,7 +168,8 @@
         "自动计算周数、文件名与解压密码（取本周周四，格式 yyyyMMdd）",
         "实时预览、工作记录管理、浅深主题切换",
         "完全离线可用，不申请 INTERNET 权限"
-      ]
+      ],
+      "current": false
     }
   ],
   "webChangelog": [

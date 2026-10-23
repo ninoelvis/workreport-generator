@@ -3,6 +3,8 @@ package com.workreport.app.data.local
 import android.content.Context
 import android.content.SharedPreferences
 import com.workreport.app.domain.model.SensitiveWord
+import com.workreport.app.domain.model.ShortcutSlot
+import com.workreport.app.domain.model.ShortcutTemplate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -119,6 +121,58 @@ class SettingsStore(context: Context) {
     private fun loadDraft(): ReportDraft =
         DraftCodec.decode(prefs.getString(KEY_DRAFT, null))
 
+    // ---------------- 快捷记录模板 ----------------
+
+    /**
+     * 两套互相独立的快捷模板：一套给「本周工作记录」，一套给「下周工作计划」。
+     * 每次改动都会同步刷新对应的 StateFlow。
+     */
+    private val _shortcuts: Map<ShortcutSlot, MutableStateFlow<List<ShortcutTemplate>>> =
+        ShortcutSlot.entries.associateWith { slot ->
+            MutableStateFlow(loadShortcuts(slot))
+        }
+
+    fun shortcuts(slot: ShortcutSlot): StateFlow<List<ShortcutTemplate>> =
+        _shortcuts.getValue(slot).asStateFlow()
+
+    /** 覆盖某个分区的全部模板 */
+    fun setShortcuts(slot: ShortcutSlot, templates: List<ShortcutTemplate>) {
+        prefs.edit().putString(slot.storageKey, ShortcutCodec.encode(templates)).apply()
+        _shortcuts.getValue(slot).value = templates
+    }
+
+    /** 新增一条模板，正文为空则忽略 */
+    fun addShortcut(slot: ShortcutSlot, text: String) {
+        val body = text.trim()
+        if (body.isEmpty()) return
+        val list = _shortcuts.getValue(slot).value.toMutableList()
+        list.add(ShortcutTemplate(id = newId(), text = body))
+        setShortcuts(slot, list)
+    }
+
+    /** 修改模板正文 */
+    fun updateShortcut(slot: ShortcutSlot, id: String, text: String) {
+        val body = text.trim()
+        if (body.isEmpty()) return
+        val list = _shortcuts.getValue(slot).value.map {
+            if (it.id == id) it.copy(text = body) else it
+        }
+        setShortcuts(slot, list)
+    }
+
+    /** 删除模板 */
+    fun removeShortcut(slot: ShortcutSlot, id: String) {
+        val list = _shortcuts.getValue(slot).value.filterNot { it.id == id }
+        setShortcuts(slot, list)
+    }
+
+    /** 模板 id：时间戳 + 随机尾巴，够用且不用引三方库 */
+    private fun newId(): String =
+        "${System.currentTimeMillis()}-${(0..0xFFFF).random().toString(16)}"
+
+    private fun loadShortcuts(slot: ShortcutSlot): List<ShortcutTemplate> =
+        ShortcutCodec.decode(prefs.getString(slot.storageKey, null))
+
     // ---------------- 引导页 ----------------
 
     /** 是否已经看过功能介绍（首次启动会弹，之后可在「我的」页随时再看） */
@@ -151,6 +205,7 @@ class SettingsStore(context: Context) {
         _autoSendMail.value = false
         _lastTimeRange.value = ""
         _draft.value = ReportDraft()
+        ShortcutSlot.entries.forEach { _shortcuts.getValue(it).value = emptyList() }
         // 引导页不随「清除数据」重置，否则清完又会被弹一次
     }
 
