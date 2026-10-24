@@ -30,6 +30,10 @@ data class ProfileUiState(
     val mailApps: List<MailApp> = emptyList(),
     /** 是否每次生成后都直接拉起邮箱 App 发送（不再询问） */
     val autoSendMail: Boolean = false,
+    /** 是否开启周报提醒 */
+    val reminderEnabled: Boolean = false,
+    /** 提醒的星期几，1=周一 … 7=周日 */
+    val reminderWeekdays: Set<Int> = emptySet(),
     /** 「本周工作记录」快捷模板 */
     val workShortcuts: List<ShortcutTemplate> = emptyList(),
     /** 「下周工作计划」快捷模板 */
@@ -56,6 +60,12 @@ class ProfileViewModel(
         }
         viewModelScope.launch {
             settings.autoSendMail.collect { _state.value = _state.value.copy(autoSendMail = it) }
+        }
+        viewModelScope.launch {
+            settings.reminderEnabled.collect { _state.value = _state.value.copy(reminderEnabled = it) }
+        }
+        viewModelScope.launch {
+            settings.reminderWeekdays.collect { _state.value = _state.value.copy(reminderWeekdays = it) }
         }
         viewModelScope.launch {
             settings.shortcuts(ShortcutSlot.WORK).collect {

@@ -167,6 +167,32 @@ class HistoryViewModel(
         _uiState.value = _uiState.value.copy(keyword = value)
     }
 
+    /**
+     * 把一份历史报告的「下周工作计划」取回首页，填进「本周已完成工作梳理」。
+     *
+     * 语义：上周报告的「下周计划」= 这一周该做的事，所以它落到「本周已完成」框里。
+     * 只作为**起点**，用户填完可以随便改或删 —— 避免上周没做完的事变成这周凭空多出来的。
+     */
+    fun takePlanIntoHome(entity: ReportEntity, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val plan = entity.planWorks.trim()
+            if (plan.isEmpty()) {
+                onDone(false)
+                return@launch
+            }
+            val current = settings.draft.value
+            val merged = if (current.doneWorks.isBlank()) {
+                plan
+            } else {
+                current.doneWorks.trimEnd() + "\n" + plan
+            }
+            settings.saveDraft(current.copy(doneWorks = merged))
+            // 首页可能还活着（切 Tab 不一定重建 ViewModel），通知它重新读草稿
+            ServiceLocator.notifyDraftReloaded()
+            onDone(true)
+        }
+    }
+
     /** 二次下载：把历史报告再存一份到系统「下载」目录 */
     fun downloadAgain(entity: ReportEntity, onDone: (Boolean) -> Unit) {
         viewModelScope.launch {

@@ -14,8 +14,8 @@ android {
         // 最低支持 Android 8.0 (API 26)
         minSdk = 26
         targetSdk = 34
-        versionCode = 20
-        versionName = "1.3.11"
+        versionCode = 22
+        versionName = "1.4.0-beta2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -115,6 +115,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.okhttp)
     implementation(libs.zip4j)
     implementation(libs.kotlinx.coroutines.android)

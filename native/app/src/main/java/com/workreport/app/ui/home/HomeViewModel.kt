@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.ReportDraft
+import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.domain.model.ShortcutSlot
 import com.workreport.app.domain.model.ShortcutTemplate
@@ -12,6 +13,9 @@ import com.workreport.app.domain.model.SensitiveWord
 import com.workreport.app.util.DateUtils
 import com.workreport.app.util.MailApp
 import com.workreport.app.util.MailHelper
+import com.workreport.app.util.MaskAnchor
+import com.workreport.app.util.MaskSection
+import com.workreport.app.util.MaskSummary
 import com.workreport.app.util.SensitiveWordEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +47,16 @@ data class HomeUiState(
     val password: String = "",
     val fileName: String = "",
     val generating: Boolean = false,
+    /** 本次脱敏中被放行的**具体出现位置**（这些处保持原文不替换） */
+    val maskExcluded: Set<MaskAnchor> = emptySet(),
+    /** 本次脱敏命中的词与处数，用于「脱敏预览」面板 */
+    val maskSummary: MaskSummary = MaskSummary(),
+    /** 上一份报告留下的「下周工作计划」，可一键填入本周已完成工作梳理 */
+    val carriedPlan: String = "",
+    /** 上一份报告的日期描述，用于提示条文案 */
+    val carriedPlanSource: String = "",
+    /** 最近一份历史报告（用于判断本周是否已生成、提取上周计划） */
+    val latestReport: ReportEntity? = null,
     /** 一次性提示消息 */
     val message: String? = null,
 )
@@ -99,6 +113,71 @@ class HomeViewModel(
                 restoreDraft()
             }
         }
+        // 观察历史报告：用来判断「本周是否已生成」，以及提供上一份报告的下周计划
+        viewModelScope.launch {
+            repository.observeAll().collect { list ->
+                _state.value = _state.value.copy(latestReport = list.firstOrNull())
+            }
+        }
+    }
+
+    /**
+     * 把上一份报告的「下周工作计划」填入「本周已完成工作梳理」。
+     *
+     * 只作为**起点**：填进去之后完全可以改、可以删，避免把上周没做完的事
+     * 变成这周凭空多出来的一条。
+     */
+    fun applyCarriedPlan() {
+        val plan = _state.value.carriedPlan.trim()
+        if (plan.isEmpty()) return
+        val merged = if (_state.value.doneWorks.isBlank()) {
+            plan
+        } else {
+            _state.value.doneWorks.trimEnd() + "\n" + plan
+        }
+        _state.value = _state.value.copy(doneWorks = merged, carriedPlan = "")
+        recompute(settings.sensitiveWords.value)
+        persistDraft()
+        showMessage("已把上周计划填入「本周已完成工作梳理」，可自行修改")
+    }
+
+    /** 忽略上一份报告留下的计划 */
+    fun dismissCarriedPlan() {
+        if (_state.value.carriedPlan.isEmpty()) return
+        _state.value = _state.value.copy(carriedPlan = "")
+    }
+
+    // ---------------- 脱敏预览 ----------------
+
+    /**
+     * 切换某一处命中的放行状态。
+     *
+     * 粒度是**每一次出现**：同一句里两次「查询」是两条独立记录，
+     * 可以只放行其中一处，另一处照常脱敏。
+     *
+     * 放行只影响**本次生成**，不会改动敏感词库 —— 永久删除某个词要去
+     * 「我的 → 敏感词」里操作。
+     */
+    fun toggleMaskExclusion(anchor: MaskAnchor) {
+        val current = _state.value.maskExcluded
+        val next = if (anchor in current) current - anchor else current + anchor
+        _state.value = _state.value.copy(maskExcluded = next)
+        recompute(settings.sensitiveWords.value)
+    }
+
+    /** 全部还原：本次一处都不脱敏 */
+    fun excludeAllMasking() {
+        val all = _state.value.maskSummary.hits.map { it.anchor }.toSet()
+        if (all.isEmpty()) return
+        _state.value = _state.value.copy(maskExcluded = all)
+        recompute(settings.sensitiveWords.value)
+    }
+
+    /** 恢复脱敏：清掉全部豁免 */
+    fun restoreAllMasking() {
+        if (_state.value.maskExcluded.isEmpty()) return
+        _state.value = _state.value.copy(maskExcluded = emptySet())
+        recompute(settings.sensitiveWords.value)
     }
 
     /**
@@ -258,6 +337,7 @@ class HomeViewModel(
                     doneWorks = s.doneWorks,
                     planWorks = s.planWorks,
                     sensitiveWords = settings.sensitiveWords.value,
+                    excludedAnchors = s.maskExcluded,
                 )
             }.onSuccess { result ->
                 // 周报已经产出：把「工作记录」和「周报内容」清空，
@@ -349,12 +429,30 @@ class HomeViewModel(
 
         val engine = SensitiveWordEngine(sensitiveWords)
         val name = s.userName.trim().ifEmpty { "姓名" }
+        val excluded = s.maskExcluded
+
+        // 脱敏命中汇总：与预览、导出走的是同一套引擎与放行集合，
+        // 所以面板里显示的「替换了 N 处」和实际导出内容永远一致。
+        val doneSummary = engine.analyzeMultiline(s.doneWorks, excluded, MaskSection.DONE)
+        val planSummary = engine.analyzeMultiline(s.planWorks, excluded, MaskSection.PLAN)
+        val mergedSummary = MaskSummary(doneSummary.hits + planSummary.hits)
+
+        // 上一份报告留下的「下周计划」：只有当本周还没生成过报告时才提示
+        val latest = s.latestReport
+        val sameWeekAsLatest = latest != null &&
+            latest.year == year && latest.month == month && latest.weekNum == weekNum
+        val carried = if (sameWeekAsLatest) "" else (latest?.planWorks ?: "").trim()
+        val carriedSource = if (carried.isEmpty()) "" else
+            "${latest!!.year}年${latest.month}月第${latest.weekNum}周"
 
         _state.value = _state.value.copy(
             previewTitle = title,
             previewTimeRange = s.timeRange.trim(),
-            previewDone = SensitiveWordEngine.formatDoneWorks(s.doneWorks, engine),
-            previewPlan = SensitiveWordEngine.formatPlanWorks(s.planWorks, engine),
+            previewDone = SensitiveWordEngine.formatDoneWorks(s.doneWorks, engine, excluded),
+            previewPlan = SensitiveWordEngine.formatPlanWorks(s.planWorks, engine, excluded),
+            maskSummary = mergedSummary,
+            carriedPlan = carried,
+            carriedPlanSource = carriedSource,
             weekLabel = "${year}年${month}月第${weekNum}周",
             password = password,
             fileName = "${name}-${year}年${month}月第${weekNum}周工作报告.zip",

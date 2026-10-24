@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import com.workreport.app.domain.model.SensitiveWord
 import com.workreport.app.util.DateUtils
+import com.workreport.app.util.MaskAnchor
 import com.workreport.app.util.SensitiveWordEngine
 import java.io.File
 import java.util.Calendar
@@ -55,6 +56,7 @@ class ReportExporter(
         sensitiveWords: List<SensitiveWord>,
         outputDir: File,
         now: Date = Date(),
+        excludedAnchors: Set<MaskAnchor> = emptySet(),
     ): ExportResult {
         // 命名与密码规则集中在 ReportNaming 里（可单元测试，避免改动时破坏兼容性）
         val plan = ReportNaming.plan(userName, timeRangeText)
@@ -67,8 +69,8 @@ class ReportExporter(
         val xlsxFileName = plan.xlsxFileName
 
         val engine = SensitiveWordEngine(sensitiveWords)
-        val doneFormatted = SensitiveWordEngine.formatDoneWorks(doneWorks, engine)
-        val planFormatted = SensitiveWordEngine.formatPlanWorks(planWorks, engine)
+        val doneFormatted = SensitiveWordEngine.formatDoneWorks(doneWorks, engine, excludedAnchors)
+        val planFormatted = SensitiveWordEngine.formatPlanWorks(planWorks, engine, excludedAnchors)
 
         val xlsxBytes = XlsxWriter.toBytes(
             title = title,
@@ -77,7 +79,9 @@ class ReportExporter(
             planWorks = planFormatted,
         )
 
-        val target = File(outputDir, zipFileName)
+        // 内部文件名加时间戳前缀：同一周生成多次也不会互相覆盖。
+        // 对外展示、复制到「下载」目录的文件名仍然是 zipFileName —— 公司规定的格式一个字都不改。
+        val target = File(outputDir, "${now.time}_$zipFileName")
         EncryptedZipWriter.write(
             target = target,
             password = password,

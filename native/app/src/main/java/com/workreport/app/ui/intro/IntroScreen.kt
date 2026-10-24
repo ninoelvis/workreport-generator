@@ -33,6 +33,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.workreport.app.BuildConfig
+import com.workreport.app.ServiceLocator
 import com.workreport.app.ui.common.AppTopBar
 
 /**
@@ -67,6 +69,8 @@ fun IntroScreen(
     forced: Boolean = false,
 ) {
     var dontShowAgain by remember { mutableStateOf(false) }
+    // 首次启动必须填姓名 —— 压缩包文件名要用
+    var userName by remember { mutableStateOf(ServiceLocator.settings.userName.value) }
 
     Column(
         modifier = Modifier
@@ -124,6 +128,14 @@ fun IntroScreen(
                     IntroBullet("一键生成", "导出 Excel 并加密成 ZIP，存到手机「下载」目录。")
                     IntroBullet("自动发邮件", "拉起邮箱 App，主题和压缩包附件自动带好，收件人自己填。")
                     IntroBullet("敏感词替换", "「纪委」自动变「jw」，词库自己维护。")
+                    IntroBullet(
+                        "脱敏预览，逐处放行",
+                        "导出前就能看清哪几处被替换了，还带上下文。同一句话里出现两次「查询」时，" +
+                            "可以只放行其中一处 —— 另一处照常脱敏，不会再整句一起豁免。",
+                    )
+                    IntroBullet("系统分享", "生成的压缩包可以直接调系统分享面板，发给任何人。")
+                    IntroBullet("周报提醒", "选好星期几，到点首页顶部提醒一句，不用记着什么时候写周报。")
+                    IntroBullet("配置备份", "姓名、词库、模板、提醒设置可以备份成一个加密文件，换手机时一键恢复。")
                     IntroBullet("历史报告", "随时回看，可以再下载、再发一次。")
                     IntroBullet(
                         "历史报告直接预览",
@@ -142,11 +154,18 @@ fun IntroScreen(
             item {
                 IntroSection(title = "历史版本更新记录", icon = Icons.Filled.History) {
                     ChangeLogItem(
+                        "v1.4.0",
+                        "脱敏预览升级成**按处放行**：同一句话里出现两次「查询」时会列成两行并带上下文，" +
+                            "可以只放行其中一处，另一处照常脱敏；「全部还原」「恢复脱敏」也按处生效。" +
+                            "新增系统分享面板、周报提醒（选星期几，16:00-18:00 之间提醒）、" +
+                            "个人配置加密备份与恢复、快捷模板复制导入、上周计划一键接续本周工作。",
+                        current = true,
+                    )
+                    ChangeLogItem(
                         "v1.3.11",
                         "预览表在深色模式下也看得清了（表头、标题、边框都改成跟随主题）；" +
                             "生成压缩包后自动清空「工作记录」和「周报内容」，下次直接重新填；" +
                             "历史报告新增「载入首页继续编辑」—— 看完内容可以直接改，改完重新生成。",
-                        current = true,
                     )
                     ChangeLogItem(
                         "v1.3.10",
@@ -247,11 +266,32 @@ fun IntroScreen(
                     )
                 }
                 Spacer(Modifier.height(8.dp))
+                // 首次启动时必须留下姓名：压缩包文件名是「姓名-2026年10月第4周工作报告.zip」
+                if (forced) {
+                    OutlinedTextField(
+                        value = userName,
+                        onValueChange = { userName = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("你的姓名", fontSize = 13.sp) },
+                        placeholder = { Text("用于压缩包文件名，如：张三", fontSize = 12.5.sp) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
                 Button(
-                    onClick = { onClose() },
+                    onClick = {
+                        // 首次启动时把姓名存下来，首页的文件名就能直接用
+                        if (forced && userName.isNotBlank()) {
+                            ServiceLocator.settings.setUserName(userName)
+                        }
+                        onClose()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(46.dp),
+                    enabled = !forced || userName.isNotBlank(),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,

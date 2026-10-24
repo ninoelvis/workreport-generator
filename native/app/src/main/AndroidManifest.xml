@@ -6,9 +6,12 @@
         权限说明（按需声明，不多给）：
         · INTERNET            仅供「后续在线功能」预留，当前版本代码不会发起任何网络请求。
         · WRITE_EXTERNAL_STORAGE 仅 Android 8/9 (API 26~28) 需要；API 29+ 走 MediaStore 免权限。
+        · POST_NOTIFICATIONS   仅用于「周报提醒」通知（Android 13+ 需要运行时申请）。
         · 未申请相机、位置、通讯录、麦克风等任何与功能无关的权限。
     -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
@@ -70,5 +73,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- 周报提醒：闹钟触发时弹通知 -->
+        <receiver
+            android:name=".ui.reminder.ReminderReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.workreport.app.action.REMINDER_FIRED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

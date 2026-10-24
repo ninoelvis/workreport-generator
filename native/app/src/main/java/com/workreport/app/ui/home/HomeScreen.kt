@@ -24,7 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -61,11 +61,14 @@ import com.workreport.app.ui.common.FieldLabel
 import com.workreport.app.ui.common.InfoStatRow
 import com.workreport.app.ui.common.LabeledField
 import com.workreport.app.ui.common.AppTopBar
+import com.workreport.app.ui.common.CarryOverBanner
+import com.workreport.app.ui.common.MaskPanel
 import com.workreport.app.ui.common.PreviewTable
 import com.workreport.app.ui.common.SectionCard
 import com.workreport.app.ui.common.ShortcutChips
 import com.workreport.app.util.MailApp
 import com.workreport.app.util.MailHelper
+import com.workreport.app.util.ShareHelper
 import android.widget.Toast
 
 @Composable
@@ -121,6 +124,17 @@ fun HomeScreen(
                 title = "工作报告生成器",
                 subtitle = "自动生成加密周报 ZIP · 一键复制文件名 · 自动发送邮件",
             )
+        }
+
+        // 上一份报告留下的「下周计划」提示条：只提示，不自动填
+        if (state.carriedPlan.isNotEmpty()) {
+            item {
+                CarryOverBanner(
+                    sourceLabel = state.carriedPlanSource,
+                    onApply = viewModel::applyCarriedPlan,
+                    onDismiss = viewModel::dismissCarriedPlan,
+                )
+            }
         }
 
         item {
@@ -291,12 +305,21 @@ fun HomeScreen(
 
         item {
             SectionCard(title = "预览区", icon = "👁️", hint = "最终 Excel 效果") {
-                PreviewTable(
-                    title = state.previewTitle,
-                    timeRange = state.previewTimeRange,
-                    doneWorks = state.previewDone,
-                    planWorks = state.previewPlan,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    PreviewTable(
+                        title = state.previewTitle,
+                        timeRange = state.previewTimeRange,
+                        doneWorks = state.previewDone,
+                        planWorks = state.previewPlan,
+                    )
+                    MaskPanel(
+                        summary = state.maskSummary,
+                        excluded = state.maskExcluded,
+                        onToggleHit = viewModel::toggleMaskExclusion,
+                        onExcludeAll = viewModel::excludeAllMasking,
+                        onRestoreAll = viewModel::restoreAllMasking,
+                    )
+                }
             }
         }
 
@@ -319,7 +342,7 @@ fun HomeScreen(
                     Spacer(Modifier.width(8.dp))
                     Text("生成中…", fontSize = 14.sp)
                 } else {
-                    Icon(Icons.Filled.Send, contentDescription = null, modifier = Modifier.size(17.dp))
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.size(17.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("生成加密 ZIP 下载", fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 }
@@ -446,10 +469,21 @@ fun HomeScreen(
                 }) { Text("是，拉起邮箱") }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    mailChoiceFor = null
-                    if (rememberChoice) settings.setAutoSendMail(false)
-                }) { Text("否，只保存到本地") }
+                Row {
+                    TextButton(onClick = {
+                        mailChoiceFor = null
+                        if (rememberChoice) settings.setAutoSendMail(false)
+                    }) { Text("否，只保存到本地") }
+                    Spacer(Modifier.width(4.dp))
+                    TextButton(onClick = {
+                        mailChoiceFor = null
+                        // 系统分享面板：手机自带，能选微信/企业微信/邮件/文件管理器等
+                        val ok = ShareHelper.shareFile(context, result.file)
+                        if (!ok) {
+                            Toast.makeText(context, "未能拉起系统分享", Toast.LENGTH_SHORT).show()
+                        }
+                    }) { Text("分享") }
+                }
             },
         )
     }

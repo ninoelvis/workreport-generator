@@ -22,7 +22,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -52,8 +54,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.ui.common.EmptyState
+import androidx.compose.ui.platform.LocalContext
 import com.workreport.app.ui.common.PreviewTable
 import com.workreport.app.util.MailHelper
+import com.workreport.app.util.ShareHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -66,6 +70,7 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.factory()),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val preferredMail by viewModel.preferredMailPackage.collectAsStateWithLifecycle()
     val previews by viewModel.previews.collectAsStateWithLifecycle()
     var mailPickerFor by remember { mutableStateOf<ReportEntity?>(null) }
@@ -75,6 +80,8 @@ fun HistoryScreen(
     var previewId by remember { mutableStateOf<Long?>(null) }
     /** 待载入首页的历史报告（等用户二次确认） */
     var loadTarget by remember { mutableStateOf<ReportEntity?>(null) }
+    /** 待取回「下周计划」的历史报告（等用户二次确认） */
+    var planTarget by remember { mutableStateOf<ReportEntity?>(null) }
     /** 载入过程中的报告（用于置灰按钮、防止重复点） */
     var loadingId by remember { mutableStateOf<Long?>(null) }
 
@@ -174,6 +181,16 @@ fun HistoryScreen(
                             }
                         },
                         onDelete = { deleteTarget = report },
+                        onTakePlan = { planTarget = report },
+                        onShare = {
+                            val file = viewModel.fileOf(report)
+                            if (!file.exists()) {
+                                toast = "文件已被系统清理，无法分享"
+                            } else {
+                                val ok = ShareHelper.shareFile(context, file)
+                                if (!ok) toast = "未能拉起系统分享"
+                            }
+                        },
                     )
                 }
             }
@@ -190,6 +207,35 @@ fun HistoryScreen(
                 viewModel.sendAgain(report) { ok ->
                     toast = if (ok) "已拉起邮件应用" else "拉起失败"
                 }
+            },
+        )
+    }
+
+    // 取回「下周计划」的二次确认
+    planTarget?.let { report ->
+        val lines = report.planWorks.split("\n").filter { it.isNotBlank() }
+        AlertDialog(
+            onDismissRequest = { planTarget = null },
+            title = { Text("取回这份报告的「下周工作计划」？") },
+            text = {
+                Text(
+                    "这份报告是 ${report.year}年${report.month}月第${report.weekNum}周的，" +
+                        "它的「下周工作计划」就是这一周该做的事。\n\n" +
+                        "取回后会填进首页的「本周已完成工作梳理」，共 ${lines.size} 条。" +
+                        "这只是当作起点，填完你可以随意修改或删除。",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    planTarget = null
+                    viewModel.takePlanIntoHome(report) { ok ->
+                        toast = if (ok) "已填入首页「本周已完成工作梳理」" else "取回失败"
+                    }
+                    onGoHome()
+                }) { Text("取回") }
+            },
+            dismissButton = {
+                TextButton(onClick = { planTarget = null }) { Text("再想想") }
             },
         )
     }
@@ -267,6 +313,10 @@ private fun ReportCard(
     onDownload: () -> Unit,
     onMail: () -> Unit,
     onDelete: () -> Unit,
+    /** 把这份报告的「下周工作计划」取回当新一周的起点 */
+    onTakePlan: () -> Unit,
+    /** 拉起系统分享面板 */
+    onShare: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -339,6 +389,27 @@ private fun ReportCard(
                         contentDescription = "删除",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
+
+            // 第二行：把这份报告的「下周计划」取回当新一周的起点；系统分享
+            if (report.planWorks.isNotBlank() || !report.filePath.isBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (report.planWorks.isNotBlank()) {
+                        SmallAction(
+                            icon = Icons.AutoMirrored.Filled.PlaylistAdd,
+                            label = "取回下周计划",
+                            modifier = Modifier.weight(1f),
+                            onClick = onTakePlan,
+                        )
+                    }
+                    SmallAction(
+                        icon = Icons.Filled.Share,
+                        label = "分享",
+                        modifier = Modifier.weight(1f),
+                        onClick = onShare,
                     )
                 }
             }

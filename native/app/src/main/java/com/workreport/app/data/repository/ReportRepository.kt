@@ -6,6 +6,7 @@ import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.export.ExportResult
 import com.workreport.app.export.ReportExporter
 import com.workreport.app.domain.model.SensitiveWord
+import com.workreport.app.util.MaskAnchor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -42,6 +43,7 @@ class ReportRepository(
         doneWorks: String,
         planWorks: String,
         sensitiveWords: List<SensitiveWord>,
+        excludedAnchors: Set<MaskAnchor> = emptySet(),
     ): ExportResult = withContext(Dispatchers.IO) {
         val exporter = ReportExporter(context.applicationContext)
         val result = exporter.export(
@@ -52,6 +54,7 @@ class ReportRepository(
             planWorks = planWorks,
             sensitiveWords = sensitiveWords,
             outputDir = ReportExporter.reportsDir(context.applicationContext),
+            excludedAnchors = excludedAnchors,
         )
 
         dao.insert(

@@ -33,6 +33,7 @@ import com.workreport.app.ui.home.HomeScreen
 import com.workreport.app.ui.intro.IntroScreen
 import com.workreport.app.ui.profile.ProfileAboutPage
 import com.workreport.app.ui.profile.ProfileAppearancePage
+import com.workreport.app.ui.profile.BackupPage
 import com.workreport.app.ui.profile.ProfileDataPage
 import com.workreport.app.ui.profile.ProfileMailPage
 import com.workreport.app.ui.profile.ProfileNamePage
@@ -40,6 +41,7 @@ import com.workreport.app.ui.profile.ProfileRoute
 import com.workreport.app.ui.profile.ProfileScreen
 import com.workreport.app.ui.profile.ProfileSensitivePage
 import com.workreport.app.ui.profile.ProfileShortcutsPage
+import com.workreport.app.ui.reminder.ReminderPage
 
 /** 三个主 Tab */
 enum class TopLevelDestination(
@@ -159,6 +161,12 @@ fun AppRoot() {
             }
             composable(ProfileRoute.MAIL.route) {
                 ProfileMailPage(onBack = { navController.popBackStack() })
+            }
+            composable(ProfileRoute.REMINDER.route) {
+                ReminderPage(onBack = { navController.popBackStack() })
+            }
+            composable(ProfileRoute.BACKUP.route) {
+                BackupPage(onBack = { navController.popBackStack() })
             }
             composable(ProfileRoute.DATA.route) {
                 ProfileDataPage(onBack = { navController.popBackStack() })

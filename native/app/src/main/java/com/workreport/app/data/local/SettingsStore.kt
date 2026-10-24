@@ -173,6 +173,110 @@ class SettingsStore(context: Context) {
     private fun loadShortcuts(slot: ShortcutSlot): List<ShortcutTemplate> =
         ShortcutCodec.decode(prefs.getString(slot.storageKey, null))
 
+    // ---------------- 周报提醒 ----------------
+
+    /**
+     * 是否开启周报提醒。
+     *
+     * 提醒时间固定在 16:00–18:00 之间（用户只需选周几，不需要选时间）。
+     */
+    private val _reminderEnabled = MutableStateFlow(prefs.getBoolean(KEY_REMINDER_ENABLED, false))
+    val reminderEnabled: StateFlow<Boolean> = _reminderEnabled.asStateFlow()
+
+    /** 提醒的星期几，1=周一 … 7=周日 */
+    private val _reminderWeekdays = MutableStateFlow(loadReminderWeekdays())
+    val reminderWeekdays: StateFlow<Set<Int>> = _reminderWeekdays.asStateFlow()
+
+    fun setReminderEnabled(value: Boolean) {
+        prefs.edit().putBoolean(KEY_REMINDER_ENABLED, value).apply()
+        _reminderEnabled.value = value
+    }
+
+    fun setReminderWeekdays(days: Set<Int>) {
+        val valid = days.filter { it in 1..7 }.toSet()
+        prefs.edit().putString(KEY_REMINDER_WEEKDAYS, valid.sorted().joinToString(",")).apply()
+        _reminderWeekdays.value = valid
+    }
+
+    private fun loadReminderWeekdays(): Set<Int> {
+        val raw = prefs.getString(KEY_REMINDER_WEEKDAYS, null) ?: return setOf(DEFAULT_REMINDER_WEEKDAY)
+        val parsed = raw.split(',').mapNotNull { it.trim().toIntOrNull() }.filter { it in 1..7 }.toSet()
+        return parsed.ifEmpty { setOf(DEFAULT_REMINDER_WEEKDAY) }
+    }
+
+    // ---------------- 配置备份 ----------------
+
+    /**
+     * 导出当前个人配置（不含历史报告与已生成的 ZIP）。
+     */
+    fun exportConfig(): ConfigSnapshot = ConfigSnapshot(
+        userName = _userName.value,
+        themeMode = _themeMode.value.storageValue,
+        sensitiveWords = _sensitiveWords.value,
+        workShortcuts = _shortcuts.getValue(ShortcutSlot.WORK).value,
+        planShortcuts = _shortcuts.getValue(ShortcutSlot.PLAN).value,
+        preferredMailPackage = _preferredMailPackage.value,
+        autoSendMail = _autoSendMail.value,
+        reminderEnabled = _reminderEnabled.value,
+        reminderWeekdays = _reminderWeekdays.value,
+        draft = _draft.value,
+    )
+
+    /**
+     * 导入一份配置。
+     *
+     * @param merge true=合并（敏感词按词去重、模板按正文去重，姓名/提醒等直接覆盖，
+     *              草稿保留当前正在写的那份）；false=整体覆盖。
+     */
+    fun importConfig(snapshot: ConfigSnapshot, merge: Boolean) {
+        if (!merge) {
+            setUserName(snapshot.userName)
+            setThemeMode(ThemeMode.from(snapshot.themeMode))
+            setSensitiveWords(snapshot.sensitiveWords)
+            setShortcuts(ShortcutSlot.WORK, snapshot.workShortcuts)
+            setShortcuts(ShortcutSlot.PLAN, snapshot.planShortcuts)
+            setPreferredMailPackage(snapshot.preferredMailPackage)
+            setAutoSendMail(snapshot.autoSendMail)
+            setReminderEnabled(snapshot.reminderEnabled)
+            setReminderWeekdays(snapshot.reminderWeekdays)
+            saveDraft(snapshot.draft)
+            return
+        }
+
+        // 合并模式：敏感词按「词」去重，模板按「正文」去重
+        val mergedWords = LinkedHashMap<String, SensitiveWord>()
+        for (w in _sensitiveWords.value + snapshot.sensitiveWords) {
+            mergedWords[w.word] = w
+        }
+        setSensitiveWords(mergedWords.values.toList())
+
+        val mergedWork = mergeTemplates(_shortcuts.getValue(ShortcutSlot.WORK).value, snapshot.workShortcuts)
+        val mergedPlan = mergeTemplates(_shortcuts.getValue(ShortcutSlot.PLAN).value, snapshot.planShortcuts)
+        setShortcuts(ShortcutSlot.WORK, mergedWork)
+        setShortcuts(ShortcutSlot.PLAN, mergedPlan)
+
+        // 姓名、邮箱偏好、提醒设置直接以导入方为准；草稿保留当前正在写的那份
+        if (snapshot.userName.isNotBlank()) setUserName(snapshot.userName)
+        if (snapshot.preferredMailPackage.isNotBlank()) {
+            setPreferredMailPackage(snapshot.preferredMailPackage)
+        }
+        setReminderEnabled(snapshot.reminderEnabled)
+        if (snapshot.reminderWeekdays.isNotEmpty()) {
+            setReminderWeekdays(snapshot.reminderWeekdays)
+        }
+    }
+
+    /** 合并模板：按正文去重，保留已有的（id 更稳定） */
+    private fun mergeTemplates(
+        current: List<ShortcutTemplate>,
+        incoming: List<ShortcutTemplate>,
+    ): List<ShortcutTemplate> {
+        val merged = LinkedHashMap<String, ShortcutTemplate>()
+        for (t in current) merged[t.text] = t
+        for (t in incoming) if (!merged.containsKey(t.text)) merged[t.text] = t
+        return merged.values.toList()
+    }
+
     // ---------------- 引导页 ----------------
 
     /** 是否已经看过功能介绍（首次启动会弹，之后可在「我的」页随时再看） */
@@ -203,6 +307,8 @@ class SettingsStore(context: Context) {
         _sensitiveWords.value = loadSensitiveWords()
         _preferredMailPackage.value = ""
         _autoSendMail.value = false
+        _reminderEnabled.value = false
+        _reminderWeekdays.value = setOf(DEFAULT_REMINDER_WEEKDAY)
         _lastTimeRange.value = ""
         _draft.value = ReportDraft()
         ShortcutSlot.entries.forEach { _shortcuts.getValue(it).value = emptyList() }
@@ -243,6 +349,15 @@ class SettingsStore(context: Context) {
         private const val KEY_LAST_TIME_RANGE = "last_time_range"
         private const val KEY_INTRO_SHOWN = "intro_shown"
         private const val KEY_AUTO_SEND_MAIL = "auto_send_mail"
+        private const val KEY_REMINDER_ENABLED = "reminder_enabled"
+        private const val KEY_REMINDER_WEEKDAYS = "reminder_weekdays"
+
+        /** 默认提醒星期：周四（4） */
+        const val DEFAULT_REMINDER_WEEKDAY = 4
+
+        /** 提醒时间窗口：16:00–18:00（用户只选周几，时间固定） */
+        const val REMINDER_WINDOW_START_HOUR = 16
+        const val REMINDER_WINDOW_END_HOUR = 18
 
         /** 内置默认词库，与 WebView 版保持一致 */
         val DEFAULT_SENSITIVE_WORDS: List<SensitiveWord> = listOf(

@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -61,6 +63,7 @@ import com.workreport.app.BuildConfig
 import com.workreport.app.data.local.ThemeMode
 import com.workreport.app.domain.model.SensitiveWord
 import com.workreport.app.domain.model.ShortcutSlot
+import com.workreport.app.util.ShortcutTransfer
 import com.workreport.app.domain.model.ShortcutTemplate
 import com.workreport.app.ui.common.EmptyState
 import com.workreport.app.ui.common.LabeledField
@@ -70,7 +73,7 @@ import com.workreport.app.util.MailApp
 
 /** 子页面统一外壳：顶部返回栏 + 内容 */
 @Composable
-private fun ProfileSubPage(
+internal fun ProfileSubPage(
     title: String,
     onBack: () -> Unit,
     subtitle: String? = null,
@@ -154,6 +157,9 @@ fun ProfileShortcutsPage(
 
     var newText by remember { mutableStateOf("") }
     var editing by remember { mutableStateOf<ShortcutTemplate?>(null) }
+    /** 待从剪贴板导入模板（等用户二次确认） */
+    var importTarget by remember { mutableStateOf<ShortcutSlot?>(null) }
+    val context = LocalContext.current
 
     ProfileSubPage(
         title = "快捷记录模板",
@@ -240,6 +246,51 @@ fun ProfileShortcutsPage(
                         )
                     }
                 }
+
+                // 复制 / 导入：把整理好的模板分享给同事
+                item {
+                    SectionCard(
+                        title = "复制与分享",
+                        icon = "📤",
+                        hint = "给同事用",
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(
+                                "把当前分区的模板复制成一段文字，发给同事；" +
+                                    "同事在 App 里点「从剪贴板导入」就能一键收下。\n\n" +
+                                    "⚠️ 模板内容不会自动脱敏，发送前请自己确认。",
+                                fontSize = 11.5.sp,
+                                lineHeight = 17.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        val text = ShortcutTransfer.encode(slot, templates)
+                                        ShortcutTransfer.copyToClipboard(context, text)
+                                        ShortcutTransfer.toastCopied(context, templates.size)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    enabled = templates.isNotEmpty(),
+                                    shape = RoundedCornerShape(8.dp),
+                                ) {
+                                    Icon(Icons.Filled.ContentCopy, null, Modifier.size(15.dp))
+                                    Spacer(Modifier.width(5.dp))
+                                    Text("复制全部", fontSize = 12.5.sp)
+                                }
+                                OutlinedButton(
+                                    onClick = { importTarget = slot },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(8.dp),
+                                ) {
+                                    Icon(Icons.Filled.ContentPaste, null, Modifier.size(15.dp))
+                                    Spacer(Modifier.width(5.dp))
+                                    Text("从剪贴板导入", fontSize = 12.5.sp)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -255,6 +306,46 @@ fun ProfileShortcutsPage(
             onDelete = {
                 viewModel.removeShortcut(slot, target.id)
                 editing = null
+            },
+        )
+    }
+
+    // 从剪贴板导入模板的二次确认
+    importTarget?.let { targetSlot ->
+        val clipboardText = ShortcutTransfer.readClipboard(context)
+        val parsed = ShortcutTransfer.decode(clipboardText)
+        AlertDialog(
+            onDismissRequest = { importTarget = null },
+            title = { Text("从剪贴板导入模板？") },
+            text = {
+                if (parsed == null) {
+                    Text("剪贴板里没有找到可识别的模板文本，请先让对方复制模板再导入。")
+                } else {
+                    val (fromSlot, list) = parsed
+                    Text(
+                        "剪贴板里有 ${list.size} 条「${fromSlot.title}」模板。\n\n" +
+                            "导入后会加到「${targetSlot.title}」里，已有的内容不受影响。\n\n" +
+                            "⚠️ 模板内容未经脱敏，导入后请自己检查一遍。",
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        importTarget = null
+                        val (_, list) = parsed ?: return@TextButton
+                        list.forEach { viewModel.addShortcut(targetSlot, it.text) }
+                        Toast.makeText(
+                            context,
+                            "已导入 ${list.size} 条模板",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    },
+                    enabled = parsed != null,
+                ) { Text("导入") }
+            },
+            dismissButton = {
+                TextButton(onClick = { importTarget = null }) { Text("取消") }
             },
         )
     }
@@ -430,13 +521,21 @@ fun ProfileSensitivePage(
     }
 }
 
+/**
+ * 这个词是不是 App 自带的内置词。
+ *
+ * 内置词和自定义词都能改、都能删，只是标一下来源，
+ * 免得用户以为「删不掉」。
+ */
+private fun isBuiltinSensitiveWord(word: String): Boolean =
+    com.workreport.app.data.local.SettingsStore.DEFAULT_SENSITIVE_WORDS.any { it.word == word }
+
 @Composable
 private fun SensitiveWordRow(
     word: SensitiveWord,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-) {
-    Row(
+) {    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
@@ -449,8 +548,21 @@ private fun SensitiveWordRow(
             fontSize = 13.5.sp,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
         )
+        // 内置词角标：内置的可以改也可以删，角标只是让用户一眼分清来源
+        if (isBuiltinSensitiveWord(word.word)) {
+            Spacer(Modifier.width(6.dp))
+            Text(
+                "内置",
+                fontSize = 9.5.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 5.dp, vertical = 1.dp),
+            )
+        }
+        Spacer(Modifier.weight(1f))
         Text(
             "→",
             fontSize = 12.sp,

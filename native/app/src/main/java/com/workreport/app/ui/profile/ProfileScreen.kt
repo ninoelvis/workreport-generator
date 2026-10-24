@@ -113,6 +113,14 @@ fun ProfileScreen(
                     value = if (state.autoSendMail) "自动发送" else "每次询问",
                     onClick = { onOpen(ProfileRoute.MAIL) },
                 )
+                SettingsDivider()
+                SettingsRow(
+                    icon = "⏰",
+                    title = "周报提醒",
+                    subtitle = "选好周几，16:00–18:00 之间提醒你写周报",
+                    value = if (state.reminderEnabled) "已开启" else "未开启",
+                    onClick = { onOpen(ProfileRoute.REMINDER) },
+                )
             }
         }
 
@@ -123,6 +131,13 @@ fun ProfileScreen(
                     title = "功能介绍与更新记录",
                     subtitle = "看看这个版本都改了什么",
                     onClick = onShowIntro,
+                )
+                SettingsDivider()
+                SettingsRow(
+                    icon = "💾",
+                    title = "配置备份",
+                    subtitle = "导出/恢复个人配置（加密 ZIP）",
+                    onClick = { onOpen(ProfileRoute.BACKUP) },
                 )
                 SettingsDivider()
                 SettingsRow(
@@ -151,6 +166,8 @@ enum class ProfileRoute(val route: String) {
     SENSITIVE("profile/sensitive"),
     APPEARANCE("profile/appearance"),
     MAIL("profile/mail"),
+    REMINDER("profile/reminder"),
+    BACKUP("profile/backup"),
     DATA("profile/data"),
     ABOUT("profile/about"),
 }
