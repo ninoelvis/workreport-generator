@@ -97,6 +97,21 @@ class WorkItemsTakeoverTest {
         assertEquals(emptyList<String>(), PlanItems.split(""))
     }
 
+    @Test
+    fun `旧报告的格式化计划先拆格式再拆条`() {
+        // 旧报告（v1.3.9 之前）存的是格式化后的文本
+        val formatted = "下周预计共2项工作任务：\n1、配合纪委完成案件审理；\n2、组织案管系统培训。"
+        val raw = ReportContentFormat.unformatPlanWorks(formatted)
+        assertEquals(listOf("配合纪委完成案件审理", "组织案管系统培训"), PlanItems.split(raw))
+    }
+
+    @Test
+    fun `新报告的原始计划不受拆格式影响`() {
+        val raw = "配合纪委完成案件审理\n组织案管系统培训"
+        assertEquals(raw, ReportContentFormat.unformatPlanWorks(raw))
+        assertEquals(listOf("配合纪委完成案件审理", "组织案管系统培训"), PlanItems.split(raw))
+    }
+
     // ---------------- 排序 ----------------
 
     @Test

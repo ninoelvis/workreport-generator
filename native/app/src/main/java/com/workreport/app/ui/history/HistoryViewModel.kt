@@ -196,7 +196,11 @@ class HistoryViewModel(
      */
     fun takePlanIntoHome(entity: ReportEntity, onDone: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val items = PlanItems.split(entity.planWorks)
+            // 旧报告（v1.3.9 之前）里存的「下周计划」是**格式化后**的文本
+            // （「下周预计共2项工作任务：」+「1、xxx；」），
+            // 直接按行拆会把表头也当成一条计划 —— 先拆回原始条目。
+            val raw = ReportContentFormat.unformatPlanWorks(entity.planWorks)
+            val items = PlanItems.split(raw)
             if (items.isEmpty()) {
                 onDone(false)
                 return@launch
