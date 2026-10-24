@@ -170,4 +170,6 @@ enum class ProfileRoute(val route: String) {
     BACKUP("profile/backup"),
     DATA("profile/data"),
     ABOUT("profile/about"),
+    /** 隐藏的调试页：在「关于」里连点版本号 7 次才会出现 */
+    DEBUG("profile/debug"),
 }

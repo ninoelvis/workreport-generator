@@ -37,6 +37,16 @@ object ReminderScheduler {
     const val EXTRA_FOCUS_WORK_RECORD = "FOCUS_WORK_RECORD"
 
     /**
+     * 「强制触发」标记（仅调试页用）。
+     *
+     * 带上这个 extra 的闹钟会跳过「开关是否打开」「今天是不是选中的星期」这两道检查，
+     * 直接发通知 —— 这样不改任何设置也能验证闹钟链路到底通不通。
+     *
+     * 正常排的提醒**不带**这个标记，行为一个字都没变。
+     */
+    const val EXTRA_FORCE_TEST = "FORCE_TEST"
+
+    /**
      * 闹钟 PendingIntent 的固定 requestCode。
      *
      * 必须稳定：requestCode 变了就等于换了一个闹钟，旧的 cancel 不掉。

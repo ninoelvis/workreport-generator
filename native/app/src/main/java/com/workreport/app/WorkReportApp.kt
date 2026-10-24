@@ -13,5 +13,7 @@ class WorkReportApp : Application() {
     override fun onCreate() {
         super.onCreate()
         ServiceLocator.init(this)
+        // 崩溃留痕：只记录，不改变系统行为（记完立刻交还给原来的处理器）
+        com.workreport.app.util.AppLog.installUncaughtHandler()
     }
 }

@@ -28,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.workreport.app.ServiceLocator
+import com.workreport.app.ui.debug.DebugPage
 import com.workreport.app.ui.history.HistoryScreen
 import com.workreport.app.ui.home.HomeScreen
 import com.workreport.app.ui.intro.IntroScreen
@@ -172,7 +173,16 @@ fun AppRoot() {
                 ProfileDataPage(onBack = { navController.popBackStack() })
             }
             composable(ProfileRoute.ABOUT.route) {
-                ProfileAboutPage(onBack = { navController.popBackStack() })
+                ProfileAboutPage(
+                    onBack = { navController.popBackStack() },
+                    // 连点版本号 7 次打开隐藏的调试页
+                    onOpenDebug = { navController.navigate(ProfileRoute.DEBUG.route) },
+                )
+            }
+
+            // 隐藏的调试页：入口在「关于」页连点版本号 7 次
+            composable(ProfileRoute.DEBUG.route) {
+                DebugPage(onBack = { navController.popBackStack() })
             }
 
             // ---------- 功能介绍页（整屏，不是弹窗）----------

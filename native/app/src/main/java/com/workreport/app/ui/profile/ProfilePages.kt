@@ -918,7 +918,26 @@ fun ProfileDataPage(
 // ===================== 关于 =====================
 
 @Composable
-fun ProfileAboutPage(onBack: () -> Unit) {
+fun ProfileAboutPage(
+    onBack: () -> Unit,
+    /** 隐藏入口：连点版本号 7 次打开调试页 */
+    onOpenDebug: () -> Unit = {},
+) {
+    // 连点版本号 7 次 → 打开调试页
+    var debugTapCount by remember { mutableStateOf(0) }
+    var lastTapAt by remember { mutableStateOf(0L) }
+    val onVersionTap: () -> Unit = {
+        val now = System.currentTimeMillis()
+        // 两次点击间隔超过 3 秒就重新计数
+        val count = if (now - lastTapAt > 3_000L) 1 else debugTapCount + 1
+        lastTapAt = now
+        debugTapCount = count
+        if (count >= 7) {
+            debugTapCount = 0
+            onOpenDebug()
+        }
+    }
+
     ProfileSubPage(
         title = "关于",
         subtitle = "工作报告生成器 · 原生版",
@@ -941,6 +960,7 @@ fun ProfileAboutPage(onBack: () -> Unit) {
                             "版本 " + BuildConfig.VERSION_NAME,
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.clickable { onVersionTap() },
                         )
                         Text(
                             "完全离线运行，不申请网络以外的多余权限，所有内容只存在本机。",

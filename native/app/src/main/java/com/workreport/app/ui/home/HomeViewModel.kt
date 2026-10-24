@@ -17,6 +17,8 @@ import com.workreport.app.util.MaskAnchor
 import com.workreport.app.util.MaskSection
 import com.workreport.app.util.MaskSummary
 import com.workreport.app.util.PlanMerge
+import com.workreport.app.util.RecordOrder
+import com.workreport.app.util.WorkItemsTakeover
 import com.workreport.app.util.SensitiveWordEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -89,8 +91,8 @@ class HomeViewModel(
     init {
         // 恢复上次没填完的草稿 —— 用户中途退出 App 不该丢内容
         restoreDraft()
-        // 历史页可能刚好送来了一段「下周计划」，在这里就并进去
-        applyPendingPlan()
+        // 历史页可能刚好送来了一批工作条目，在这里就放进「工作记录」
+        applyPendingWorkItems()
         viewModelScope.launch {
             settings.userName.collect { name ->
                 _state.value = _state.value.copy(userName = name)
@@ -113,10 +115,10 @@ class HomeViewModel(
         // 历史报告「编辑并回填」后，重新读一次草稿
         viewModelScope.launch {
             ServiceLocator.draftReload.collect {
-                // 先把表单同步到草稿，再把可能送来的计划并进去
-                // （顺序不能反：合并的基准是首页当前显示的内容）
+                // 先把表单同步到草稿，再处理可能送来的工作条目
+                // （顺序不能反：取回动作要基于首页当前状态来做）
                 restoreDraft()
-                applyPendingPlan()
+                applyPendingWorkItems()
             }
         }
         // 观察历史报告：用来判断「本周是否已生成」，以及提供上一份报告的下周计划
@@ -144,21 +146,32 @@ class HomeViewModel(
     }
 
     /**
-     * 并入历史页送来的「下周计划」。
+     * 并入历史页送来的工作条目。
      *
-     * 合并基准是**首页当前正在显示的内容**（`state.doneWorks`），
-     * 不是草稿 —— 这条是这个功能曾经"点了没反应"的根因。
+     * 语义（用户定的）：点「取回下周计划」后
+     *  1. **清空**「工作记录」和「周报内容」两块；
+     *  2. 把那份报告的「下周计划」拆成一条一条，放进「工作记录」；
+     *  3. 用户可以在「工作记录」里继续补这周新增的内容、调顺序；
+     *  4. 点「汇总」才进「本周已完成工作梳理」。
      *
-     * 计划取走即清空，保证同一段计划只并入一次。
+     * 搬运由首页自己完成 —— 基准就是首页当前的状态，
+     * 不绕草稿（之前绕草稿导致「点了首页毫无变化」）。
      */
-    private fun applyPendingPlan() {
-        val plan = ServiceLocator.takePlanForHome() ?: return
-        if (plan.isBlank()) return
-        val merged = PlanMerge.merge(_state.value.doneWorks, plan)
-        _state.value = _state.value.copy(doneWorks = merged)
+    private fun applyPendingWorkItems() {
+        val items = ServiceLocator.takeWorkItems() ?: return
+        if (items.isEmpty()) return
+        // 清空「工作记录」和「周报内容」，再把取回的条目放进「工作记录」
+        val taken = WorkItemsTakeover.apply(items)
+        _records.value = taken.records
+        _state.value = _state.value.copy(
+            records = taken.records,
+            doneWorks = taken.doneWorks,
+            planWorks = taken.planWorks,
+            recordInput = "",
+        )
         recompute(settings.sensitiveWords.value)
         persistDraft()
-        showMessage("已把这份报告的「下周计划」填入「本周已完成工作梳理」，可自行修改")
+        showMessage("已取回 ${items.size} 条到「工作记录」，可排序、增删后点「汇总」")
     }
 
     /** 忽略上一份报告留下的计划 */
@@ -297,6 +310,28 @@ class HomeViewModel(
         _state.value = _state.value.copy(records = _records.value)
         persistDraft()
     }
+
+    /**
+     * 调整工作记录的顺序。
+     *
+     * 工作记录是「还没汇总」的内容，汇总之后顺序就固定在「本周已完成工作梳理」里了，
+     * 所以排序只对未汇总的记录有意义。
+     */
+    fun moveRecord(from: Int, to: Int) {
+        val list = _records.value
+        if (from !in list.indices || to !in list.indices) return
+        if (from == to) return
+        val next = RecordOrder.move(list, from, to)
+        _records.value = next
+        _state.value = _state.value.copy(records = next)
+        persistDraft()
+    }
+
+    /** 上移一条 */
+    fun moveRecordUp(index: Int) = moveRecord(index, index - 1)
+
+    /** 下移一条 */
+    fun moveRecordDown(index: Int) = moveRecord(index, index + 1)
 
     /**
      * 快捷插入一条「工作记录」：直接进列表，不用再点「添加」。

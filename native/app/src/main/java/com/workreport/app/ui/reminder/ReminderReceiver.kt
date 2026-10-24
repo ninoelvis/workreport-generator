@@ -32,25 +32,34 @@ class ReminderReceiver : BroadcastReceiver() {
         ServiceLocator.init(context.applicationContext)
 
         val settings = ServiceLocator.settings
-        if (!settings.reminderEnabled.value) return
 
-        val weekdays = settings.reminderWeekdays.value
-        val today = Calendar.getInstance()
-        if (!ReminderScheduler.isReminderDay(weekdays, ReminderScheduler.isoDayOfWeek(today))) return
+        // 调试页触发的测试闹钟：跳过开关和星期的检查，直接发通知
+        val forceTest = intent?.getBooleanExtra(ReminderScheduler.EXTRA_FORCE_TEST, false) == true
+        if (!forceTest) {
+            if (!settings.reminderEnabled.value) return
 
-        // 一天只提醒一次
-        if (ReminderScheduler.hasFiredToday(context, today)) return
+            val weekdays = settings.reminderWeekdays.value
+            val today = Calendar.getInstance()
+            if (!ReminderScheduler.isReminderDay(weekdays, ReminderScheduler.isoDayOfWeek(today))) return
+
+            // 一天只提醒一次
+            if (ReminderScheduler.hasFiredToday(context, today)) return
+        }
 
         if (postReminderNotification(context)) {
-            ReminderScheduler.markFiredToday(context, today)
+            if (!forceTest) {
+                ReminderScheduler.markFiredToday(context, Calendar.getInstance())
+            }
         }
 
         // setWindow 是一次性闹钟，触发完把下一次排上
-        ReminderScheduler.schedule(
-            context,
-            settings.reminderEnabled.value,
-            settings.reminderWeekdays.value,
-        )
+        if (!forceTest) {
+            ReminderScheduler.schedule(
+                context,
+                settings.reminderEnabled.value,
+                settings.reminderWeekdays.value,
+            )
+        }
     }
 
     companion object {

@@ -182,6 +182,7 @@ object MailHelper {
             launch(context, spec, uri)
         }.getOrElse { e ->
             Log.e(TAG, "拉起邮件应用失败", e)
+            AppLog.error(TAG, "拉起邮件应用失败", e)
             false
         }
     }

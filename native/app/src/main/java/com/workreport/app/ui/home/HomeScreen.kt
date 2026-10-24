@@ -24,6 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -233,6 +235,10 @@ fun HomeScreen(
                             RecordRow(
                                 index = index + 1,
                                 text = record,
+                                canMoveUp = index > 0,
+                                canMoveDown = index < state.records.size - 1,
+                                onMoveUp = { viewModel.moveRecordUp(index) },
+                                onMoveDown = { viewModel.moveRecordDown(index) },
                                 onDelete = { viewModel.deleteRecord(index) },
                             )
                         }
@@ -554,7 +560,15 @@ fun HomeScreen(
 
 /** 工作记录行 */
 @Composable
-private fun RecordRow(index: Int, text: String, onDelete: () -> Unit) {
+private fun RecordRow(
+    index: Int,
+    text: String,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onDelete: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -579,6 +593,39 @@ private fun RecordRow(index: Int, text: String, onDelete: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )
+        // 排序：汇总之前可以手动调顺序
+        IconButton(
+            onClick = onMoveUp,
+            enabled = canMoveUp,
+            modifier = Modifier.size(30.dp),
+        ) {
+            Icon(
+                Icons.Filled.KeyboardArrowUp,
+                contentDescription = "上移",
+                tint = if (canMoveUp) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                },
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        IconButton(
+            onClick = onMoveDown,
+            enabled = canMoveDown,
+            modifier = Modifier.size(30.dp),
+        ) {
+            Icon(
+                Icons.Filled.KeyboardArrowDown,
+                contentDescription = "下移",
+                tint = if (canMoveDown) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                },
+                modifier = Modifier.size(18.dp),
+            )
+        }
         IconButton(onClick = onDelete, modifier = Modifier.size(30.dp)) {
             Icon(
                 Icons.Filled.Delete,
@@ -614,6 +661,7 @@ private fun sendGeneratedMail(
         )
     }.getOrElse { e ->
         android.util.Log.e("MailHelper", "发送邮件失败", e)
+        com.workreport.app.util.AppLog.error("Home", "发送邮件失败", e)
         false
     }
     android.widget.Toast.makeText(

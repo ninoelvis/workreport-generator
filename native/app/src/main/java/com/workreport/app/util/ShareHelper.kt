@@ -62,6 +62,7 @@ object ShareHelper {
             true
         }.getOrElse { e ->
             android.util.Log.e("ShareHelper", "拉起系统分享失败", e)
+            AppLog.error("ShareHelper", "拉起系统分享失败", e)
             false
         }
     }

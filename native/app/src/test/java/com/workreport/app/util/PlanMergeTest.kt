@@ -1,10 +1,6 @@
 package com.workreport.app.util
 
-import com.workreport.app.ServiceLocator
-import com.workreport.app.data.local.ReportDraft
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -50,80 +46,11 @@ class PlanMergeTest {
         assertEquals("已完成A\n计划B", PlanMerge.merge("已完成A", "  计划B  \n"))
     }
 
-    // ---------- 一次只并入一次 ----------
-
-    @Test
-    fun `取走计划后就没有了 不会重复并入`() {
-        val holder = ServiceLocator.PendingPlanHolder()
-        holder.deliver("计划A")
-        assertEquals("计划A", holder.take())
-        assertNull("计划取走后不该再有", holder.take())
-    }
-
-    @Test
-    fun `多次送来依次追加 不互相覆盖`() {
-        val holder = ServiceLocator.PendingPlanHolder()
-        holder.deliver("计划A")
-        holder.deliver("计划B")
-        assertEquals("计划A\n计划B", holder.take())
-    }
-
-    @Test
-    fun `空计划不会被受理`() {
-        val holder = ServiceLocator.PendingPlanHolder()
-        holder.deliver("   ")
-        assertNull(holder.take())
-    }
-
-    // ---------- 端到端场景：先「载入首页继续编辑」，再「取回下周计划」----------
-
-    @Test
-    fun `载入之后再取回 计划会接在已载入内容后面`() {
-        // 1. 历史页「载入首页继续编辑」：把报告内容写进草稿
-        val draft = ReportDraft.fromContent(
-            title = "2026年10月工作报告",
-            timeRange = "2026.10.19-2026.10.25",
-            doneWorks = "已完成A\n已完成B",
-            planWorks = "计划1\n计划2",
-        )
-        assertEquals("已完成A\n已完成B", draft.doneWorks)
-
-        // 2. 首页恢复草稿 —— 首页当前显示的内容
-        val homeContent = draft.doneWorks
-        assertEquals("已完成A\n已完成B", homeContent)
-
-        // 3. 历史页「取回下周计划」：把计划交给首页
-        val holder = ServiceLocator.PendingPlanHolder()
-        holder.deliver(draft.planWorks)
-        ServiceLocator.deliverPlanToHome(draft.planWorks)
-
-        // 4. 首页合并：基准是首页当前显示的内容
-        val pending = ServiceLocator.takePlanForHome()!!
-        val merged = PlanMerge.merge(homeContent, pending)
-        assertEquals("已完成A\n已完成B\n计划1\n计划2", merged)
-
-        // 5. 再来一次通知（首页重建 / 重复通知）不会重复并入
-        val again = ServiceLocator.takePlanForHome()
-        assertNull("同一段计划不该被并入两次", again)
-        assertEquals("已完成A\n已完成B\n计划1\n计划2", merged)
-    }
-
-    @Test
-    fun `取回之后首页内容一定和草稿里不一样（也就是用户能看到变化）`() {
-        val draft = ReportDraft.fromContent(
-            title = "2026年10月工作报告",
-            timeRange = "2026.10.19-2026.10.25",
-            doneWorks = "已完成A",
-            planWorks = "计划1",
-        )
-        val homeContent = draft.doneWorks
-        ServiceLocator.deliverPlanToHome(draft.planWorks)
-        val merged = PlanMerge.merge(homeContent, ServiceLocator.takePlanForHome()!!)
-        assertTrue(
-            "合并后内容必须和原来不同，否则用户点了看不到变化",
-            merged != homeContent,
-        )
-        assertTrue(merged.contains("已完成A"))
-        assertTrue(merged.contains("计划1"))
-    }
+    // ---------- 说明 ----------
+    //
+    // 「取回下周计划」的一次性暂存（PendingWorkItemsHolder）
+    // 和「取回会清空工作记录与周报内容」的语义，
+    // 已经在 WorkItemsTakeoverTest 里覆盖，这里不再重复。
+    //
+    // PlanMerge 只剩下首页顶部横幅那条老路径在用（把上周计划并进本周已完成）。
 }

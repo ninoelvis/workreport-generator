@@ -14,8 +14,8 @@ android {
         // 最低支持 Android 8.0 (API 26)
         minSdk = 26
         targetSdk = 34
-        versionCode = 24
-        versionName = "1.4.0-beta4"
+        versionCode = 25
+        versionName = "1.4.0-beta5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

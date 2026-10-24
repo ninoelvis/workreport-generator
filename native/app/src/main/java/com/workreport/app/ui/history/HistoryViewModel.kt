@@ -1,6 +1,7 @@
 package com.workreport.app.ui.history
 
 import androidx.lifecycle.ViewModel
+import com.workreport.app.util.PlanItems
 import androidx.lifecycle.viewModelScope
 import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.ReportDraft
@@ -178,28 +179,31 @@ class HistoryViewModel(
     }
 
     /**
-     * 把一份历史报告的「下周工作计划」取回首页，填进「本周已完成工作梳理」。
+     * 把一份历史报告的「下周工作计划」取回首页。
      *
-     * 语义：上周报告的「下周计划」= 这一周该做的事，所以它落到「本周已完成」框里。
-     * 只作为**起点**，用户填完可以随便改或删 —— 避免上周没做完的事变成这周凭空多出来的。
+     * 语义（用户定的）：取回之后
+     *  - 首页的「工作记录」和「周报内容」**都会被清空**；
+     *  - 这份报告的「下周计划」被拆成一条一条，放进首页的「工作记录」；
+     *  - 用户可以在「工作记录」里补这周新增的内容、调顺序；
+     *  - 点「汇总」才进「本周已完成工作梳理」。
      *
-     * ⚠️ 合并这件事由**首页自己**做（见 [HomeViewModel.applyPendingPlan]）：
-     * 历史页只负责把计划文本送过去。
+     * ⚠️ 搬运由**首页自己**做（见 [HomeViewModel.applyPendingWorkItems]）：
+     * 历史页只负责把条目交过去。
      *
      * 之前的历史页是「把计划合并进草稿 → 通知首页重读草稿」，
-     * 合并基准是草稿而不是首页当前显示的内容，
+     * 搬运基准是草稿而不是首页当前的内容，
      * 两者一旦对不上，用户点了就是「首页毫无变化」。
      */
     fun takePlanIntoHome(entity: ReportEntity, onDone: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val plan = entity.planWorks.trim()
-            if (plan.isEmpty()) {
+            val items = PlanItems.split(entity.planWorks)
+            if (items.isEmpty()) {
                 onDone(false)
                 return@launch
             }
-            // 交给首页：首页会把它并进自己当前显示的内容里
-            ServiceLocator.deliverPlanToHome(plan)
-            // 通知首页刷新一下（首页会先同步草稿，再并入这段计划）
+            // 交给首页：首页会清空工作记录和周报内容，再把这些条目放进工作记录
+            ServiceLocator.deliverWorkItems(items)
+            // 通知首页刷新一下（首页会先同步草稿，再处理这批条目）
             ServiceLocator.notifyDraftReloaded()
             onDone(true)
         }
@@ -230,6 +234,7 @@ class HistoryViewModel(
                 )
             }.getOrElse { e ->
                 android.util.Log.e("MailHelper", "发送邮件失败", e)
+                com.workreport.app.util.AppLog.error("History", "发送邮件失败", e)
                 false
             }
             onDone(ok)
