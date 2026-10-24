@@ -16,6 +16,7 @@ import com.workreport.app.util.MailHelper
 import com.workreport.app.util.MaskAnchor
 import com.workreport.app.util.MaskSection
 import com.workreport.app.util.MaskSummary
+import com.workreport.app.util.PlanMerge
 import com.workreport.app.util.SensitiveWordEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -88,6 +89,8 @@ class HomeViewModel(
     init {
         // 恢复上次没填完的草稿 —— 用户中途退出 App 不该丢内容
         restoreDraft()
+        // 历史页可能刚好送来了一段「下周计划」，在这里就并进去
+        applyPendingPlan()
         viewModelScope.launch {
             settings.userName.collect { name ->
                 _state.value = _state.value.copy(userName = name)
@@ -110,7 +113,10 @@ class HomeViewModel(
         // 历史报告「编辑并回填」后，重新读一次草稿
         viewModelScope.launch {
             ServiceLocator.draftReload.collect {
+                // 先把表单同步到草稿，再把可能送来的计划并进去
+                // （顺序不能反：合并的基准是首页当前显示的内容）
                 restoreDraft()
+                applyPendingPlan()
             }
         }
         // 观察历史报告：用来判断「本周是否已生成」，以及提供上一份报告的下周计划
@@ -130,15 +136,29 @@ class HomeViewModel(
     fun applyCarriedPlan() {
         val plan = _state.value.carriedPlan.trim()
         if (plan.isEmpty()) return
-        val merged = if (_state.value.doneWorks.isBlank()) {
-            plan
-        } else {
-            _state.value.doneWorks.trimEnd() + "\n" + plan
-        }
+        val merged = PlanMerge.merge(_state.value.doneWorks, plan)
         _state.value = _state.value.copy(doneWorks = merged, carriedPlan = "")
         recompute(settings.sensitiveWords.value)
         persistDraft()
         showMessage("已把上周计划填入「本周已完成工作梳理」，可自行修改")
+    }
+
+    /**
+     * 并入历史页送来的「下周计划」。
+     *
+     * 合并基准是**首页当前正在显示的内容**（`state.doneWorks`），
+     * 不是草稿 —— 这条是这个功能曾经"点了没反应"的根因。
+     *
+     * 计划取走即清空，保证同一段计划只并入一次。
+     */
+    private fun applyPendingPlan() {
+        val plan = ServiceLocator.takePlanForHome() ?: return
+        if (plan.isBlank()) return
+        val merged = PlanMerge.merge(_state.value.doneWorks, plan)
+        _state.value = _state.value.copy(doneWorks = merged)
+        recompute(settings.sensitiveWords.value)
+        persistDraft()
+        showMessage("已把这份报告的「下周计划」填入「本周已完成工作梳理」，可自行修改")
     }
 
     /** 忽略上一份报告留下的计划 */

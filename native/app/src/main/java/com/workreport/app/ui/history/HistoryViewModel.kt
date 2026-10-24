@@ -9,6 +9,7 @@ import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.repository.ReportRepository
 import com.workreport.app.export.EncryptedZipReader
 import com.workreport.app.export.XlsxContentReader
+import com.workreport.app.util.ReportContentFormat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -131,6 +132,7 @@ class HistoryViewModel(
     fun loadIntoHome(entity: ReportEntity, onDone: (Boolean) -> Unit) {
         viewModelScope.launch {
             val content = if (entity.hasFullContent) {
+                // 数据库里存的就是用户当初写的原始内容，直接用
                 XlsxContentReader.Content(
                     title = entity.reportTitle,
                     timeRange = entity.timeRange,
@@ -138,8 +140,16 @@ class HistoryViewModel(
                     planWorks = entity.planWorks,
                 )
             } else {
+                // 老报告没有存内容，只能去解开压缩包读 Excel。
+                // ⚠️ Excel 里那两格是**格式化后**的文本，
+                // 必须拆回原始条目再填进输入框，否则重新生成会二次格式化变成乱码。
                 withContext(Dispatchers.IO) {
                     EncryptedZipReader.readContent(File(entity.filePath), entity.password)
+                }?.let {
+                    it.copy(
+                        doneWorks = ReportContentFormat.unformatDoneWorks(it.doneWorks),
+                        planWorks = ReportContentFormat.unformatPlanWorks(it.planWorks),
+                    )
                 }
             }
 
@@ -172,6 +182,13 @@ class HistoryViewModel(
      *
      * 语义：上周报告的「下周计划」= 这一周该做的事，所以它落到「本周已完成」框里。
      * 只作为**起点**，用户填完可以随便改或删 —— 避免上周没做完的事变成这周凭空多出来的。
+     *
+     * ⚠️ 合并这件事由**首页自己**做（见 [HomeViewModel.applyPendingPlan]）：
+     * 历史页只负责把计划文本送过去。
+     *
+     * 之前的历史页是「把计划合并进草稿 → 通知首页重读草稿」，
+     * 合并基准是草稿而不是首页当前显示的内容，
+     * 两者一旦对不上，用户点了就是「首页毫无变化」。
      */
     fun takePlanIntoHome(entity: ReportEntity, onDone: (Boolean) -> Unit) {
         viewModelScope.launch {
@@ -180,14 +197,9 @@ class HistoryViewModel(
                 onDone(false)
                 return@launch
             }
-            val current = settings.draft.value
-            val merged = if (current.doneWorks.isBlank()) {
-                plan
-            } else {
-                current.doneWorks.trimEnd() + "\n" + plan
-            }
-            settings.saveDraft(current.copy(doneWorks = merged))
-            // 首页可能还活着（切 Tab 不一定重建 ViewModel），通知它重新读草稿
+            // 交给首页：首页会把它并进自己当前显示的内容里
+            ServiceLocator.deliverPlanToHome(plan)
+            // 通知首页刷新一下（首页会先同步草稿，再并入这段计划）
             ServiceLocator.notifyDraftReloaded()
             onDone(true)
         }

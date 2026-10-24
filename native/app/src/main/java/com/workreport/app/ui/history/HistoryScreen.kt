@@ -229,9 +229,13 @@ fun HistoryScreen(
                 TextButton(onClick = {
                     planTarget = null
                     viewModel.takePlanIntoHome(report) { ok ->
-                        toast = if (ok) "已填入首页「本周已完成工作梳理」" else "取回失败"
+                        if (ok) {
+                            // 跳转放在回调里：确保计划已经交给首页了再切页面
+                            onGoHome()
+                        } else {
+                            toast = "取回失败"
+                        }
                     }
-                    onGoHome()
                 }) { Text("取回") }
             },
             dismissButton = {
