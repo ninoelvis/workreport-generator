@@ -13,8 +13,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -119,53 +126,49 @@ fun IntroScreen(
                 IntroSection(
                     title = "功能介绍",
                     icon = Icons.Filled.Star,
-                    initiallyExpanded = true,
                 ) {
-                    IntroBullet("填姓名和时间", "自动算出周数、文件名和压缩包密码。")
                     IntroBullet(
-                        "随手记工作",
-                        "做完一项记一条，可以上下调顺序，汇总进「本周已完成工作梳理」。",
-                    )
-                    IntroBullet("快捷记录模板", "常写的重复内容存成模板，首页点一下就插进去。")
-                    IntroBullet("自动暂存", "填到一半退出也不丢，下次打开还在；生成压缩包后自动清除。")
-                    IntroBullet("一键生成", "导出 Excel 并加密成 ZIP，存到手机「下载」目录。")
-                    IntroBullet("自动发邮件", "拉起邮箱 App，主题和压缩包附件自动带好，收件人自己填。")
-                    IntroBullet("敏感词替换", "「纪委」自动变「jw」，词库自己维护。")
-                    IntroBullet(
-                        "脱敏预览，逐处放行",
-                        "导出前就能看清哪几处被替换了，还带上下文。同一句话里出现两次「查询」时，" +
-                            "可以只放行其中一处 —— 另一处照常脱敏，不会再整句一起豁免。",
-                    )
-                    IntroBullet("系统分享", "生成的压缩包可以直接调系统分享面板，发给任何人。")
-                    IntroBullet("周报提醒", "选好星期几，到点首页顶部提醒一句，不用记着什么时候写周报。")
-                    IntroBullet(
-                        "通知权限引导",
-                        "第一次进首页时会问一句要不要开通知 —— 只有开了通知，" +
-                            "到点才能收到「该写周报了」的提醒。不想开就点「以后再说」，不会再问。",
-                    )
-                    IntroBullet("配置备份", "姓名、词库、模板、提醒设置可以备份成一个加密文件，换手机时一键恢复。")
-                    IntroBullet("历史报告", "随时回看，可以再下载、再发一次。")
-                    IntroBullet(
-                        "历史报告直接预览",
-                        "点开就能看到压缩包里那份 Excel 长什么样 —— 表格、合并单元格、列宽都跟导出的完全一致，" +
-                            "连以前生成的报告也能看全，不用手动解压。",
+                        "填一次姓名和时间",
+                        "自动算出周数、压缩包文件名和解压密码，不用自己想格式。",
                     )
                     IntroBullet(
-                        "历史报告改一改",
-                        "看完可以直接「载入首页继续编辑」，改完重新生成；" +
-                            "生成成功后表单会自动清空，不用手动删。",
+                        "记工作 → 汇总 → 生成",
+                        "做完一项记一条，可上下调顺序；汇总后导出加密 ZIP 存到「下载」目录，" +
+                            "也能一键拉起邮箱发送。",
                     )
                     IntroBullet(
-                        "取回下周计划",
-                        "上一份报告的「下周计划」能一键取回，放进「工作记录」一条一条排好，" +
-                            "补上这周新增的内容再点「汇总」，直接接着往下写。",
+                        "脱敏按处放行",
+                        "敏感词自动替换；导出前看清哪几处被换了，" +
+                            "同一句里重复出现时可以只放行其中一处。",
                     )
-                    IntroBullet("实时预览", "导出前先看 Excel 长什么样。")
+                    IntroBullet(
+                        "历史报告",
+                        "随时回看、直接预览 Excel（跟导出的一模一样），可再下载、再发邮件，" +
+                            "也可载入首页继续改。",
+                    )
+                    IntroBullet(
+                        "提醒与分享",
+                        "选好星期几，到点提醒你写周报；压缩包可走系统分享面板发给任何人。",
+                    )
+                    IntroBullet(
+                        "配置备份",
+                        "姓名、词库、模板、提醒设置可加密备份，换手机时一键恢复。",
+                    )
                 }
             }
 
             item {
                 IntroSection(title = "历史版本更新记录", icon = Icons.Filled.History) {
+                    ChangeLogItem(
+                        "v1.4.1",
+                        "引导页「功能介绍」精简成 6 条并改成**默认收起**（原来 16 条全部铺开，太长了）；" +
+                            "「数据与隐私」补上了**通知权限**的说明 —— 它只用于周报提醒，" +
+                            "Android 13 以上首次进首页会主动问，不开也不影响其它功能；" +
+                            "修复引导页填姓名时**输入法弹出后看不见自己打的字**（底部区域会被键盘盖住），" +
+                            "同时把所有输入框的字号统一提到 16sp —— 低于 16sp 时部分手机的输入法会强制放大整页，" +
+                            "输入框被放大裁切，文字反而看不见。",
+                        current = true,
+                    )
                     ChangeLogItem(
                         "v1.4.0",
                         "脱敏预览升级成**按处放行**：同一句话里出现两次「查询」时会列成两行并带上下文，" +
@@ -181,7 +184,6 @@ fun IntroScreen(
                             "历史报告的预览区和首页预览区现在**完全一致** —— 显示的就是 Excel 里那两格的原文" +
                             "（已格式化、已脱敏），预览即导出，导出格式一个字都没动；" +
                             "脱敏预览的开关换成跟整体风格统一的形式，不再突兀。",
-                        current = true,
                     )
                     ChangeLogItem(
                         "v1.3.11",
@@ -247,11 +249,20 @@ fun IntroScreen(
                     IntroBullet("完全本地", "所有内容只保存在本机，不上传任何服务器。")
                     IntroBullet(
                         "自动保存",
-                        "输入内容自动保存在本机，下次打开自动恢复；首次启动姓名为空。",
+                        "输入内容自动保存在本机，下次打开自动恢复；首次启动会要求填一次姓名，" +
+                            "因为压缩包文件名要用。",
+                    )
+                    IntroBullet(
+                        "通知权限",
+                        "只用于「周报提醒」——到点弹一条「该写周报了」。" +
+                            "Android 13 以上首次进首页时会主动问你要不要开，" +
+                            "点「以后再说」就再也不问；不开也不影响其它功能，" +
+                            "随时可以去系统设置里开。",
                     )
                     IntroBullet(
                         "权限最小化",
-                        "只申请联网（预留）与 Android 8/9 写「下载」目录两项权限，不申请相机等无关权限。",
+                        "除通知权限外，只申请 Android 8/9 写「下载」目录的权限；" +
+                            "不申请相机、位置等无关权限，也不需要联网。",
                     )
                 }
             }
@@ -273,7 +284,15 @@ fun IntroScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
+                    // ⚠️ 键盘弹出时必须把底部区域顶到键盘上方，
+                    // 否则姓名输入框会被盖住 —— 打字时看不见自己打的字。
+                    // navigationBars 与 ime 取**并集**（取最大值），不叠加，
+                    // 这样键盘弹出时不会在按钮下面多留一段空白。
+                    .windowInsetsPadding(
+                        WindowInsets.navigationBars
+                            .only(WindowInsetsSides.Bottom)
+                            .union(WindowInsets.ime),
+                    )
                     .padding(horizontal = 16.dp, vertical = 10.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -293,12 +312,18 @@ fun IntroScreen(
                     OutlinedTextField(
                         value = userName,
                         onValueChange = { userName = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp),
                         label = { Text("你的姓名", fontSize = 13.sp) },
                         placeholder = { Text("用于压缩包文件名，如：张三", fontSize = 12.5.sp) },
                         singleLine = true,
                         shape = RoundedCornerShape(10.dp),
-                        textStyle = MaterialTheme.typography.bodyMedium,
+                        // 字号给足 16sp —— 低于 16sp 某些系统会自己放大整页，字反而被挤出框
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        ),
                     )
                     Spacer(Modifier.height(8.dp))
                 }

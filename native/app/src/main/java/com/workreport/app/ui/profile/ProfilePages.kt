@@ -206,7 +206,12 @@ fun ProfileShortcutsPage(
                                     placeholder = { Text("输入模板内容", fontSize = 13.sp) },
                                     singleLine = true,
                                     shape = RoundedCornerShape(8.dp),
-                                    textStyle = MaterialTheme.typography.bodyMedium,
+                                    // 16sp：字号低于 16sp 时，部分 ROM 的输入法会强制放大整页，
+                                    // 结果是输入框被放大裁掉，看不见自己打的字
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 16.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    ),
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Button(
