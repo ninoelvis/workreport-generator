@@ -79,9 +79,19 @@ class ReportExporter(
             planWorks = planFormatted,
         )
 
-        // 内部文件名加时间戳前缀：同一周生成多次也不会互相覆盖。
-        // 对外展示、复制到「下载」目录的文件名仍然是 zipFileName —— 公司规定的格式一个字都不改。
-        val target = File(outputDir, "${now.time}_$zipFileName")
+        // 内部文件的名字就是公司规定的 zipFileName —— 一个字符都不多。
+        //
+        // ⚠️ 血泪教训：之前给内部文件加过时间戳前缀（"1753..._张三-....zip"），
+        // 以为「对外展示的名字没变就行」。结果是错的 ——
+        // 邮件附件和系统分享都是把**这个文件**直接交给 FileProvider 的，
+        // 而 FileProvider 查 OpenableColumns.DISPLAY_NAME 时返回的是
+        // `File.getName()`（磁盘上的真实文件名），
+        // 于是收件人看到的附件名就带上了时间戳 —— 改的是用户拿到手的文件名，红线破了。
+        //
+        // 现在改成：**文件名保持原样，唯一性由子目录承担**。
+        // 同一周生成多次 → 落到不同子目录 → 互不覆盖；
+        // 文件本身的名字从头到尾都是 zipFileName，分享/发信/下载三处拿到的是同一个名字。
+        val target = targetFileFor(outputDir, now, zipFileName)
         EncryptedZipWriter.write(
             target = target,
             password = password,
@@ -150,6 +160,19 @@ class ReportExporter(
     }
 
     companion object {
+        /**
+         * 计算这次导出要写到的文件。
+         *
+         * 规则：
+         *  - **文件名 = 公司规定的 zipFileName，一个字符都不改**
+         *    （下载目录、邮件附件、系统分享三处拿到的必须是同一个名字）
+         *  - 每次生成落到独立子目录，避免同一周生成多次互相覆盖
+         */
+        internal fun targetFileFor(outputDir: File, now: Date, zipFileName: String): File {
+            val dir = File(outputDir, now.time.toString()).apply { mkdirs() }
+            return File(dir, zipFileName)
+        }
+
         /** 应用私有目录下的报告存放位置（用于 FileProvider 分享与历史记录） */
         fun reportsDir(context: Context): File =
             File(context.filesDir, "reports").apply { mkdirs() }
