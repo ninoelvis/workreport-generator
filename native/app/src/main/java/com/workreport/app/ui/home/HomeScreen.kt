@@ -3,6 +3,7 @@ package com.workreport.app.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
+import android.Manifest
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -354,6 +357,51 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    // 通知权限引导：只在用户还没做过选择时弹一次
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {
+        // 不管给没给，都不再重复问
+        viewModel.onNotificationPermissionResult()
+    }
+
+    if (state.showNotificationPermissionPrompt) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissNotificationPermissionPrompt() },
+            title = { Text("开启通知，才能收到周报提醒") },
+            text = {
+                Column {
+                    Text(
+                        "这个 App 会在你选定的星期几提醒你「该写周报了」。\n" +
+                            "需要系统通知权限才能收到提醒。",
+                        fontSize = 13.sp,
+                        lineHeight = 19.sp,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "所有内容只存在你自己的手机里，不发送到任何服务器。",
+                        fontSize = 11.5.sp,
+                        lineHeight = 17.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.dismissNotificationPermissionPrompt()
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }) {
+                    Text("去开启")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissNotificationPermissionPrompt() }) {
+                    Text("以后再说")
+                }
+            },
+        )
     }
 
     // 第一步：确认是否生成

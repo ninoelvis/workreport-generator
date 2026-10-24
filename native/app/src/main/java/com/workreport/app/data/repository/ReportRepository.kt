@@ -68,11 +68,16 @@ class ReportRepository(
                 year = result.year,
                 month = result.month,
                 weekNum = result.weekNum,
-                contentPreview = doneWorks.take(120),
+                // 列表摘要也用导出文本，和展开后的预览保持一致
+                contentPreview = result.doneWorksExported.take(120),
                 reportTitle = title,
                 timeRange = timeRangeText,
+                // 原始条目：留给「载入首页继续编辑」
                 doneWorks = doneWorks,
                 planWorks = planWorks,
+                // 导出文本：Excel 里那两格的原文，预览区显示的就是它
+                doneWorksExported = result.doneWorksExported,
+                planWorksExported = result.planWorksExported,
             ),
         )
         result

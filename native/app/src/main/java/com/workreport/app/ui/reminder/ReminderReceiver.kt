@@ -87,6 +87,14 @@ class ReminderReceiver : BroadcastReceiver() {
                 ) == PackageManager.PERMISSION_GRANTED
 
         /**
+         * 这个系统版本到底要不要问通知权限。
+         *
+         * Android 13（API 33）以下通知权限是安装时自动给的，不用问用户。
+         */
+        fun needsNotificationPermission(context: Context): Boolean =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+        /**
          * 弹一条周报提醒通知。
          *
          * @return true = 真的发出去了；false = 没权限或系统拒绝。

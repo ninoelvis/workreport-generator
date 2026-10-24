@@ -8,7 +8,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [ReportEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class ReportDatabase : RoomDatabase() {
@@ -30,6 +30,22 @@ abstract class ReportDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE reports ADD COLUMN time_range TEXT NOT NULL DEFAULT ''")
                 db.execSQL("ALTER TABLE reports ADD COLUMN done_works TEXT NOT NULL DEFAULT ''")
                 db.execSQL("ALTER TABLE reports ADD COLUMN plan_works TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        /**
+         * v2 → v3：补齐「真正写进 Excel 的那两格」。
+         *
+         * 预览区要显示的必须是 Excel 里的原文（已格式化 + 已脱敏），
+         * 而 v2 存的只是用户写的原始条目 —— 两者对不上，
+         * 所以历史报告的预览看起来「内容缺失严重」。
+         *
+         * 旧记录这两列为空，读取时自动降级为「解压缩包读 Excel」，结果一样是 Excel 原文。
+         */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reports ADD COLUMN done_works_exported TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE reports ADD COLUMN plan_works_exported TEXT NOT NULL DEFAULT ''")
             }
         }
     }

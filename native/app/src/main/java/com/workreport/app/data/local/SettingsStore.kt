@@ -288,6 +288,25 @@ class SettingsStore(context: Context) {
         _introShown.value = value
     }
 
+    // ---------------- 通知权限引导 ----------------
+
+    /**
+     * 用户是否已经对「开启通知权限」这个引导做过选择。
+     *
+     *  - 点了「去开启」→ 记为已处理（不管系统那边给没给）；
+     *  - 点了「以后再说」→ 也记为已处理，**不再重复打扰**。
+     *
+     * 真正的权限状态每次都问系统问，不靠这个字段判断。
+     */
+    private val _notificationPromptHandled =
+        MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATION_PROMPT_HANDLED, false))
+    val notificationPromptHandled: StateFlow<Boolean> = _notificationPromptHandled.asStateFlow()
+
+    fun setNotificationPromptHandled(value: Boolean) {
+        prefs.edit().putBoolean(KEY_NOTIFICATION_PROMPT_HANDLED, value).apply()
+        _notificationPromptHandled.value = value
+    }
+
     // ---------------- 上次填写的时间范围（草稿恢复用） ----------------
 
     private val _lastTimeRange = MutableStateFlow(prefs.getString(KEY_LAST_TIME_RANGE, "").orEmpty())
@@ -313,6 +332,7 @@ class SettingsStore(context: Context) {
         _draft.value = ReportDraft()
         ShortcutSlot.entries.forEach { _shortcuts.getValue(it).value = emptyList() }
         // 引导页不随「清除数据」重置，否则清完又会被弹一次
+        _notificationPromptHandled.value = false
     }
 
     private fun loadSensitiveWords(): List<SensitiveWord> {
@@ -348,6 +368,7 @@ class SettingsStore(context: Context) {
         private const val KEY_DRAFT = "report_draft"
         private const val KEY_LAST_TIME_RANGE = "last_time_range"
         private const val KEY_INTRO_SHOWN = "intro_shown"
+        private const val KEY_NOTIFICATION_PROMPT_HANDLED = "notification_prompt_handled"
         private const val KEY_AUTO_SEND_MAIL = "auto_send_mail"
         private const val KEY_REMINDER_ENABLED = "reminder_enabled"
         private const val KEY_REMINDER_WEEKDAYS = "reminder_weekdays"

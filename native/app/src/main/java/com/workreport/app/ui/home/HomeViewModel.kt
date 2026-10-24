@@ -1,5 +1,6 @@
 package com.workreport.app.ui.home
 
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.workreport.app.ServiceLocator
@@ -16,6 +17,8 @@ import com.workreport.app.util.MailHelper
 import com.workreport.app.util.MaskAnchor
 import com.workreport.app.util.MaskSection
 import com.workreport.app.util.MaskSummary
+import com.workreport.app.ui.reminder.ReminderReceiver
+import com.workreport.app.util.NotificationPrompt
 import com.workreport.app.util.PlanMerge
 import com.workreport.app.util.RecordOrder
 import com.workreport.app.util.WorkItemsTakeover
@@ -54,6 +57,8 @@ data class HomeUiState(
     val maskExcluded: Set<MaskAnchor> = emptySet(),
     /** 本次脱敏命中的词与处数，用于「脱敏预览」面板 */
     val maskSummary: MaskSummary = MaskSummary(),
+    /** 是否弹出「开启通知权限」的引导弹窗 */
+    val showNotificationPermissionPrompt: Boolean = false,
     /** 上一份报告留下的「下周工作计划」，可一键填入本周已完成工作梳理 */
     val carriedPlan: String = "",
     /** 上一份报告的日期描述，用于提示条文案 */
@@ -96,6 +101,8 @@ class HomeViewModel(
         viewModelScope.launch {
             settings.userName.collect { name ->
                 _state.value = _state.value.copy(userName = name)
+                // 用户说的时序：填完姓名进入首页之后，才提示开启通知权限
+                checkNotificationPermissionPrompt()
             }
         }
         viewModelScope.launch {
@@ -121,12 +128,49 @@ class HomeViewModel(
                 applyPendingWorkItems()
             }
         }
+        // 第一次进首页时，引导一下通知权限（用户点过就再也不打扰）
+        checkNotificationPermissionPrompt()
+
         // 观察历史报告：用来判断「本周是否已生成」，以及提供上一份报告的下周计划
         viewModelScope.launch {
             repository.observeAll().collect { list ->
                 _state.value = _state.value.copy(latestReport = list.firstOrNull())
             }
         }
+    }
+
+    // ---------------- 通知权限引导 ----------------
+
+    /**
+     * 判断要不要弹「开启通知权限」的引导。
+     *
+     * 条件（同时满足才弹）：
+     *  1. Android 13（API 33）及以上 —— 低版本通知权限自动有，不用问；
+     *  2. 系统里还没给通知权限；
+     *  3. 用户**没有**对这个问题做过选择（点过「去开启」或「以后再说」就不再问）。
+     */
+    private fun checkNotificationPermissionPrompt() {
+        val should = NotificationPrompt.shouldShow(
+            sdkInt = Build.VERSION.SDK_INT,
+            hasPermission = ReminderReceiver.hasNotificationPermission(ServiceLocator.context),
+            handled = settings.notificationPromptHandled.value,
+            userNameFilled = settings.userName.value.isNotBlank(),
+        )
+        if (!should) return
+        if (_state.value.showNotificationPermissionPrompt) return
+        _state.value = _state.value.copy(showNotificationPermissionPrompt = true)
+    }
+
+    /** 用户点了「以后再说」—— 记下来，不再打扰 */
+    fun dismissNotificationPermissionPrompt() {
+        settings.setNotificationPromptHandled(true)
+        _state.value = _state.value.copy(showNotificationPermissionPrompt = false)
+    }
+
+    /** 系统权限弹窗的结果：无论给没给，都不再重复问 */
+    fun onNotificationPermissionResult() {
+        settings.setNotificationPromptHandled(true)
+        _state.value = _state.value.copy(showNotificationPermissionPrompt = false)
     }
 
     /**

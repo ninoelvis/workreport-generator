@@ -31,6 +31,14 @@ data class ExportResult(
     val month: Int,
     val weekNum: Int,
     val createdAt: Long,
+    /**
+     * 「本周已完成工作梳理」**写进 Excel 的最终文本**（已格式化 + 已脱敏）。
+     *
+     * 存进历史记录，预览区直接显示它 —— 预览必须和 Excel 逐字一致。
+     */
+    val doneWorksExported: String = "",
+    /** 「下周工作计划」写进 Excel 的最终文本 */
+    val planWorksExported: String = "",
 )
 
 /**
@@ -106,6 +114,8 @@ class ReportExporter(
             password = password,
             file = target,
             savedToDownloads = saved,
+            doneWorksExported = doneFormatted,
+            planWorksExported = planFormatted,
             year = year,
             month = month,
             weekNum = weekNum,

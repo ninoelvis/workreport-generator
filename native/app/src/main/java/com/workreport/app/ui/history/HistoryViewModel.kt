@@ -80,22 +80,26 @@ class HistoryViewModel(
     /**
      * 加载某份历史报告的完整内容。
      *
-     * 新版生成的报告在数据库里存了完整内容，直接用；
-     * 旧版生成的没有存，就去把加密压缩包解开、读里面的 xlsx —— 密码就是本周周四，
-     * 数据库里本来就有，所以是「自动带入」的。
+     * ⚠️ 预览区显示的必须是**实际导出的 Excel 里的原文**，不能有差别 ——
+     *    导出格式是红线，预览就得以它为准。
+     *
+     * 两条路径都指向同一个真相：
+     *  - 新版生成的报告：数据库里存了「导出时写进 Excel 的那两格」，直接用，秒开；
+     *  - 旧版生成的报告：没存，就去把加密压缩包解开、读里面的 xlsx —— 那本来就是 Excel 原文。
      */
     fun loadPreview(entity: ReportEntity) {
         if (_previews.value[entity.id]?.content != null) return
 
-        if (entity.hasFullContent) {
+        if (entity.hasExportedContent) {
+            // 数据库里存的就是 Excel 里的原文（已格式化 + 已脱敏），直接用
             setPreview(
                 entity.id,
                 PreviewState(
                     content = XlsxContentReader.Content(
                         title = entity.reportTitle,
                         timeRange = entity.timeRange,
-                        doneWorks = entity.doneWorks,
-                        planWorks = entity.planWorks,
+                        doneWorks = entity.doneWorksExported,
+                        planWorks = entity.planWorksExported,
                     ),
                 ),
             )

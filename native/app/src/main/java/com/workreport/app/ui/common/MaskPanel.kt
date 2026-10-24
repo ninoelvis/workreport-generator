@@ -1,6 +1,7 @@
 package com.workreport.app.ui.common
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,13 +15,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -64,7 +69,8 @@ fun MaskPanel(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -145,9 +151,9 @@ private fun MaskHitRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable { onToggle() }
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .padding(start = 10.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
@@ -207,36 +213,22 @@ private fun MaskHitRow(
                 )
             }
         }
-        Spacer(Modifier.width(8.dp))
-        Box(
+        Spacer(Modifier.width(6.dp))
+        // 用 Material3 自带的开关：颜色、圆角、动画都跟 App 整体统一，
+        // 不再是手搓的方块滑块（深色模式下那个白点很跳）。
+        Switch(
+            checked = isExcluded,
+            onCheckedChange = { onToggle() },
             modifier = Modifier
-                .size(34.dp, 20.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(
-                    if (isExcluded) {
-                        MaterialTheme.colorScheme.primary
+                .scale(0.78f)
+                .semantics {
+                    contentDescription = if (isExcluded) {
+                        "第 $index 处本次保留原文，点一下恢复脱敏"
                     } else {
-                        MaterialTheme.colorScheme.outlineVariant
-                    },
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(14.dp)
-                    .clip(RoundedCornerShape(7.dp))
-                    .background(
-                        if (isExcluded) Color.White else MaterialTheme.colorScheme.surface,
-                    )
-                    .then(
-                        if (isExcluded) {
-                            Modifier
-                        } else {
-                            Modifier.padding(start = 10.dp)
-                        },
-                    ),
-            )
-        }
+                        "第 $index 处本次会被脱敏，点一下保留原文"
+                    }
+                },
+        )
     }
 }
 

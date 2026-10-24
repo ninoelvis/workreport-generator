@@ -73,6 +73,24 @@ data class ReportEntity(
     /** 「下周工作计划」全文 */
     @ColumnInfo(name = "plan_works", defaultValue = "")
     val planWorks: String = "",
+
+    // ---- v1.4.0 新增：真正写进 Excel 的那两格（已格式化 + 已脱敏）----
+
+    /**
+     * 「本周已完成工作梳理」**写进 Excel 的最终文本**。
+     *
+     * ⚠️ 和 [doneWorks] 的区别：
+     *  - [doneWorks] 是用户当初写的**原始条目**，用于「载入首页继续编辑」；
+     *  - 这里存的是**格式化并脱敏之后**的文本，也就是 Excel 里 B3 那一格的原文。
+     *
+     * 预览区必须显示这个 —— 预览就是 Excel，Excel 就是红线，不能有任何差别。
+     */
+    @ColumnInfo(name = "done_works_exported", defaultValue = "")
+    val doneWorksExported: String = "",
+
+    /** 「下周工作计划」写进 Excel 的最终文本（Excel 里 C3 那一格） */
+    @ColumnInfo(name = "plan_works_exported", defaultValue = "")
+    val planWorksExported: String = "",
 ) {
     /**
      * 旧版本生成的记录没有这些字段，无法还原完整 Excel 预览。
@@ -83,4 +101,13 @@ data class ReportEntity(
             timeRange.isNotEmpty() ||
             doneWorks.isNotEmpty() ||
             planWorks.isNotEmpty()
+
+    /**
+     * 有没有「导出时的最终文本」。
+     *
+     * 有 → 预览直接用它，和 Excel 逐字一致，不用解压缩包；
+     * 没有（旧版本生成的）→ 只能去解压缩包读 Excel。
+     */
+    val hasExportedContent: Boolean
+        get() = doneWorksExported.isNotEmpty() || planWorksExported.isNotEmpty()
 }

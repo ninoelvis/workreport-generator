@@ -114,7 +114,7 @@ object ServiceLocator {
                 ReportDatabase::class.java,
                 ReportDatabase.NAME,
             )
-                .addMigrations(ReportDatabase.MIGRATION_1_2)
+                .addMigrations(ReportDatabase.MIGRATION_1_2, ReportDatabase.MIGRATION_2_3)
                 .build().also { dbInstance = it }
         }
 
