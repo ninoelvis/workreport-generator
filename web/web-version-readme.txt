@@ -13,7 +13,7 @@
 
 在线版（iPhone 推荐用这个）
 --------------------------
-https://glzdekjuw015y.space.mcode.cn
+https://i6tlzshh1wkna.space.mcode.cn
 
 加密 ZIP 需要浏览器 Web Crypto（https 或 localhost 环境）。
 iOS 上直接打开本地 .html 文件不执行 JS，所以 iPhone 请用上面的在线链接。
@@ -52,7 +52,7 @@ iOS 上直接打开本地 .html 文件不执行 JS，所以 iPhone 请用上面�
 ---------------------
 纯原生 Kotlin + Jetpack Compose，无 WebView，功能比网页版更完善。
 
-  下载页  https://gigci55aqgavw.space.mcode.cn
+  下载页  https://2zf24z18sj3q2.space.mcode.cn
   GitHub  https://github.com/ninoelvis/workreport-generator/releases/tag/v1.4.1
 
 版本：v1.3（2026-10-25）
