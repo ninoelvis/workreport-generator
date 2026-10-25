@@ -19,11 +19,13 @@
     "sourceMirrorUrl": "https://1el7opuhijthc.space.mcode.cn/workreport-native-source-v1.4.1.zip"
   },
   "web": {
-    "version": "v1.2",
-    "onlineUrl": "https://glzdekjuw015y.space.mcode.cn",
-    "singleFileUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.8/workreport-web-v1.2.htm",
-    "offlineZipUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.8/workreport-web-offline-v1.2.zip",
-    "repoFileUrl": "https://github.com/ninoelvis/workreport-generator/blob/main/web/workreport-web.htm"
+    "version": "v1.3",
+    "onlineUrl": "https://i6tlzshh1wkna.space.mcode.cn",
+    "singleFileUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-v1.3.htm",
+    "offlineZipUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-offline-v1.3.zip",
+    "repoFileUrl": "https://github.com/ninoelvis/workreport-generator/blob/main/web/workreport-web.htm",
+    "featureParity": "功能已对齐安卓原生版 v1.4.1：脱敏按处放行、历史报告、快捷模板、配置备份、工作记录排序、生成后清空。脱敏算法与原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同。",
+    "notSupported": "网页版做不到：定时周报提醒（无后台能力）、自动拉起邮箱带附件、可靠的通知权限（iPhone 基本不可用）、直接存到手机「下载」目录、长期可靠的历史（localStorage 清缓存即失）。这几项建议用安卓原生版。"
   },
   "repo": {
     "url": "https://github.com/ninoelvis/workreport-generator",
@@ -239,6 +241,19 @@
     }
   ],
   "webChangelog": [
+    {
+      "version": "网页版 v1.3",
+      "date": "2026-10-25",
+      "current": true,
+      "items": [
+        "功能对齐安卓原生版 v1.4.1：脱敏按处放行（每一处独立开关、带上下文，同句重复出现可只放行其中一处）",
+        "新增历史报告：列表 / 预览（与导出逐字一致）/ 载入继续编辑 / 再下载 / 再分享 / 取回下周计划",
+        "新增快捷模板（本周、下周两套，可复制给别人导入）、配置备份与恢复（加密 ZIP）",
+        "工作记录支持上下排序；「取回下周计划」把上一份报告的计划拆成一条条进工作记录；生成成功后自动清空工作记录与周报内容",
+        "脱敏算法与安卓原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同 —— 导出格式一个字没动",
+        "已在引导页和说明里标明网页版做不到的几项（定时提醒、自动带附件发邮件等），建议用安卓原生版"
+      ]
+    },
     {
       "version": "网页版 v1.2",
       "date": "2026-10-23",
