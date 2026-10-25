@@ -229,6 +229,16 @@ table.cmp td.c{text-align:center;white-space:nowrap}
 .yes{color:var(--green);font-weight:600}
 .no{color:var(--t3)}
 .part{color:var(--orange);font-weight:600}
+table.cmp tr.cmp-group td{
+  background:var(--bg-info);color:var(--t2);font-weight:700;font-size:12.5px;
+  letter-spacing:.3px;padding:7px 12px;
+}
+table.cmp tr.cmp-group td b{color:var(--t1)}
+@media (max-width:720px){
+  table.cmp tr.cmp-group{padding:9px 13px;margin-bottom:11px}
+  table.cmp tr.cmp-group td{display:block;padding:0;text-align:left;font-size:12.5px}
+  table.cmp tr.cmp-group td::before{content:none}
+}
 
 /* 手机端：表格转卡片，不横向滚动 */
 @media (max-width:720px){
@@ -397,8 +407,10 @@ footer a{color:var(--t2)}
             <b>为什么推荐装 App</b>
             <ul>
               <li>纯原生界面，不是套壳网页，打开快、不占内存。</li>
-              <li>存过的周报都在手机里，随时翻看、随时重新下载。</li>
+              <li>存过的周报都在手机里，随时翻看、随时重新下载，清缓存也不会丢。</li>
               <li>压缩包能直接调起邮箱发出去，不用手动挑附件。</li>
+              <li>可以设<b>定时周报提醒</b>：选好星期几，16:00-18:00 到点弹系统通知。</li>
+              <li>生成完直接落到手机「下载」目录，不用自己找文件。</li>
               <li>做出来的文件和网页版、旧版本<b>一模一样</b>，压缩包用 WinZip、7-Zip、NanaZip 这些常见解压工具都能正常打开。</li>
             </ul>
           </div>
@@ -419,7 +431,7 @@ footer a{color:var(--t2)}
       </div>
       <h3>网页版</h3>
       <div class="ver-line">打开网址就能用，不用装任何东西</div>
-      <p class="desc">手机和电脑都能用。填完点一下就下载带密码的周报压缩包，还能分享到邮件、文件或微信。</p>
+      <p class="desc">手机和电脑都能用。写周报的功能已经和安卓 App <b>完全对齐</b>：脱敏按处放行、历史周报存档、快捷模板、配置备份都有了。填完点一下就下载带密码的周报压缩包，还能分享到邮件、文件或微信。</p>
       <div class="who"><b>适合：</b>iPhone 用户，或者只想临时写一份周报的人</div>
       <div class="actions stack">
         <a class="btn btn-primary btn-block" id="dlOnline" href="#" target="_blank" rel="noopener">🌐 打开网页版</a>
@@ -438,7 +450,18 @@ footer a{color:var(--t2)}
           </div>
           <div class="note">
             <b>电脑上还想离线用？</b>
-            <p>下载下面的单文件版，双击就能用，断网也没问题。</p>
+            <p>下载下面的单文件版，双击就能用，断网也没问题。网页版和单文件版是<b>同一个文件</b>，功能一模一样。</p>
+          </div>
+          <div class="note warn">
+            <b>网页版做不到这几件事</b>
+            <ul>
+              <li><b>定时周报提醒</b>：网页没有后台运行能力，关掉页面就收不到。要定时提醒请用安卓 App。</li>
+              <li><b>自动带附件发邮件</b>：浏览器不允许网页直接发附件邮件，只能走系统分享面板选「邮件」。</li>
+              <li><b>可靠的系统通知</b>：只有部分桌面浏览器能申请通知权限，iPhone 上基本用不了。</li>
+              <li><b>压缩包直接落进「下载」目录</b>：网页版要自己选保存位置。</li>
+              <li><b>历史长期可靠</b>：历史存在浏览器里，清浏览器数据就没了；安卓 App 存在应用数据库里。</li>
+            </ul>
+            <p>这五项都建议用<a href="#dlApk" class="repo-url">安卓 App</a>，其余功能两边完全一样。</p>
           </div>
           <div class="log" id="webLog"></div>
         </div>
@@ -453,7 +476,7 @@ footer a{color:var(--t2)}
       </div>
       <h3>单文件版</h3>
       <div class="ver-line">一个网页文件，存到电脑就能用</div>
-      <p class="desc">就一个文件，双击用浏览器打开就能生成周报。断网也能用，不装任何软件。</p>
+      <p class="desc">就一个文件，双击用浏览器打开就能生成周报。断网也能用，不装任何软件。<b>和上面的网页版是同一个文件</b>，写周报的功能一模一样：脱敏按处放行、历史存档、快捷模板、配置备份都在里面。</p>
       <div class="who"><b>适合：</b>用电脑写周报，或者公司不让装软件的人</div>
       <div class="actions stack">
         <a class="btn btn-primary btn-block" id="dlSingle" href="#" download>📄 下载单文件版</a>
@@ -479,6 +502,13 @@ footer a{color:var(--t2)}
             <b>文件说明</b>
             <p>这个文件里已经装好了全部需要的东西，不会再去连别的网站，所以断网也能正常用。</p>
           </div>
+          <div class="note warn">
+            <b>两个小提醒</b>
+            <ul>
+              <li><b>iPhone 打不开这个文件</b>：苹果系统不允许本地网页运行程序。手机上请用网页版。</li>
+              <li><b>历史和草稿存在浏览器里</b>：换浏览器或清浏览器数据后会丢。想长期留档，建议用安卓 App。</li>
+            </ul>
+          </div>
           <div class="log" id="webLog2"></div>
         </div>
       </details>
@@ -490,7 +520,7 @@ footer a{color:var(--t2)}
 <!-- ===== 功能对照 ===== -->
 <section class="card">
   <h2 class="sec-title"><span class="ico">🔍</span>三种方式的功能差别</h2>
-  <p class="sec-desc">核心功能都一样，区别主要在和手机系统的配合程度上。</p>
+  <p class="sec-desc">写周报的功能三个版本<b>完全一样</b>；真正的差别在和手机系统的配合上 —— 定时提醒、带附件发邮件、存「下载」目录这几项只有 App 能做。</p>
   <details class="fold" style="margin-top:0">
     <summary>展开查看完整对照表</summary>
     <div class="fold-body">
@@ -498,26 +528,57 @@ footer a{color:var(--t2)}
       <table class="cmp">
         <thead><tr><th>功能</th><th>手机 App</th><th>网页版</th><th>单文件版</th></tr></thead>
         <tbody>
-          <tr><td class="feat">生成 Excel 周报 + 带密码的 ZIP</td>
+          <tr class="cmp-group"><td colspan="4">写周报本身的功能 —— 三个版本<b>完全一样</b></td></tr>
+          <tr><td class="feat">生成 Excel 周报 + 带密码的加密 ZIP</td>
               <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
-          <tr><td class="feat">实时预览 · 工作记录 · 敏感词 · 分区清除</td>
+          <tr><td class="feat">实时预览，和导出的 Excel 逐字一致</td>
               <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
-          <tr><td class="feat">填过的内容自动记住</td>
+          <tr><td class="feat">敏感词自动转成拼音首字母</td>
               <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
-          <tr><td class="feat">生成后自动复制文件名</td>
-              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c part" data-label="单文件版">看浏览器</td></tr>
-          <tr><td class="feat">直接调起邮箱并带上附件</td>
-              <td class="c yes" data-label="手机 App">✔</td><td class="c part" data-label="网页版">走分享面板</td><td class="c part" data-label="单文件版">走分享面板</td></tr>
+          <tr><td class="feat">脱敏<b>按处放行</b>（同一句里只放行其中某几处）</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">工作记录：记录 / 一键汇总 / 上下排序</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">「取回下周计划」拆成一条条</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">历史周报存档：预览 / 再下载 / 再分享 / 载入继续编辑</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c part" data-label="网页版">✔ 存在浏览器</td><td class="c part" data-label="单文件版">✔ 存在浏览器</td></tr>
+          <tr><td class="feat">快捷模板（本周、下周两套，可复制给别人导入）</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">配置备份与恢复（加密 ZIP）</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">浅色 / 深色主题</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
           <tr><td class="feat">分享到微信 / 文件 / 邮件</td>
               <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
-          <tr><td class="feat">历史周报存档，随时重新下载</td>
+          <tr><td class="feat">生成成功后自动清空工作记录</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+        </tbody>
+        <tbody>
+          <tr class="cmp-group"><td colspan="4">和手机系统的配合 —— 这里才有差别</td></tr>
+          <tr><td class="feat">直接调起邮箱并带上附件</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c part" data-label="网页版">走分享面板</td><td class="c part" data-label="单文件版">走分享面板</td></tr>
+          <tr><td class="feat">生成后自动复制文件名</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c part" data-label="单文件版">看浏览器</td></tr>
+          <tr><td class="feat"><b>定时周报提醒</b>（选星期几，16:00-18:00 到点通知）</td>
               <td class="c yes" data-label="手机 App">✔</td><td class="c no" data-label="网页版">—</td><td class="c no" data-label="单文件版">—</td></tr>
-          <tr><td class="feat">要不要装东西</td>
-              <td class="c" data-label="手机 App">要装 APK</td><td class="c" data-label="网页版">不用装</td><td class="c" data-label="单文件版">不用装</td></tr>
+          <tr><td class="feat">系统通知（关掉 App 也能收到）</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c part" data-label="网页版">只有桌面浏览器</td><td class="c part" data-label="单文件版">只有桌面浏览器</td></tr>
+          <tr><td class="feat">直接存到手机「下载」目录</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c part" data-label="网页版">自己选位置</td><td class="c part" data-label="单文件版">自己选位置</td></tr>
+          <tr><td class="feat">历史长期可靠（清缓存 / 换设备后还在）</td>
+              <td class="c yes" data-label="手机 App">✔ 存进 App</td><td class="c part" data-label="网页版">清缓存会丢</td><td class="c part" data-label="单文件版">清缓存会丢</td></tr>
+          <tr><td class="feat">不用装任何东西</td>
+              <td class="c part" data-label="手机 App">要装 APK</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
           <tr><td class="feat">iPhone 上能不能用</td>
-              <td class="c no" data-label="手机 App">—</td><td class="c yes" data-label="网页版">✔</td><td class="c no" data-label="单文件版">用不了</td></tr>
+              <td class="c no" data-label="手机 App">—</td><td class="c yes" data-label="网页版">✔</td><td class="c no" data-label="单文件版">打不开</td></tr>
         </tbody>
       </table>
+      </div>
+      <div class="note warn" style="margin-top:16px">
+        <b>表格里带「✔ 存在浏览器」「清缓存会丢」的那些行，就是网页版的短板</b>
+        <p>网页和单文件版是<b>同一个文件</b>，功能完全一样，只是运行的地方不同。它们的共同点是：数据存在浏览器里，关掉网页就收不到后台提醒，也没法直接把附件塞进邮箱。</p>
+        <p><b>想要定时提醒、自动带附件发邮件、压缩包直接落进「下载」目录</b> —— 这几项请用<a href="#dlApk" class="repo-url">安卓 App</a>。</p>
       </div>
     </div>
   </details>
@@ -563,16 +624,16 @@ footer a{color:var(--t2)}
 <script>
 (function () {
   var EMBEDDED = {
-  "updatedAt": "2026-10-23",
+  "updatedAt": "2026-10-25",
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "1.3.11",
-    "versionCode": 20,
-    "releasedAt": "2026-10-23",
-    "sizeBytes": 11961721,
-    "sizeText": "11.4 MB",
-    "sha256": "7f8460a116c04fbd03f39d6469092ef673d3f85b2820c8c7c44b4c5787892e72",
+    "version": "1.4.1",
+    "versionCode": 27,
+    "releasedAt": "2026-10-25",
+    "sizeBytes": 12276177,
+    "sizeText": "11.7 MB",
+    "sha256": "f4f4d718c7112a9c58efd63702b052e686f73280d5ae1526487993783cdba317",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
     "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-native-v1.4.1.apk",
     "apkMirrorUrl": "https://1el7opuhijthc.space.mcode.cn/workreport-native-v1.4.1.apk",
@@ -584,10 +645,12 @@ footer a{color:var(--t2)}
   },
   "web": {
     "version": "v1.3",
-    "onlineUrl": "https://h44xyp1lm46li.space.mcode.cn",
+    "onlineUrl": "https://dxntf9na2dn1l.space.mcode.cn",
     "singleFileUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-v1.3.htm",
     "offlineZipUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-offline-v1.3.zip",
-    "repoFileUrl": "https://github.com/ninoelvis/workreport-generator/blob/main/web/workreport-web.htm"
+    "repoFileUrl": "https://github.com/ninoelvis/workreport-generator/blob/main/web/workreport-web.htm",
+    "featureParity": "功能已对齐安卓原生版 v1.4.1：脱敏按处放行、历史报告、快捷模板、配置备份、工作记录排序、生成后清空。脱敏算法与原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同。",
+    "notSupported": "网页版做不到：定时周报提醒（无后台能力）、自动拉起邮箱带附件、可靠的通知权限（iPhone 基本不可用）、直接存到手机「下载」目录、长期可靠的历史（localStorage 清缓存即失）。这几项建议用安卓原生版。"
   },
   "repo": {
     "url": "https://github.com/ninoelvis/workreport-generator",
@@ -597,9 +660,40 @@ footer a{color:var(--t2)}
   "changelog": [
     {
       "version": "v1.4.1",
+      "date": "2026-10-25",
+      "title": "引导页瘦身 · 隐私说明补上通知权限 · 修输入框被键盘盖住",
+      "current": true,
+      "items": [
+        "引导页「功能介绍」从 16 条精简到 6 条，并改成默认收起（原来全部铺开，页面太长）",
+        "「数据与隐私」补上通知权限说明：只用于周报提醒，Android 13+ 首次进首页会主动问，点「以后再说」就不问了，不开也不影响其它功能",
+        "「权限最小化」说明更新：除通知权限外只申请 Android 8/9 写「下载」目录的权限，不需要联网，不申请相机等无关权限",
+        "修复引导页填姓名时输入法弹出后看不见自己打的字：底部区域会跟着键盘顶上来",
+        "所有输入框字号统一提到 16sp —— 低于 16sp 时部分 ROM 的输入法会强制放大整页，输入框被放大裁切，文字反而看不见",
+        "首页内容区也会避开键盘，最后几项不会被挡住",
+        "导出格式与公司红线一个字没动：命名规则 / Excel 样式 / 加密三个文件与 v1.3.11 逐字节相同"
+      ]
+    },
+    {
+      "version": "v1.4.0",
+      "date": "2026-10-25",
+      "title": "预览区 = 导出的 Excel · 通知权限引导 · 按处放行脱敏",
+      "current": false,
+      "items": [
+        "历史报告的预览区和首页预览区现在完全一致：显示的就是 Excel 里 B3 / C3 那两格的原文（已格式化、已脱敏）。新报告直接用数据库里存的那份秒开，旧报告自动解压缩包读 Excel",
+        "导出格式一个字都没动 —— 预览只是把 Excel 照原样画出来，命名规则 / Excel 样式 / 加密三个文件与 v1.3.11 逐字节相同",
+        "填完姓名进首页时弹一次通知权限引导：点「去开启」拉起系统授权框，点「以后再说」以后不再提示",
+        "「取回下周计划」改成放进「工作记录」：一条一条分开，能补内容、能上下调排序，点「汇总」才进「本周已完成工作梳理」",
+        "脱敏预览升级成按处放行：同一句里两次「查询」会列成两行并带上下文，可以只放行其中一处，另一处照常脱敏",
+        "新增系统分享面板、周报提醒（选星期几，16:00-18:00 之间提醒）、个人配置加密备份与恢复、快捷模板复制导入",
+        "脱敏预览的开关换成跟整体风格统一的形式，不再突兀",
+        "单元测试 158 项全部通过；签名证书与历史版本一致，可直接覆盖安装，历史报告和配置都在"
+      ]
+    },
+    {
+      "version": "v1.3.11",
       "date": "2026-10-23",
       "title": "深色模式看清预览 · 生成后自动清空 · 历史报告回填编辑",
-      "current": true,
+      "current": false,
       "items": [
         "修复预览表在深色模式下看不清的问题：标题行原本是「深色底 + 深灰字」，对比度只有 1.04:1，现在改为主题自适应（11.4:1），表头与边框也一并调亮",
         "生成压缩包成功后自动清空「工作记录」和「周报内容」，下次打开直接重新填，不用手动删",
@@ -772,7 +866,20 @@ footer a{color:var(--t2)}
     }
   ],
   "webChangelog": [
-    {"version":"网页版 v1.3","date":"2026-10-25","current":true,"items":["功能对齐安卓原生版 v1.4.1：脱敏按处放行、历史报告、快捷模板、配置备份、工作记录排序、生成后清空","脱敏算法与原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同","网页版做不到：定时周报提醒、自动带附件发邮件等，已在页面标注并建议用安卓原生版"]},
+    {
+      "version": "网页版 v1.3",
+      "date": "2026-10-25",
+      "current": true,
+      "items": [
+        "手机端顶栏优化：次要图标收进「☰ 更多」菜单，标题「工作报告生成器」不再被挤成竖排；桌面端布局不变",
+        "功能对齐安卓原生版 v1.4.1：脱敏按处放行（每一处独立开关、带上下文，同句重复出现可只放行其中一处）",
+        "新增历史报告：列表 / 预览（与导出逐字一致）/ 载入继续编辑 / 再下载 / 再分享 / 取回下周计划",
+        "新增快捷模板（本周、下周两套，可复制给别人导入）、配置备份与恢复（加密 ZIP）",
+        "工作记录支持上下排序；「取回下周计划」把上一份报告的计划拆成一条条进工作记录；生成成功后自动清空工作记录与周报内容",
+        "脱敏算法与安卓原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同 —— 导出格式一个字没动",
+        "已在引导页和说明里标明网页版做不到的几项（定时提醒、自动带附件发邮件等），建议用安卓原生版"
+      ]
+    },
     {
       "version": "网页版 v1.2",
       "date": "2026-10-23",
@@ -794,7 +901,7 @@ footer a{color:var(--t2)}
     }
   ],
   "disclaimer": "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。使用者应自行确保所填报的工作内容真实、合法，不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，软件作者不承担任何法律责任。",
-  "downloadPageUrl": "https://u960jv2slblhb.space.mcode.cn"
+  "downloadPageUrl": "https://qjkjhw0u27eqb.space.mcode.cn"
 };
   /* 取数顺序：同源 → GitHub raw（实时）→ jsDelivr CDN → 页面内嵌副本
      注：jsDelivr 对 @main 分支的同步有分钟级延迟，仅作备用；
