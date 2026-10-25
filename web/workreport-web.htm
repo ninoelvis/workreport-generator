@@ -370,6 +370,41 @@ h1{
 .app-header-actions .theme-toggle:hover{transform:scale(1.08)}
 .app-header-actions .theme-toggle:active{transform:scale(.95)}
 
+/* 标题永不竖排：空间不足时省略号，而不是一字一行 */
+.app-title-wrap h1{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:100%;
+}
+
+/* ===== 移动端「更多」收纳菜单 ===== */
+.more-btn{display:none}
+.more-menu{
+  position:absolute;top:calc(100% + 10px);right:0;z-index:950;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card);padding:6px;min-width:186px;
+  display:flex;flex-direction:column;gap:2px;
+  animation:fadeIn .16s ease;
+}
+.more-menu[hidden]{display:none}
+.more-item{
+  display:flex;align-items:center;gap:11px;width:100%;
+  padding:11px 12px;border:none;border-radius:9px;background:transparent;
+  color:var(--text-primary);font-size:14px;font-family:inherit;
+  text-align:left;cursor:pointer;white-space:nowrap;
+}
+.more-item:hover{background:var(--feishu-blue-light)}
+.more-item:active{background:var(--feishu-blue-light)}
+.mi-ico{font-size:16px;line-height:1;flex-shrink:0}
+
+/* 窄屏：把次要图标收进「更多」菜单，把空间让给标题 */
+@media (max-width:640px){
+  .app-header{gap:9px}
+  .app-logo{width:36px;height:36px;border-radius:10px}
+  .app-header h1{font-size:16px}
+  .app-header-actions .hdr-move{display:none}
+  .app-header-actions .more-btn{display:flex}
+}
+
 /* ===== 面板标题 ===== */
 .panel h2{
   display:flex;align-items:center;gap:8px;
@@ -1006,24 +1041,33 @@ body{
 <div class="app-subtitle">自动生成加密周报 ZIP · 一键复制文件名 · 自动发送邮件</div>
 </div>
 <div class="app-header-actions">
-<button class="theme-toggle" id="sensBtn" onclick="openSensPanel()" title="敏感词管理">
+<button class="theme-toggle hdr-move" id="sensBtn" onclick="openSensPanel()" title="敏感词管理">
 <span class="theme-icon">🛡️</span>
 </button>
 <button class="theme-toggle" id="historyBtn" onclick="openHistoryDrawer()" title="历史报告">
 <span class="theme-icon">📚</span>
 </button>
-<button class="theme-toggle" id="templateBtn" onclick="openTemplateDrawer()" title="快捷模板">
+<button class="theme-toggle hdr-move" id="templateBtn" onclick="openTemplateDrawer()" title="快捷模板">
 <span class="theme-icon">⚡</span>
 </button>
-<button class="theme-toggle" id="backupBtn" onclick="openBackupDrawer()" title="配置备份">
+<button class="theme-toggle hdr-move" id="backupBtn" onclick="openBackupDrawer()" title="配置备份">
 <span class="theme-icon">💾</span>
 </button>
-<button class="theme-toggle" id="introBtn" onclick="showIntro()" title="功能介绍与更新记录">
+<button class="theme-toggle hdr-move" id="introBtn" onclick="showIntro()" title="功能介绍与更新记录">
 <span class="theme-icon">ℹ️</span>
 </button>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换深色/浅色主题">
 <span class="theme-icon" id="themeIcon">🌙</span>
 </button>
+<button class="theme-toggle more-btn" id="moreBtn" onclick="toggleMoreMenu(event)" title="更多功能" aria-label="更多功能" aria-expanded="false">
+<span class="theme-icon">☰</span>
+</button>
+</div>
+<div class="more-menu" id="moreMenu" hidden role="menu" aria-label="更多功能">
+<button class="more-item" role="menuitem" onclick="closeMoreMenu();openSensPanel()"><span class="mi-ico">🛡️</span><span>敏感词管理</span></button>
+<button class="more-item" role="menuitem" onclick="closeMoreMenu();openTemplateDrawer()"><span class="mi-ico">⚡</span><span>快捷模板</span></button>
+<button class="more-item" role="menuitem" onclick="closeMoreMenu();openBackupDrawer()"><span class="mi-ico">💾</span><span>配置备份</span></button>
+<button class="more-item" role="menuitem" onclick="closeMoreMenu();showIntro()"><span class="mi-ico">ℹ️</span><span>功能介绍与更新记录</span></button>
 </div>
 </div>
 <div class="sens-mask" id="sensMask" onclick="closeSensPanel()"></div>
@@ -1243,6 +1287,253 @@ body{
 </div>
 </div>
 <script>
+/* ==========================================================================
+ * 脱敏引擎（与 Android 原生版 SensitiveWordEngine 逐字对齐）
+ * ==========================================================================
+ *
+ * 为什么不能直接用旧版的 split/join：
+ * 旧版只能「整个词都替换」，同一句里出现两次「查询」就没法只放行其中一处。
+ * 原生版 v1.4.0 起改成**按处豁免** —— 每一处命中都有独立标识（词 + 前后文 + 第几个），
+ * 用户可以只放行其中一处。
+ *
+ * 这里完整移植原生版的算法，保证：
+ *   1. 不放行任何处时，输出与旧版、与原生版**逐字节一致**（导出内容不受影响）；
+ *   2. 放行时，行为与原生版完全一致（同一处放行、另一处照常脱敏）。
+ *
+ * ⚠️ 兼容性红线：这里的任何改动都必须先过交叉验证
+ *    （/workspace/cross 下用 1500 组随机用例 + Kotlin 原生版对拍）。
+ */
+(function (global) {
+    'use strict';
+
+    /** 上下文窗口大小：前后各取这么多字用于识别与展示 */
+    var CONTEXT_WINDOW = 8;
+
+    var SECTION_DONE = 'DONE';
+    var SECTION_PLAN = 'PLAN';
+
+    /** 锚点的稳定标识：区 + 前文 + 词 + 后文 + 第几个 */
+    function anchorKey(section, before, word, after, nth) {
+        return section + '\u0001' + before + '\u0001' + word + '\u0001' + after + '\u0001' + nth;
+    }
+
+    function contextBefore(source, start) {
+        var from = Math.max(0, start - CONTEXT_WINDOW);
+        var prefix = from > 0 ? '…' : '';
+        return prefix + source.substring(from, start);
+    }
+
+    function contextAfter(source, end) {
+        var to = Math.min(source.length, end + CONTEXT_WINDOW);
+        var suffix = to < source.length ? '…' : '';
+        return source.substring(end, to) + suffix;
+    }
+
+    /**
+     * 脱敏引擎。
+     * @param rules [[词, 缩写], ...]，顺序即词库顺序（和原生版一致）
+     */
+    function MaskEngine(rules) {
+        this.rules = rules || [];
+    }
+
+    /**
+     * 核心：对一行文本做脱敏，同时给出每一处命中。
+     *
+     * 逐词 indexOf 扫描（等价于 String.replace 的非重叠、从左到右语义）；
+     * 同时维护「工作文本 → 原文」的字符映射，所以每一处命中都能追回它在原文里的位置；
+     * 被放行的命中会把它覆盖的原文区间标成保护区，后续规则不再动这块。
+     */
+    MaskEngine.prototype.maskLine = function (source, section, excluded, lineIndex, counter) {
+        excluded = excluded || {};
+        counter = counter || {};
+        if (!source || !this.rules.length) {
+            return { text: source, hits: [] };
+        }
+
+        var working = source;
+        var originStart = [];
+        var originEnd = [];
+        var i;
+        for (i = 0; i < source.length; i++) {
+            originStart.push(i);
+            originEnd.push(i + 1);
+        }
+
+        var protectedRanges = [];
+        var hits = [];
+
+        for (var r = 0; r < this.rules.length; r++) {
+            var word = this.rules[r][0];
+            var pinyin = this.rules[r][1];
+            if (!word || working.indexOf(word) < 0) continue;
+
+            var sb = '';
+            var nextStart = [];
+            var nextEnd = [];
+            var k;
+
+            i = 0;
+            while (i < working.length) {
+                var idx = working.indexOf(word, i);
+                if (idx < 0) {
+                    for (k = i; k < working.length; k++) {
+                        sb += working[k];
+                        nextStart.push(originStart[k]);
+                        nextEnd.push(originEnd[k]);
+                    }
+                    break;
+                }
+                for (k = i; k < idx; k++) {
+                    sb += working[k];
+                    nextStart.push(originStart[k]);
+                    nextEnd.push(originEnd[k]);
+                }
+
+                var srcStart = originStart[idx];
+                var srcEnd = originEnd[idx + word.length - 1];
+
+                // 落在保护区里（前面某处被放行）→ 原样保留，不参与替换
+                var protectedHit = false;
+                for (var p = 0; p < protectedRanges.length; p++) {
+                    var it = protectedRanges[p];
+                    if (srcStart < it[1] + 1 && it[0] < srcEnd) {
+                        protectedHit = true;
+                        break;
+                    }
+                }
+                if (protectedHit) {
+                    for (k = idx; k < idx + word.length; k++) {
+                        sb += working[k];
+                        nextStart.push(originStart[k]);
+                        nextEnd.push(originEnd[k]);
+                    }
+                    i = idx + word.length;
+                    continue;
+                }
+
+                var before = contextBefore(source, srcStart);
+                var after = contextAfter(source, srcEnd);
+                var triple = before + '\u0001' + word + '\u0001' + after;
+                var nth = counter[triple] || 0;
+                counter[triple] = nth + 1;
+                var key = anchorKey(section, before, word, after, nth);
+                var isExcluded = !!excluded[key];
+
+                hits.push({
+                    key: key,
+                    section: section,
+                    before: before,
+                    after: after,
+                    word: word,
+                    replacement: pinyin,
+                    excluded: isExcluded,
+                    lineIndex: lineIndex,
+                    position: srcStart,
+                    nth: nth
+                });
+
+                if (isExcluded) {
+                    // 放行：原样保留，并把这段原文划为保护区
+                    // ⚠️ 闭区间 [srcStart, srcEnd-1]，和原生版的 `srcStart until srcEnd` 一致。
+                    //    写成半开区间会让保护区多覆盖一个字符，导致紧挨着的下一处也被误放行。
+                    protectedRanges.push([srcStart, srcEnd - 1]);
+                    for (k = idx; k < idx + word.length; k++) {
+                        sb += working[k];
+                        nextStart.push(originStart[k]);
+                        nextEnd.push(originEnd[k]);
+                    }
+                } else {
+                    for (var q = 0; q < pinyin.length; q++) {
+                        sb += pinyin[q];
+                        nextStart.push(srcStart);
+                        nextEnd.push(srcEnd);
+                    }
+                }
+                i = idx + word.length;
+            }
+
+            working = sb;
+            originStart = nextStart;
+            originEnd = nextEnd;
+        }
+
+        hits.sort(function (a, b) { return a.position - b.position; });
+        return { text: working, hits: hits };
+    };
+
+    /** 对文本做脱敏（可跳过放行的那些处） */
+    MaskEngine.prototype.replace = function (text, excluded) {
+        return this.maskLine(text, SECTION_DONE, excluded, 0, {}).text;
+    };
+
+    /** 统计单行命中 */
+    MaskEngine.prototype.analyze = function (text, excluded) {
+        return this.maskLine(text, SECTION_DONE, excluded, 0, {}).hits;
+    };
+
+    /**
+     * 统计多行内容的脱敏命中。
+     * 与格式化一样**逐行**统计，口径完全一致。
+     */
+    MaskEngine.prototype.analyzeMultiline = function (text, excluded, section) {
+        var lines = text.split('\n').filter(function (l) { return l.trim() !== ''; });
+        if (!lines.length) return [];
+        var counter = {};
+        var hits = [];
+        for (var i = 0; i < lines.length; i++) {
+            var res = this.maskLine(lines[i].trim(), section || SECTION_DONE, excluded, i, counter);
+            for (var j = 0; j < res.hits.length; j++) hits.push(res.hits[j]);
+        }
+        return hits;
+    };
+
+    /** 格式化「本周已完成工作梳理」 */
+    MaskEngine.formatDoneWorks = function (text, engine, excluded) {
+        var lines = text.split('\n').filter(function (l) { return l.trim() !== ''; });
+        var n = lines.length;
+        if (n === 0) return '';
+        var result = '完成共' + n + '项工作内容：\n';
+        var counter = {};
+        for (var i = 0; i < n; i++) {
+            var endChar = (i === n - 1) ? '。' : '；';
+            result += (i + 1) + '、' +
+                engine.maskLine(lines[i].trim(), SECTION_DONE, excluded, i, counter).text +
+                endChar + '\n';
+        }
+        return result.trim();
+    };
+
+    /** 格式化「下周工作计划」 */
+    MaskEngine.formatPlanWorks = function (text, engine, excluded) {
+        var lines = text.split('\n').filter(function (l) { return l.trim() !== ''; });
+        var n = lines.length;
+        if (n === 0) return '';
+        var result = '下周预计共' + n + '项工作任务：\n';
+        var counter = {};
+        for (var i = 0; i < n; i++) {
+            var endChar = (i === n - 1) ? '。' : '；';
+            result += (i + 1) + '、' +
+                engine.maskLine(lines[i].trim(), SECTION_PLAN, excluded, i, counter).text +
+                endChar + '\n';
+        }
+        return result.trim();
+    };
+
+    global.MaskEngine = MaskEngine;
+    global.MASK_SECTION_DONE = SECTION_DONE;
+    global.MASK_SECTION_PLAN = SECTION_PLAN;
+    global.maskAnchorKey = anchorKey;
+
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = {
+            MaskEngine: MaskEngine,
+            SECTION_DONE: SECTION_DONE,
+            SECTION_PLAN: SECTION_PLAN,
+            anchorKey: anchorKey
+        };
+    }
+})(typeof window !== 'undefined' ? window : globalThis);
 /* ==========================================================================
  * 脱敏引擎（与 Android 原生版 SensitiveWordEngine 逐字对齐）
  * ==========================================================================
@@ -4147,6 +4438,38 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
     global.copyTemplatesOut = copyTemplatesOut;
     global.copyTemplatesIn = copyTemplatesIn;
     global.doImportTemplates = doImportTemplates;
+
+    /* ===== 移动端「更多」收纳菜单 ===== */
+    function toggleMoreMenu(ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation();
+        var m = document.getElementById('moreMenu');
+        if (!m) return;
+        var show = m.hasAttribute('hidden');
+        if (show) m.removeAttribute('hidden'); else m.setAttribute('hidden', '');
+        var btn = document.getElementById('moreBtn');
+        if (btn) btn.setAttribute('aria-expanded', show ? 'true' : 'false');
+    }
+    function closeMoreMenu() {
+        var m = document.getElementById('moreMenu');
+        if (m && !m.hasAttribute('hidden')) m.setAttribute('hidden', '');
+        var btn = document.getElementById('moreBtn');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+    global.toggleMoreMenu = toggleMoreMenu;
+    global.closeMoreMenu = closeMoreMenu;
+
+    document.addEventListener('click', function (ev) {
+        var t = ev.target;
+        if (!t || !t.closest) return;
+        if (t.closest('#moreBtn') || t.closest('#moreMenu')) return;
+        closeMoreMenu();
+    });
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape' || ev.key === 'Esc') closeMoreMenu();
+    });
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 640) closeMoreMenu();
+    });
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
@@ -4237,8 +4560,8 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
       <li><span class="ico">👁️</span><span><b>实时预览</b>：预览区就是最终 Excel 的样子，所见即所得。</span></li>
       <li><span class="ico">🛡️</span><span><b>脱敏按处放行</b>：敏感词自动转拼音首字母（如「纪委」→ jw）；导出前能看清哪几处被换了，同句重复出现可只放行其中一处。</span></li>
       <li><span class="ico">📚</span><span><b>历史报告</b>：顶栏 📚 随时回看，预览与导出逐字一致，可再下载、再分享、载入继续编辑。</span></li>
-      <li><span class="ico">⚡</span><span><b>快捷模板</b>：顶栏 ⚡ 把常写的内容存成模板，点一下就插进去；还能复制给别人。</span></li>
-      <li><span class="ico">💾</span><span><b>配置备份</b>：顶栏 💾 把姓名、词库、模板、草稿备份成一个加密文件，换设备一键恢复。</span></li>
+      <li><span class="ico">⚡</span><span><b>快捷模板</b>：⚡ 把常写的内容存成模板，点一下就插进去；还能复制给别人。（手机在「☰ 更多」里）</span></li>
+      <li><span class="ico">💾</span><span><b>配置备份</b>：💾 把姓名、词库、模板、草稿备份成一个加密文件，换设备一键恢复。（手机在「☰ 更多」里）</span></li>
     </ul>
   </div>
 
