@@ -20,7 +20,7 @@
   },
   "web": {
     "version": "v1.3",
-    "onlineUrl": "https://h44xyp1lm46li.space.mcode.cn",
+    "onlineUrl": "https://dxntf9na2dn1l.space.mcode.cn",
     "singleFileUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-v1.3.htm",
     "offlineZipUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-offline-v1.3.zip",
     "repoFileUrl": "https://github.com/ninoelvis/workreport-generator/blob/main/web/workreport-web.htm",
@@ -246,6 +246,7 @@
       "date": "2026-10-25",
       "current": true,
       "items": [
+        "手机端顶栏优化：次要图标收进「☰ 更多」菜单，标题「工作报告生成器」不再被挤成竖排；桌面端布局不变",
         "功能对齐安卓原生版 v1.4.1：脱敏按处放行（每一处独立开关、带上下文，同句重复出现可只放行其中一处）",
         "新增历史报告：列表 / 预览（与导出逐字一致）/ 载入继续编辑 / 再下载 / 再分享 / 取回下周计划",
         "新增快捷模板（本周、下周两套，可复制给别人导入）、配置备份与恢复（加密 ZIP）",
