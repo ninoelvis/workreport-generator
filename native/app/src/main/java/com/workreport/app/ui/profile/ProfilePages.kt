@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.workreport.app.ui.profile
 
 import android.widget.Toast
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -116,7 +119,10 @@ fun ProfileNamePage(
         onBack = onBack,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+            .fillMaxSize()
+            // 输入框被键盘挡住时自动滚到可见处
+            .imeNestedScroll(),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 28.dp),
         ) {
             item {
@@ -181,7 +187,10 @@ fun ProfileShortcutsPage(
             }
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+            .fillMaxSize()
+            // 输入框被键盘挡住时自动滚到可见处
+            .imeNestedScroll(),
                 contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -451,7 +460,10 @@ fun ProfileSensitivePage(
         onBack = onBack,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+            .fillMaxSize()
+            // 输入框被键盘挡住时自动滚到可见处
+            .imeNestedScroll(),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -662,7 +674,10 @@ fun ProfileAppearancePage(
         onBack = onBack,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+            .fillMaxSize()
+            // 输入框被键盘挡住时自动滚到可见处
+            .imeNestedScroll(),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
@@ -715,7 +730,10 @@ fun ProfileMailPage(
         onBack = onBack,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+            .fillMaxSize()
+            // 输入框被键盘挡住时自动滚到可见处
+            .imeNestedScroll(),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
@@ -875,7 +893,10 @@ fun ProfileDataPage(
         onBack = onBack,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+            .fillMaxSize()
+            // 输入框被键盘挡住时自动滚到可见处
+            .imeNestedScroll(),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
@@ -949,7 +970,10 @@ fun ProfileAboutPage(
         onBack = onBack,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+            .fillMaxSize()
+            // 输入框被键盘挡住时自动滚到可见处
+            .imeNestedScroll(),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

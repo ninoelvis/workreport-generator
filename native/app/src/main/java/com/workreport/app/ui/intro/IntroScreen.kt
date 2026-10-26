@@ -13,14 +13,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -160,6 +154,16 @@ fun IntroScreen(
             item {
                 IntroSection(title = "历史版本更新记录", icon = Icons.Filled.History) {
                     ChangeLogItem(
+                        "v1.4.2",
+                        "修复打字时**键盘上方多出一大块空白**的问题 —— " +
+                            "页面底部原本已经被底部导航栏抬高过一次，输入法又叠了一层避让，" +
+                            "等于多减了一个导航栏的高度，键盘上沿和内容区之间就空出一大条。" +
+                            "现在底部避让统一按「导航栏高度和键盘高度取大值」计算，" +
+                            "内容区正好停在键盘上沿，一条空白都不留。" +
+                            "同时给所有输入框所在的列表补了自动滚动：被键盘挡住时会自己滚到能看见的位置。",
+                        current = true,
+                    )
+                    ChangeLogItem(
                         "v1.4.1",
                         "引导页「功能介绍」精简成 6 条并改成**默认收起**（原来 16 条全部铺开，太长了）；" +
                             "「数据与隐私」补上了**通知权限**的说明 —— 它只用于周报提醒，" +
@@ -167,7 +171,7 @@ fun IntroScreen(
                             "修复引导页填姓名时**输入法弹出后看不见自己打的字**（底部区域会被键盘盖住），" +
                             "同时把所有输入框的字号统一提到 16sp —— 低于 16sp 时部分手机的输入法会强制放大整页，" +
                             "输入框被放大裁切，文字反而看不见。",
-                        current = true,
+                        current = false,
                     )
                     ChangeLogItem(
                         "v1.4.0",
@@ -284,15 +288,8 @@ fun IntroScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // ⚠️ 键盘弹出时必须把底部区域顶到键盘上方，
-                    // 否则姓名输入框会被盖住 —— 打字时看不见自己打的字。
-                    // navigationBars 与 ime 取**并集**（取最大值），不叠加，
-                    // 这样键盘弹出时不会在按钮下面多留一段空白。
-                    .windowInsetsPadding(
-                        WindowInsets.navigationBars
-                            .only(WindowInsetsSides.Bottom)
-                            .union(WindowInsets.ime),
-                    )
+                    // ⚠️ 键盘避让统一由 AppRoot 处理（max(导航栏高度, 输入法高度)），
+                    // 这里绝不能再叠一层 insets padding，否则键盘上方会多出一段空白。
                     .padding(horizontal = 16.dp, vertical = 10.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

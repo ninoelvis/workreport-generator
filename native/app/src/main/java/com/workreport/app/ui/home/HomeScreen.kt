@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.workreport.app.ui.home
 
 import androidx.compose.foundation.background
@@ -12,8 +14,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -120,8 +122,10 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            // 键盘弹出时把内容区收上去，最后几项不会被键盘盖住
-            .imePadding(),
+            // 输入框被键盘挡住时自动滚到可见处
+            .imeNestedScroll(),
+        // 键盘避让统一由 AppRoot 处理（max(导航栏高度, 输入法高度)），
+        // 这里绝不能再叠 imePadding()，否则键盘上方会多出一条空白带。
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
             start = 14.dp, end = 14.dp, top = 0.dp, bottom = 24.dp,
         ),

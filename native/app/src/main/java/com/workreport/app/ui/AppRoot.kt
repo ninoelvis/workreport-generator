@@ -1,7 +1,9 @@
 package com.workreport.app.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
@@ -21,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -28,6 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.workreport.app.ServiceLocator
+import com.workreport.app.util.BottomAvoidance
 import com.workreport.app.ui.debug.DebugPage
 import com.workreport.app.ui.history.HistoryScreen
 import com.workreport.app.ui.home.HomeScreen
@@ -112,12 +116,28 @@ fun AppRoot() {
             }
         },
     ) { innerPadding ->
+        // 底部避让 = max(底部导航栏高度, 输入法高度)
+        //
+        // 为什么不能各页面自己写 imePadding()？
+        //   Scaffold 已经用 innerPadding 把内容区抬高了一个导航栏的高度，
+        //   如果页面再叠一层 imePadding()，等于把「导航栏高度」多减了一次，
+        //   键盘上方就会凭空多出一条空白带（实测就是用户看到的那块灰色）。
+        //
+        // 取两者最大值：
+        //   · 没弹键盘 → 留导航栏的位置，底部 Tab 不会被压住
+        //   · 弹了键盘 → 留键盘的高度，内容正好停在键盘上沿，不多不少
+        val density = LocalDensity.current
+        val bottomAvoidance = with(density) {
+            val navBarPx = innerPadding.calculateBottomPadding().toPx()
+            val imePx = WindowInsets.ime.getBottom(density)
+            BottomAvoidance.compute(navBarPx.toInt(), imePx).toDp()
+        }
         NavHost(
             navController = navController,
             startDestination = TopLevelDestination.HOME.route,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding()),
+                .padding(bottom = bottomAvoidance),
         ) {
             composable(TopLevelDestination.HOME.route) {
                 HomeScreen(
