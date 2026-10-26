@@ -3,20 +3,20 @@
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "1.4.2",
-    "versionCode": 28,
+    "version": "1.4.3",
+    "versionCode": 29,
     "releasedAt": "2026-10-26",
     "sizeBytes": 12276177,
     "sizeText": "11.7 MB",
-    "sha256": "847d1922754a22a9a5020017282b4ef6a9ad4b81a2afb0e9dc7bea54685b060f",
+    "sha256": "bd2a54e0a5eda1e40753e5cc21881b7fb0e895f09f752942e556fcbb450143bd",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.2/workreport-native-v1.4.2.apk",
-    "apkMirrorUrl": "https://javdoddw20i6o.space.mcode.cn/workreport-native-v1.4.2.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.2/workreport-native-source-v1.4.2.zip",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.3/workreport-native-v1.4.3.apk",
+    "apkMirrorUrl": "https://rw51hsh0l679z.space.mcode.cn/workreport-native-v1.4.3.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.3/workreport-native-source-v1.4.3.zip",
     "minAndroid": "Android 8.0 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://javdoddw20i6o.space.mcode.cn/workreport-native-source-v1.4.2.zip"
+    "sourceMirrorUrl": "https://rw51hsh0l679z.space.mcode.cn/workreport-native-source-v1.4.3.zip"
   },
   "web": {
     "version": "v1.3",
@@ -34,6 +34,18 @@
   },
   "changelog": [
     {
+      "version": "v1.4.3",
+      "date": "2026-10-26",
+      "title": "修「滑到最下面输入法自己弹出来」",
+      "items": [
+        "修复 v1.4.2 引入的回归：列表滑到最下面后输入法自己弹出来 —— 那个「输入法嵌套滚动」修饰符会把滑到底后多出来的滚动量交给输入法去唤起键盘",
+        "已去掉该修饰符：内容区本来就被压在键盘上沿，输入框不会被遮住，不需要它",
+        "新增 8 个防回归测试：扫源码禁止再出现该修饰符、禁止页面各自加键盘避让、并把整条避让链路的数学写成端到端布局模型",
+        "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 176/176 通过"
+      ],
+      "current": true
+    },
+    {
       "version": "v1.4.2",
       "date": "2026-10-26",
       "title": "修键盘上方的大块空白",
@@ -42,8 +54,7 @@
         "底部避让统一改为「导航栏高度与键盘高度取大值」，在 AppRoot 一处计算，内容区正好停在键盘上沿",
         "所有输入框所在的列表补上自动滚动：被键盘挡住时会自己滚到能看见的位置",
         "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 168/168 通过"
-      ],
-      "current": true
+      ]
     },
     {
       "version": "v1.4.1",
