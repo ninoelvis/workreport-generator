@@ -1,22 +1,22 @@
 {
-  "updatedAt": "2026-10-25",
+  "updatedAt": "2026-10-26",
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "1.4.1",
-    "versionCode": 27,
-    "releasedAt": "2026-10-25",
+    "version": "1.4.2",
+    "versionCode": 28,
+    "releasedAt": "2026-10-26",
     "sizeBytes": 12276177,
     "sizeText": "11.7 MB",
-    "sha256": "f4f4d718c7112a9c58efd63702b052e686f73280d5ae1526487993783cdba317",
+    "sha256": "847d1922754a22a9a5020017282b4ef6a9ad4b81a2afb0e9dc7bea54685b060f",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-native-v1.4.1.apk",
-    "apkMirrorUrl": "https://1el7opuhijthc.space.mcode.cn/workreport-native-v1.4.1.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-native-source-v1.4.1.zip",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.2/workreport-native-v1.4.2.apk",
+    "apkMirrorUrl": "https://javdoddw20i6o.space.mcode.cn/workreport-native-v1.4.2.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.2/workreport-native-source-v1.4.2.zip",
     "minAndroid": "Android 8.0 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://1el7opuhijthc.space.mcode.cn/workreport-native-source-v1.4.1.zip"
+    "sourceMirrorUrl": "https://javdoddw20i6o.space.mcode.cn/workreport-native-source-v1.4.2.zip"
   },
   "web": {
     "version": "v1.3",
@@ -34,10 +34,21 @@
   },
   "changelog": [
     {
+      "version": "v1.4.2",
+      "date": "2026-10-26",
+      "title": "修键盘上方的大块空白",
+      "items": [
+        "修复打字时输入法键盘上方多出一大块空白：页面底边已被底部导航栏抬高过一次，输入法又叠了一层避让，等于多减了一个导航栏高度，键盘上沿和内容区之间就空出一大条",
+        "底部避让统一改为「导航栏高度与键盘高度取大值」，在 AppRoot 一处计算，内容区正好停在键盘上沿",
+        "所有输入框所在的列表补上自动滚动：被键盘挡住时会自己滚到能看见的位置",
+        "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 168/168 通过"
+      ],
+      "current": true
+    },
+    {
       "version": "v1.4.1",
       "date": "2026-10-25",
       "title": "引导页瘦身 · 隐私说明补上通知权限 · 修输入框被键盘盖住",
-      "current": true,
       "items": [
         "引导页「功能介绍」从 16 条精简到 6 条，并改成默认收起（原来全部铺开，页面太长）",
         "「数据与隐私」补上通知权限说明：只用于周报提醒，Android 13+ 首次进首页会主动问，点「以后再说」就不问了，不开也不影响其它功能",
@@ -52,7 +63,6 @@
       "version": "v1.4.0",
       "date": "2026-10-25",
       "title": "预览区 = 导出的 Excel · 通知权限引导 · 按处放行脱敏",
-      "current": false,
       "items": [
         "历史报告的预览区和首页预览区现在完全一致：显示的就是 Excel 里 B3 / C3 那两格的原文（已格式化、已脱敏）。新报告直接用数据库里存的那份秒开，旧报告自动解压缩包读 Excel",
         "导出格式一个字都没动 —— 预览只是把 Excel 照原样画出来，命名规则 / Excel 样式 / 加密三个文件与 v1.3.11 逐字节相同",
@@ -68,7 +78,6 @@
       "version": "v1.3.11",
       "date": "2026-10-23",
       "title": "深色模式看清预览 · 生成后自动清空 · 历史报告回填编辑",
-      "current": false,
       "items": [
         "修复预览表在深色模式下看不清的问题：标题行原本是「深色底 + 深灰字」，对比度只有 1.04:1，现在改为主题自适应（11.4:1），表头与边框也一并调亮",
         "生成压缩包成功后自动清空「工作记录」和「周报内容」，下次打开直接重新填，不用手动删",
@@ -79,7 +88,6 @@
       "version": "v1.3.10",
       "date": "2026-10-23",
       "title": "历史报告预览改成真的解压压缩包",
-      "current": false,
       "items": [
         "历史报告预览改为真正解开压缩包读取：自动带上解压密码，读出里面那份 Excel 的完整内容",
         "以前版本生成的报告也能看全表格，不再只显示内容摘要",
@@ -91,7 +99,6 @@
       "version": "v1.3.9",
       "date": "2026-10-23",
       "title": "历史报告可直接预览 Excel 内容",
-      "current": false,
       "items": [
         "历史报告新增「查看内容」：点开就能看到压缩包里那份 Excel 的样子，表格、合并单元格、列宽跟导出完全一致，不用手动解压",
         "卡片上直接显示「本周完成」的内容摘要，瞄一眼就知道写了什么",
@@ -102,7 +109,6 @@
       "version": "v1.3.8",
       "date": "2026-10-23",
       "title": "快捷记录模板 · 「我的」页分页面 · 引导页全屏重做",
-      "current": false,
       "items": [
         "新增「快捷记录模板」：常写的重复内容存成模板，首页点一下就插入，不用每次手敲",
         "「本周工作记录」与「下周工作计划」两套模板分开配置，互不影响",
@@ -114,7 +120,6 @@
       "version": "v1.3.7",
       "date": "2026-10-22",
       "title": "邮件发送回归标准通道",
-      "current": false,
       "items": [
         "撤销 v1.3.3 起为阿里邮箱增加的专用发送通道，恢复 WebView 旧版即已验证的标准 ACTION_SEND 通道（EXTRA_STREAM + clipData + 主题，正文留空）",
         "修复专用通道在部分机型上「点击发送即闪退」与「邮箱 App 无法拉起」的问题",
@@ -130,8 +135,7 @@
         "表单内容在每次输入后暂存至本机，下次打开自动恢复",
         "生成压缩包成功后才清除草稿，界面内容保留供当场核对",
         "采用 SharedPreferences + Base64 纯 Kotlin 编解码，不依赖 Android 的 org.json 空壳"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.3.5",
@@ -141,8 +145,7 @@
         "按需求彻底移除「自动带入收件人」，邮件仅携带主题与附件，收件人由使用者于邮箱 App 内自行填写",
         "修复首页文件名显示不全的问题（改为独占一行并允许折行）",
         "「关于」页加入免责声明"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.3.4",
@@ -151,8 +154,7 @@
       "items": [
         "修复 v1.3.3 引入的「点击发送闪退」与「邮箱 App 无法拉起」",
         "根因为 intent.selector 搭配 Intent.createChooser() 触发系统 ResolverActivity NPE，以及 filter 未声明 scheme/mimeType 导致带 data URI 的 Intent 匹配失败"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.3.3",
@@ -161,8 +163,7 @@
       "items": [
         "逆向 com.alibaba.cloudmail v4.12.8 后为其增加专用发送通道",
         "该通道已于 v1.3.7 撤销"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.3.2",
@@ -172,8 +173,7 @@
         "修复填写收件人邮箱但拉起邮箱 App 后收件人栏为空的问题",
         "邮件主题改为与压缩包名完全一致，历史报告二次发送亦携带收件人",
         "注：收件人功能已于 v1.3.5 移除"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.3.1",
@@ -183,8 +183,7 @@
         "两个内容输入框的清除按钮增加二次确认，防止误删",
         "生成后的确认弹窗中新增收件人邮箱输入框并自动保存",
         "注：收件人功能已于 v1.3.5 移除"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.3.0",
@@ -196,8 +195,7 @@
         "交叉验证抓出并修复 3 个真实缺陷：Date 强转 Calendar、周日起始偏移一天、字符串模板标识符解析",
         "新增首次启动引导页、生成后拉起邮箱 App 发送、内容框独立清除；首页预览按 Excel 真实列宽重新对齐",
         "单元测试 51 条全部通过"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.2.1",
@@ -205,8 +203,7 @@
       "title": "顶栏图标",
       "items": [
         "App 内顶栏图标替换为新的卷轴+笔图标，深色主题下自动切换"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.2.0",
@@ -215,8 +212,7 @@
       "items": [
         "全新应用图标（适配 Android 自适应图标）",
         "状态栏与导航栏颜色跟随页面主题"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.1.0",
@@ -224,8 +220,7 @@
       "title": "敏感词管理",
       "items": [
         "顶栏可打开管理面板，自行增删改敏感词库，词库长期保存，保存后立即生效"
-      ],
-      "current": false
+      ]
     },
     {
       "version": "v1.0.0",
@@ -236,8 +231,7 @@
         "自动计算周数、文件名与解压密码（取本周周四，格式 yyyyMMdd）",
         "实时预览、工作记录管理、浅深主题切换",
         "完全离线可用，不申请 INTERNET 权限"
-      ],
-      "current": false
+      ]
     }
   ],
   "webChangelog": [
