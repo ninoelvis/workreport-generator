@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -120,9 +119,9 @@ fun ProfileNamePage(
     ) {
         LazyColumn(
             modifier = Modifier
-            .fillMaxSize()
-            // 输入框被键盘挡住时自动滚到可见处
-            .imeNestedScroll(),
+                .fillMaxSize(),
+            // ⚠️ 不要加 imeNestedScroll()：滑到底会自己唤起输入法。
+            // 输入框不会被键盘遮住 —— AppRoot 已把内容区压到键盘上沿。
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 28.dp),
         ) {
             item {
@@ -188,9 +187,7 @@ fun ProfileShortcutsPage(
 
             LazyColumn(
                 modifier = Modifier
-            .fillMaxSize()
-            // 输入框被键盘挡住时自动滚到可见处
-            .imeNestedScroll(),
+                    .fillMaxSize(),
                 contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -461,9 +458,9 @@ fun ProfileSensitivePage(
     ) {
         LazyColumn(
             modifier = Modifier
-            .fillMaxSize()
-            // 输入框被键盘挡住时自动滚到可见处
-            .imeNestedScroll(),
+                .fillMaxSize(),
+            // ⚠️ 不要加 imeNestedScroll()：滑到底会自己唤起输入法。
+            // 输入框不会被键盘遮住 —— AppRoot 已把内容区压到键盘上沿。
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -675,9 +672,9 @@ fun ProfileAppearancePage(
     ) {
         LazyColumn(
             modifier = Modifier
-            .fillMaxSize()
-            // 输入框被键盘挡住时自动滚到可见处
-            .imeNestedScroll(),
+                .fillMaxSize(),
+            // ⚠️ 不要加 imeNestedScroll()：滑到底会自己唤起输入法。
+            // 输入框不会被键盘遮住 —— AppRoot 已把内容区压到键盘上沿。
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
@@ -731,9 +728,9 @@ fun ProfileMailPage(
     ) {
         LazyColumn(
             modifier = Modifier
-            .fillMaxSize()
-            // 输入框被键盘挡住时自动滚到可见处
-            .imeNestedScroll(),
+                .fillMaxSize(),
+            // ⚠️ 不要加 imeNestedScroll()：滑到底会自己唤起输入法。
+            // 输入框不会被键盘遮住 —— AppRoot 已把内容区压到键盘上沿。
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
@@ -894,9 +891,9 @@ fun ProfileDataPage(
     ) {
         LazyColumn(
             modifier = Modifier
-            .fillMaxSize()
-            // 输入框被键盘挡住时自动滚到可见处
-            .imeNestedScroll(),
+                .fillMaxSize(),
+            // ⚠️ 不要加 imeNestedScroll()：滑到底会自己唤起输入法。
+            // 输入框不会被键盘遮住 —— AppRoot 已把内容区压到键盘上沿。
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
@@ -971,9 +968,9 @@ fun ProfileAboutPage(
     ) {
         LazyColumn(
             modifier = Modifier
-            .fillMaxSize()
-            // 输入框被键盘挡住时自动滚到可见处
-            .imeNestedScroll(),
+                .fillMaxSize(),
+            // ⚠️ 不要加 imeNestedScroll()：滑到底会自己唤起输入法。
+            // 输入框不会被键盘遮住 —— AppRoot 已把内容区压到键盘上沿。
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
