@@ -626,335 +626,1067 @@ footer a{color:var(--t2)}
 <script>
 (function () {
   var EMBEDDED =   {
-    "updatedAt": "2026-11-20",
-    "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
-    "app": {
-      "name": "工作报告生成器",
-      "version": "1.5.1",
-      "versionCode": 31,
-      "releasedAt": "2026-11-20",
-      "sizeBytes": 12325329,
-      "sizeText": "11.8 MB",
-      "sha256": "d0179eb50d389797b4144c2149f725b29e33c60f4c2f9498e7648e4865cf6a74",
-      "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-      "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.1/workreport-native-v1.5.1.apk",
-      "apkMirrorUrl": "https://qq6e8ktowljcp.space.mcode.cn/workreport-native-v1.5.1.apk",
-      "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.1/workreport-native-source-v1.5.1.zip",
-      "minAndroid": "Android 8.0 及以上",
-      "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
-      "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-      "sourceMirrorUrl": "https://qq6e8ktowljcp.space.mcode.cn/workreport-native-source-v1.5.1.zip"
+  "updatedAt": "2026-11-21",
+  "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
+  "app": {
+    "name": "工作报告生成器",
+    "version": "1.6.0",
+    "versionCode": 32,
+    "releasedAt": "2026-11-21",
+    "sizeBytes": 12404138,
+    "sizeText": "11.8 MB",
+    "sha256": "c9cfc553e184a2fb3f34e8da50b64f09ad988d4d9c549147f5c4a0f2c53ca418",
+    "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-v1.6.0.apk",
+    "apkMirrorUrl": "https://cbct07rx38099.space.mcode.cn/workreport-native-v1.6.0.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-source-v1.6.0.zip",
+    "minAndroid": "Android 8.0 及以上",
+    "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
+    "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
+    "sourceMirrorUrl": "https://cbct07rx38099.space.mcode.cn/workreport-native-source-v1.6.0.zip"
+  },
+  "web": {
+    "version": "v1.3",
+    "onlineUrl": "https://dxntf9na2dn1l.space.mcode.cn",
+    "singleFileUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-v1.3.htm",
+    "offlineZipUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-offline-v1.3.zip",
+    "repoFileUrl": "https://github.com/ninoelvis/workreport-generator/blob/main/web/workreport-web.htm",
+    "featureParity": "功能已对齐安卓原生版 v1.4.1：脱敏按处放行、历史报告、快捷模板、配置备份、工作记录排序、生成后清空。脱敏算法与原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同。",
+    "notSupported": "网页版做不到：定时周报提醒（无后台能力）、自动拉起邮箱带附件、可靠的通知权限（iPhone 基本不可用）、直接存到手机「下载」目录、长期可靠的历史（localStorage 清缓存即失）。这几项建议用安卓原生版。"
+  },
+  "repo": {
+    "url": "https://github.com/ninoelvis/workreport-generator",
+    "nativeDir": "https://github.com/ninoelvis/workreport-generator/tree/main/native",
+    "releases": "https://github.com/ninoelvis/workreport-generator/releases"
+  },
+  "changelog": [
+    {
+      "version": "v1.6.0",
+      "date": "2026-11-21",
+      "title": "整套图标重做，深浅色自动跟随，底部导航加动画",
+      "items": [
+        "全 App 图标重新画成同一套矢量图标：功能区、底部三个标签页、操作按钮、顶栏 Logo、空状态、列表标签、输入框标题 —— 原来的 emoji 和系统自带图标全部换掉，风格统一、粗细一致",
+        "桌面图标也换了新的：品牌标志 + WorkReport 字样，适配各种屏幕形状与启动器裁切，并另做了一套深色配色",
+        "图标颜色不再写死，跟着 App 的浅色/深色主题自动切换；设计稿里「深→浅」的层次改用透明度实现，切主题时层次照样在",
+        "底部导航改成自绘并加了动画：指示条在三个标签之间平滑平移，选中图标放大一点、没选中的缩一点，文字只在选中时淡入",
+        "页面之间加了轻微的横向滑动 + 淡入淡出过渡",
+        "导出内容、Excel 样式、压缩包文件名、解压密码一个字都没改；单元测试 198/198 通过，并新增 9 项图标体系防回归检查"
+      ],
+      "current": true
     },
-    "web": {
-      "version": "v1.3",
-      "onlineUrl": "https://dxntf9na2dn1l.space.mcode.cn",
-      "singleFileUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-v1.3.htm",
-      "offlineZipUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-offline-v1.3.zip",
-      "repoFileUrl": "https://github.com/ninoelvis/workreport-generator/blob/main/web/workreport-web.htm",
-      "featureParity": "功能已对齐安卓原生版 v1.4.1：脱敏按处放行、历史报告、快捷模板、配置备份、工作记录排序、生成后清空。脱敏算法与原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同。",
-      "notSupported": "网页版做不到：定时周报提醒（无后台能力）、自动拉起邮箱带附件、可靠的通知权限（iPhone 基本不可用）、直接存到手机「下载」目录、长期可靠的历史（localStorage 清缓存即失）。这几项建议用安卓原生版。"
+    {
+      "version": "v1.5.1",
+      "date": "2026-11-20",
+      "title": "修「存放位置显示成文件名」「表头高度不齐」「放大查看一片空白」",
+      "items": [
+        "修复「我的 → 周报存放目录」里的「当前存放位置」显示成目录里第一个文件的文件名 —— 之前查的是子文档列表的第一条而不是目录本身，现在显示目录自己的名字，并补上完整路径，一眼看清选的是哪个文件夹",
+        "修复预览区表头高度不齐：Excel 的表头行高是固定的，现在预览也用固定行高，「客户（及用户）反馈」这类长标题换行时不再把整行撑歪，六列表头一样高、一样居中",
+        "修复点「放大查看」进去一片空白：横向和纵向滚动套在了同一个容器上，把表格宽度压成了 0；现在改成横竖分层滚动、宽度写死，没填内容时也能看到完整的表格样式",
+        "历史报告页的预览（数据库里的报告 + 手动拷进来的压缩包）也加了「放大查看」，和首页一致",
+        "导出格式、压缩包文件名、解压密码依旧一个字没改；单元测试 189/189 通过"
+      ],
+      "current": false
     },
-    "repo": {
-      "url": "https://github.com/ninoelvis/workreport-generator",
-      "nativeDir": "https://github.com/ninoelvis/workreport-generator/tree/main/native",
-      "releases": "https://github.com/ninoelvis/workreport-generator/releases"
+    {
+      "version": "v1.5.0",
+      "date": "2026-11-20",
+      "title": "存放目录自己挑，预览可以放大",
+      "items": [
+        "新增「周报存放目录」：第一次用可以在引导页选一个文件夹存周报，之后随时在「我的 → 周报存放目录」里改或恢复默认；不选就还是原来的「下载」目录",
+        "用系统官方的文件夹选择器（SAF），不需要申请任何存储权限，卸载或换手机也不影响",
+        "历史报告页能认出你手动拷进该目录的压缩包，直接预览内容、也能分享出去",
+        "预览区新增「放大查看」：全屏显示，双指缩放、双击放大、左右滑动看全部列，长的工作梳理一行都不再被裁掉",
+        "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 187/187 通过"
+      ],
+      "current": false
     },
-    "changelog": [
-      {
-        "version": "v1.5.1",
-        "date": "2026-11-20",
-        "title": "修「存放位置显示成文件名」「表头高度不齐」「放大查看一片空白」",
-        "items": [
-          "修复「我的 → 周报存放目录」里的「当前存放位置」显示成目录里第一个文件的文件名 —— 之前查的是子文档列表的第一条而不是目录本身，现在显示目录自己的名字，并补上完整路径，一眼看清选的是哪个文件夹",
-          "修复预览区表头高度不齐：Excel 的表头行高是固定的，现在预览也用固定行高，「客户（及用户）反馈」这类长标题换行时不再把整行撑歪，六列表头一样高、一样居中",
-          "修复点「放大查看」进去一片空白：横向和纵向滚动套在了同一个容器上，把表格宽度压成了 0；现在改成横竖分层滚动、宽度写死，没填内容时也能看到完整的表格样式",
-          "历史报告页的预览（数据库里的报告 + 手动拷进来的压缩包）也加了「放大查看」，和首页一致",
-          "导出格式、压缩包文件名、解压密码依旧一个字没改；单元测试 189/189 通过"
-        ],
-        "current": true
-      },
-      {
-        "version": "v1.5.0",
-        "date": "2026-11-20",
-        "title": "存放目录自己挑，预览可以放大",
-        "items": [
-          "新增「周报存放目录」：第一次用可以在引导页选一个文件夹存周报，之后随时在「我的 → 周报存放目录」里改或恢复默认；不选就还是原来的「下载」目录",
-          "用系统官方的文件夹选择器（SAF），不需要申请任何存储权限，卸载或换手机也不影响",
-          "历史报告页能认出你手动拷进该目录的压缩包，直接预览内容、也能分享出去",
-          "预览区新增「放大查看」：全屏显示，双指缩放、双击放大、左右滑动看全部列，长的工作梳理一行都不再被裁掉",
-          "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 187/187 通过"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.4.3",
-        "date": "2026-10-26",
-        "title": "修「滑到最下面输入法自己弹出来」",
-        "items": [
-          "修复 v1.4.2 引入的回归：列表滑到最下面后输入法自己弹出来 —— 那个「输入法嵌套滚动」修饰符会把滑到底后多出来的滚动量交给输入法去唤起键盘",
-          "已去掉该修饰符：内容区本来就被压在键盘上沿，输入框不会被遮住，不需要它",
-          "新增 8 个防回归测试：扫源码禁止再出现该修饰符、禁止页面各自加键盘避让、并把整条避让链路的数学写成端到端布局模型",
-          "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 176/176 通过"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.4.2",
-        "date": "2026-10-26",
-        "title": "修键盘上方的大块空白",
-        "items": [
-          "修复打字时输入法键盘上方多出一大块空白：页面底边已被底部导航栏抬高过一次，输入法又叠了一层避让，等于多减了一个导航栏高度，键盘上沿和内容区之间就空出一大条",
-          "底部避让统一改为「导航栏高度与键盘高度取大值」，在 AppRoot 一处计算，内容区正好停在键盘上沿",
-          "所有输入框所在的列表补上自动滚动：被键盘挡住时会自己滚到能看见的位置",
-          "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 168/168 通过"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.4.1",
-        "date": "2026-10-25",
-        "title": "引导页瘦身 · 隐私说明补上通知权限 · 修输入框被键盘盖住",
-        "items": [
-          "引导页「功能介绍」从 16 条精简到 6 条，并改成默认收起（原来全部铺开，页面太长）",
-          "「数据与隐私」补上通知权限说明：只用于周报提醒，Android 13+ 首次进首页会主动问，点「以后再说」就不问了，不开也不影响其它功能",
-          "「权限最小化」说明更新：除通知权限外只申请 Android 8/9 写「下载」目录的权限，不需要联网，不申请相机等无关权限",
-          "修复引导页填姓名时输入法弹出后看不见自己打的字：底部区域会跟着键盘顶上来",
-          "所有输入框字号统一提到 16sp —— 低于 16sp 时部分 ROM 的输入法会强制放大整页，输入框被放大裁切，文字反而看不见",
-          "首页内容区也会避开键盘，最后几项不会被挡住",
-          "导出格式与公司红线一个字没动：命名规则 / Excel 样式 / 加密三个文件与 v1.3.11 逐字节相同"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.4.0",
-        "date": "2026-10-25",
-        "title": "预览区 = 导出的 Excel · 通知权限引导 · 按处放行脱敏",
-        "items": [
-          "历史报告的预览区和首页预览区现在完全一致：显示的就是 Excel 里 B3 / C3 那两格的原文（已格式化、已脱敏）。新报告直接用数据库里存的那份秒开，旧报告自动解压缩包读 Excel",
-          "导出格式一个字都没动 —— 预览只是把 Excel 照原样画出来，命名规则 / Excel 样式 / 加密三个文件与 v1.3.11 逐字节相同",
-          "填完姓名进首页时弹一次通知权限引导：点「去开启」拉起系统授权框，点「以后再说」以后不再提示",
-          "「取回下周计划」改成放进「工作记录」：一条一条分开，能补内容、能上下调排序，点「汇总」才进「本周已完成工作梳理」",
-          "脱敏预览升级成按处放行：同一句里两次「查询」会列成两行并带上下文，可以只放行其中一处，另一处照常脱敏",
-          "新增系统分享面板、周报提醒（选星期几，16:00-18:00 之间提醒）、个人配置加密备份与恢复、快捷模板复制导入",
-          "脱敏预览的开关换成跟整体风格统一的形式，不再突兀",
-          "单元测试 158 项全部通过；签名证书与历史版本一致，可直接覆盖安装，历史报告和配置都在"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.11",
-        "date": "2026-10-23",
-        "title": "深色模式看清预览 · 生成后自动清空 · 历史报告回填编辑",
-        "items": [
-          "修复预览表在深色模式下看不清的问题：标题行原本是「深色底 + 深灰字」，对比度只有 1.04:1，现在改为主题自适应（11.4:1），表头与边框也一并调亮",
-          "生成压缩包成功后自动清空「工作记录」和「周报内容」，下次打开直接重新填，不用手动删",
-          "历史报告新增「载入首页继续编辑」：看完内容可二次确认后回填首页，改完重新生成"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.10",
-        "date": "2026-10-23",
-        "title": "历史报告预览改成真的解压压缩包",
-        "items": [
-          "历史报告预览改为真正解开压缩包读取：自动带上解压密码，读出里面那份 Excel 的完整内容",
-          "以前版本生成的报告也能看全表格，不再只显示内容摘要",
-          "预览区会一并显示压缩包的解压密码，方便对照",
-          "卡片上直接显示「本周完成」的内容摘要"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.9",
-        "date": "2026-10-23",
-        "title": "历史报告可直接预览 Excel 内容",
-        "items": [
-          "历史报告新增「查看内容」：点开就能看到压缩包里那份 Excel 的样子，表格、合并单元格、列宽跟导出完全一致，不用手动解压",
-          "卡片上直接显示「本周完成」的内容摘要，瞄一眼就知道写了什么",
-          "生成报告时会把内容一并存进本地数据库，因此文件被清理掉也不影响预览"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.8",
-        "date": "2026-10-23",
-        "title": "快捷记录模板 · 「我的」页分页面 · 引导页全屏重做",
-        "items": [
-          "新增「快捷记录模板」：常写的重复内容存成模板，首页点一下就插入，不用每次手敲",
-          "「本周工作记录」与「下周工作计划」两套模板分开配置，互不影响",
-          "「我的」页改成设置首页：个人信息、快捷记录模板、敏感词库、外观、邮件设置、数据管理、关于，各点进去单独编辑",
-          "引导页改为整页全屏展示（原先是弹窗，顶部会露出一条系统灰底），各分区可展开收起"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.7",
-        "date": "2026-10-22",
-        "title": "邮件发送回归标准通道",
-        "items": [
-          "撤销 v1.3.3 起为阿里邮箱增加的专用发送通道，恢复 WebView 旧版即已验证的标准 ACTION_SEND 通道（EXTRA_STREAM + clipData + 主题，正文留空）",
-          "修复专用通道在部分机型上「点击发送即闪退」与「邮箱 App 无法拉起」的问题",
-          "仅对阿里邮箱附加 CLEAR_TASK 标记，规避其写邮件页复用旧实例导致附件不被处理的问题",
-          "新增 MailIntentSpec 纯数据类与 10 条单元测试，将「附件必定写入 Intent、主题非空、正文为空」转化为可自动验证的不变量"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.6",
-        "date": "2026-10-22",
-        "title": "首页表单草稿暂存",
-        "items": [
-          "表单内容在每次输入后暂存至本机，下次打开自动恢复",
-          "生成压缩包成功后才清除草稿，界面内容保留供当场核对",
-          "采用 SharedPreferences + Base64 纯 Kotlin 编解码，不依赖 Android 的 org.json 空壳"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.5",
-        "date": "2026-10-22",
-        "title": "移除收件人功能并加入免责声明",
-        "items": [
-          "按需求彻底移除「自动带入收件人」，邮件仅携带主题与附件，收件人由使用者于邮箱 App 内自行填写",
-          "修复首页文件名显示不全的问题（改为独占一行并允许折行）",
-          "「关于」页加入免责声明"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.4",
-        "date": "2026-10-22",
-        "title": "修复发送闪退",
-        "items": [
-          "修复 v1.3.3 引入的「点击发送闪退」与「邮箱 App 无法拉起」",
-          "根因为 intent.selector 搭配 Intent.createChooser() 触发系统 ResolverActivity NPE，以及 filter 未声明 scheme/mimeType 导致带 data URI 的 Intent 匹配失败"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.3",
-        "date": "2026-10-22",
-        "title": "阿里邮箱专用通道",
-        "items": [
-          "逆向 com.alibaba.cloudmail v4.12.8 后为其增加专用发送通道",
-          "该通道已于 v1.3.7 撤销"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.2",
-        "date": "2026-10-22",
-        "title": "修复收件人未填入",
-        "items": [
-          "修复填写收件人邮箱但拉起邮箱 App 后收件人栏为空的问题",
-          "邮件主题改为与压缩包名完全一致，历史报告二次发送亦携带收件人",
-          "注：收件人功能已于 v1.3.5 移除"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.1",
-        "date": "2026-10-22",
-        "title": "清除二次确认与收件人输入",
-        "items": [
-          "两个内容输入框的清除按钮增加二次确认，防止误删",
-          "生成后的确认弹窗中新增收件人邮箱输入框并自动保存",
-          "注：收件人功能已于 v1.3.5 移除"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.3.0",
-        "date": "2026-10-22",
-        "title": "原生重写正式版",
-        "items": [
-          "整个应用由 WebView 套壳改写为 Kotlin + Jetpack Compose 纯原生实现，不再加载任何网页资源",
-          "导出的 Excel 与加密 ZIP 与旧版逐字节一致（10/10 个 XML 部件实测比对通过）",
-          "交叉验证抓出并修复 3 个真实缺陷：Date 强转 Calendar、周日起始偏移一天、字符串模板标识符解析",
-          "新增首次启动引导页、生成后拉起邮箱 App 发送、内容框独立清除；首页预览按 Excel 真实列宽重新对齐",
-          "单元测试 51 条全部通过"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.2.1",
-        "date": "2026-10-22",
-        "title": "顶栏图标",
-        "items": [
-          "App 内顶栏图标替换为新的卷轴+笔图标，深色主题下自动切换"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.2.0",
-        "date": "2026-10-22",
-        "title": "全新应用图标与状态栏适配",
-        "items": [
-          "全新应用图标（适配 Android 自适应图标）",
-          "状态栏与导航栏颜色跟随页面主题"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.1.0",
-        "date": "2026-10-22",
-        "title": "敏感词管理",
-        "items": [
-          "顶栏可打开管理面板，自行增删改敏感词库，词库长期保存，保存后立即生效"
-        ],
-        "current": false
-      },
-      {
-        "version": "v1.0.0",
-        "date": "2026-10-22",
-        "title": "首个正式版",
-        "items": [
-          "周报内容生成、Excel 导出、AES 加密 ZIP 保存至系统下载目录",
-          "自动计算周数、文件名与解压密码（取本周周四，格式 yyyyMMdd）",
-          "实时预览、工作记录管理、浅深主题切换",
-          "完全离线可用，不申请 INTERNET 权限"
-        ],
-        "current": false
-      }
-    ],
-    "webChangelog": [
-      {
-        "version": "网页版 v1.3",
-        "date": "2026-10-25",
-        "current": true,
-        "items": [
-          "手机端顶栏优化：次要图标收进「☰ 更多」菜单，标题「工作报告生成器」不再被挤成竖排；桌面端布局不变",
-          "功能对齐安卓原生版 v1.4.1：脱敏按处放行（每一处独立开关、带上下文，同句重复出现可只放行其中一处）",
-          "新增历史报告：列表 / 预览（与导出逐字一致）/ 载入继续编辑 / 再下载 / 再分享 / 取回下周计划",
-          "新增快捷模板（本周、下周两套，可复制给别人导入）、配置备份与恢复（加密 ZIP）",
-          "工作记录支持上下排序；「取回下周计划」把上一份报告的计划拆成一条条进工作记录；生成成功后自动清空工作记录与周报内容",
-          "脱敏算法与安卓原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同 —— 导出格式一个字没动",
-          "已在引导页和说明里标明网页版做不到的几项（定时提醒、自动带附件发邮件等），建议用安卓原生版"
-        ]
-      },
-      {
-        "version": "网页版 v1.2",
-        "date": "2026-10-23",
-        "items": [
-          "引导页精简：更新记录由 11 条压缩至 2 条，功能介绍由 8 条合并为 4 条，页面总高由 4000+ px 降至 2004 px",
-          "新增原生版 App 下载入口与免责声明",
-          "修复「分享 / 发送」「复制密码」按钮无响应：新增全局函数遗漏了 window 导出"
-        ]
-      },
-      {
-        "version": "网页版 v1.1",
-        "date": "2026-10-23",
-        "items": [
-          "跨平台适配 iPhone Safari / Edge / 电脑端浏览器",
-          "iOS 专项：输入框字号提升至 16px（低于该值时 Safari 聚焦会强制放大整页）、dvh 视口高度、刘海屏与底部安全区适配、触屏设备取消 hover 高亮、弹窗内容可滚动",
-          "新增 Web Share API 系统分享，iPhone 可直接分享至「邮件」/「文件」/微信",
-          "剪贴板与文件下载增加降级兜底；加密能力缺失时给出中文提示"
-        ]
-      }
-    ],
-    "disclaimer": "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。使用者应自行确保所填报的工作内容真实、合法，不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，软件作者不承担任何法律责任。",
-    "downloadPageUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest"
-  };
+    {
+      "version": "v1.4.3",
+      "date": "2026-10-26",
+      "title": "修「滑到最下面输入法自己弹出来」",
+      "items": [
+        "修复 v1.4.2 引入的回归：列表滑到最下面后输入法自己弹出来 —— 那个「输入法嵌套滚动」修饰符会把滑到底后多出来的滚动量交给输入法去唤起键盘",
+        "已去掉该修饰符：内容区本来就被压在键盘上沿，输入框不会被遮住，不需要它",
+        "新增 8 个防回归测试：扫源码禁止再出现该修饰符、禁止页面各自加键盘避让、并把整条避让链路的数学写成端到端布局模型",
+        "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 176/176 通过"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.4.2",
+      "date": "2026-10-26",
+      "title": "修键盘上方的大块空白",
+      "items": [
+        "修复打字时输入法键盘上方多出一大块空白：页面底边已被底部导航栏抬高过一次，输入法又叠了一层避让，等于多减了一个导航栏高度，键盘上沿和内容区之间就空出一大条",
+        "底部避让统一改为「导航栏高度与键盘高度取大值」，在 AppRoot 一处计算，内容区正好停在键盘上沿",
+        "所有输入框所在的列表补上自动滚动：被键盘挡住时会自己滚到能看见的位置",
+        "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 168/168 通过"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.4.1",
+      "date": "2026-10-25",
+      "title": "引导页瘦身 · 隐私说明补上通知权限 · 修输入框被键盘盖住",
+      "items": [
+        "引导页「功能介绍」从 16 条精简到 6 条，并改成默认收起（原来全部铺开，页面太长）",
+        "「数据与隐私」补上通知权限说明：只用于周报提醒，Android 13+ 首次进首页会主动问，点「以后再说」就不问了，不开也不影响其它功能",
+        "「权限最小化」说明更新：除通知权限外只申请 Android 8/9 写「下载」目录的权限，不需要联网，不申请相机等无关权限",
+        "修复引导页填姓名时输入法弹出后看不见自己打的字：底部区域会跟着键盘顶上来",
+        "所有输入框字号统一提到 16sp —— 低于 16sp 时部分 ROM 的输入法会强制放大整页，输入框被放大裁切，文字反而看不见",
+        "首页内容区也会避开键盘，最后几项不会被挡住",
+        "导出格式与公司红线一个字没动：命名规则 / Excel 样式 / 加密三个文件与 v1.3.11 逐字节相同"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.4.0",
+      "date": "2026-10-25",
+      "title": "预览区 = 导出的 Excel · 通知权限引导 · 按处放行脱敏",
+      "items": [
+        "历史报告的预览区和首页预览区现在完全一致：显示的就是 Excel 里 B3 / C3 那两格的原文（已格式化、已脱敏）。新报告直接用数据库里存的那份秒开，旧报告自动解压缩包读 Excel",
+        "导出格式一个字都没动 —— 预览只是把 Excel 照原样画出来，命名规则 / Excel 样式 / 加密三个文件与 v1.3.11 逐字节相同",
+        "填完姓名进首页时弹一次通知权限引导：点「去开启」拉起系统授权框，点「以后再说」以后不再提示",
+        "「取回下周计划」改成放进「工作记录」：一条一条分开，能补内容、能上下调排序，点「汇总」才进「本周已完成工作梳理」",
+        "脱敏预览升级成按处放行：同一句里两次「查询」会列成两行并带上下文，可以只放行其中一处，另一处照常脱敏",
+        "新增系统分享面板、周报提醒（选星期几，16:00-18:00 之间提醒）、个人配置加密备份与恢复、快捷模板复制导入",
+        "脱敏预览的开关换成跟整体风格统一的形式，不再突兀",
+        "单元测试 158 项全部通过；签名证书与历史版本一致，可直接覆盖安装，历史报告和配置都在"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.11",
+      "date": "2026-10-23",
+      "title": "深色模式看清预览 · 生成后自动清空 · 历史报告回填编辑",
+      "items": [
+        "修复预览表在深色模式下看不清的问题：标题行原本是「深色底 + 深灰字」，对比度只有 1.04:1，现在改为主题自适应（11.4:1），表头与边框也一并调亮",
+        "生成压缩包成功后自动清空「工作记录」和「周报内容」，下次打开直接重新填，不用手动删",
+        "历史报告新增「载入首页继续编辑」：看完内容可二次确认后回填首页，改完重新生成"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.10",
+      "date": "2026-10-23",
+      "title": "历史报告预览改成真的解压压缩包",
+      "items": [
+        "历史报告预览改为真正解开压缩包读取：自动带上解压密码，读出里面那份 Excel 的完整内容",
+        "以前版本生成的报告也能看全表格，不再只显示内容摘要",
+        "预览区会一并显示压缩包的解压密码，方便对照",
+        "卡片上直接显示「本周完成」的内容摘要"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.9",
+      "date": "2026-10-23",
+      "title": "历史报告可直接预览 Excel 内容",
+      "items": [
+        "历史报告新增「查看内容」：点开就能看到压缩包里那份 Excel 的样子，表格、合并单元格、列宽跟导出完全一致，不用手动解压",
+        "卡片上直接显示「本周完成」的内容摘要，瞄一眼就知道写了什么",
+        "生成报告时会把内容一并存进本地数据库，因此文件被清理掉也不影响预览"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.8",
+      "date": "2026-10-23",
+      "title": "快捷记录模板 · 「我的」页分页面 · 引导页全屏重做",
+      "items": [
+        "新增「快捷记录模板」：常写的重复内容存成模板，首页点一下就插入，不用每次手敲",
+        "「本周工作记录」与「下周工作计划」两套模板分开配置，互不影响",
+        "「我的」页改成设置首页：个人信息、快捷记录模板、敏感词库、外观、邮件设置、数据管理、关于，各点进去单独编辑",
+        "引导页改为整页全屏展示（原先是弹窗，顶部会露出一条系统灰底），各分区可展开收起"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.7",
+      "date": "2026-10-22",
+      "title": "邮件发送回归标准通道",
+      "items": [
+        "撤销 v1.3.3 起为阿里邮箱增加的专用发送通道，恢复 WebView 旧版即已验证的标准 ACTION_SEND 通道（EXTRA_STREAM + clipData + 主题，正文留空）",
+        "修复专用通道在部分机型上「点击发送即闪退」与「邮箱 App 无法拉起」的问题",
+        "仅对阿里邮箱附加 CLEAR_TASK 标记，规避其写邮件页复用旧实例导致附件不被处理的问题",
+        "新增 MailIntentSpec 纯数据类与 10 条单元测试，将「附件必定写入 Intent、主题非空、正文为空」转化为可自动验证的不变量"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.6",
+      "date": "2026-10-22",
+      "title": "首页表单草稿暂存",
+      "items": [
+        "表单内容在每次输入后暂存至本机，下次打开自动恢复",
+        "生成压缩包成功后才清除草稿，界面内容保留供当场核对",
+        "采用 SharedPreferences + Base64 纯 Kotlin 编解码，不依赖 Android 的 org.json 空壳"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.5",
+      "date": "2026-10-22",
+      "title": "移除收件人功能并加入免责声明",
+      "items": [
+        "按需求彻底移除「自动带入收件人」，邮件仅携带主题与附件，收件人由使用者于邮箱 App 内自行填写",
+        "修复首页文件名显示不全的问题（改为独占一行并允许折行）",
+        "「关于」页加入免责声明"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.4",
+      "date": "2026-10-22",
+      "title": "修复发送闪退",
+      "items": [
+        "修复 v1.3.3 引入的「点击发送闪退」与「邮箱 App 无法拉起」",
+        "根因为 intent.selector 搭配 Intent.createChooser() 触发系统 ResolverActivity NPE，以及 filter 未声明 scheme/mimeType 导致带 data URI 的 Intent 匹配失败"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.3",
+      "date": "2026-10-22",
+      "title": "阿里邮箱专用通道",
+      "items": [
+        "逆向 com.alibaba.cloudmail v4.12.8 后为其增加专用发送通道",
+        "该通道已于 v1.3.7 撤销"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.2",
+      "date": "2026-10-22",
+      "title": "修复收件人未填入",
+      "items": [
+        "修复填写收件人邮箱但拉起邮箱 App 后收件人栏为空的问题",
+        "邮件主题改为与压缩包名完全一致，历史报告二次发送亦携带收件人",
+        "注：收件人功能已于 v1.3.5 移除"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.1",
+      "date": "2026-10-22",
+      "title": "清除二次确认与收件人输入",
+      "items": [
+        "两个内容输入框的清除按钮增加二次确认，防止误删",
+        "生成后的确认弹窗中新增收件人邮箱输入框并自动保存",
+        "注：收件人功能已于 v1.3.5 移除"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.0",
+      "date": "2026-10-22",
+      "title": "原生重写正式版",
+      "items": [
+        "整个应用由 WebView 套壳改写为 Kotlin + Jetpack Compose 纯原生实现，不再加载任何网页资源",
+        "导出的 Excel 与加密 ZIP 与旧版逐字节一致（10/10 个 XML 部件实测比对通过）",
+        "交叉验证抓出并修复 3 个真实缺陷：Date 强转 Calendar、周日起始偏移一天、字符串模板标识符解析",
+        "新增首次启动引导页、生成后拉起邮箱 App 发送、内容框独立清除；首页预览按 Excel 真实列宽重新对齐",
+        "单元测试 51 条全部通过"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.2.1",
+      "date": "2026-10-22",
+      "title": "顶栏图标",
+      "items": [
+        "App 内顶栏图标替换为新的卷轴+笔图标，深色主题下自动切换"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.2.0",
+      "date": "2026-10-22",
+      "title": "全新应用图标与状态栏适配",
+      "items": [
+        "全新应用图标（适配 Android 自适应图标）",
+        "状态栏与导航栏颜色跟随页面主题"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.1.0",
+      "date": "2026-10-22",
+      "title": "敏感词管理",
+      "items": [
+        "顶栏可打开管理面板，自行增删改敏感词库，词库长期保存，保存后立即生效"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.0.0",
+      "date": "2026-10-22",
+      "title": "首个正式版",
+      "items": [
+        "周报内容生成、Excel 导出、AES 加密 ZIP 保存至系统下载目录",
+        "自动计算周数、文件名与解压密码（取本周周四，格式 yyyyMMdd）",
+        "实时预览、工作记录管理、浅深主题切换",
+        "完全离线可用，不申请 INTERNET 权限"
+      ],
+      "current": false
+    }
+  ],
+  "webChangelog": [
+    {
+      "version": "网页版 v1.3",
+      "date": "2026-10-25",
+      "current": true,
+      "items": [
+        "手机端顶栏优化：次要图标收进「☰ 更多」菜单，标题「工作报告生成器」不再被挤成竖排；桌面端布局不变",
+        "功能对齐安卓原生版 v1.4.1：脱敏按处放行（每一处独立开关、带上下文，同句重复出现可只放行其中一处）",
+        "新增历史报告：列表 / 预览（与导出逐字一致）/ 载入继续编辑 / 再下载 / 再分享 / 取回下周计划",
+        "新增快捷模板（本周、下周两套，可复制给别人导入）、配置备份与恢复（加密 ZIP）",
+        "工作记录支持上下排序；「取回下周计划」把上一份报告的计划拆成一条条进工作记录；生成成功后自动清空工作记录与周报内容",
+        "脱敏算法与安卓原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同 —— 导出格式一个字没动",
+        "已在引导页和说明里标明网页版做不到的几项（定时提醒、自动带附件发邮件等），建议用安卓原生版"
+      ]
+    },
+    {
+      "version": "网页版 v1.2",
+      "date": "2026-10-23",
+      "items": [
+        "引导页精简：更新记录由 11 条压缩至 2 条，功能介绍由 8 条合并为 4 条，页面总高由 4000+ px 降至 2004 px",
+        "新增原生版 App 下载入口与免责声明",
+        "修复「分享 / 发送」「复制密码」按钮无响应：新增全局函数遗漏了 window 导出"
+      ]
+    },
+    {
+      "version": "网页版 v1.1",
+      "date": "2026-10-23",
+      "items": [
+        "跨平台适配 iPhone Safari / Edge / 电脑端浏览器",
+        "iOS 专项：输入框字号提升至 16px（低于该值时 Safari 聚焦会强制放大整页）、dvh 视口高度、刘海屏与底部安全区适配、触屏设备取消 hover 高亮、弹窗内容可滚动",
+        "新增 Web Share API 系统分享，iPhone 可直接分享至「邮件」/「文件」/微信",
+        "剪贴板与文件下载增加降级兜底；加密能力缺失时给出中文提示"
+      ]
+    }
+  ],
+  "disclaimer": "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。使用者应自行确保所填报的工作内容真实、合法，不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，软件作者不承担任何法律责任。",
+  "downloadPageUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest"
+}ent:space-between;gap:14px;
+    text-align:right;
+  }
+  table.cmp td.feat{
+    font-weight:650;color:var(--t1);border-bottom:1px dashed var(--border-dash);
+    padding-bottom:9px;margin-bottom:5px;display:block;text-align:left;
+  }
+  table.cmp td.c::before{
+    content:attr(data-label);color:var(--t3);font-weight:400;font-size:12.5px;
+    flex:0 0 auto;text-align:left;
+  }
+}
+
+/* ===== 更新记录 ===== */
+.log{margin-top:4px}
+.log-item{display:flex;gap:13px;padding:14px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none;padding-bottom:0}
+.log-rail{flex:0 0 88px}
+.log-ver{
+  display:inline-block;padding:3px 9px;border-radius:var(--r-sm);font-size:12px;font-weight:700;
+  background:var(--bg-info);color:var(--t2);white-space:nowrap;
+}
+.log-item.cur .log-ver{background:var(--blue);color:var(--on)}
+.log-date{font-size:11.5px;color:var(--t3);margin-top:5px}
+.log-body{flex:1;min-width:0}
+.log-title{font-size:14px;font-weight:650;margin:2px 0 6px}
+.log-items{margin:0;padding-left:19px;font-size:13px;color:var(--t2)}
+.log-items li{margin:4px 0}
+@media (max-width:640px){
+  .log-item{flex-direction:column;gap:7px}
+  .log-rail{flex:none;display:flex;align-items:center;gap:9px}
+  .log-date{margin-top:0}
+}
+
+/* ===== 免责 ===== */
+.disclaimer{
+  padding:15px 17px;border-radius:var(--r-md);background:var(--bg-warn);
+  border:1px solid var(--warn-bd);font-size:13px;color:var(--t2);line-height:1.85;
+}
+.disclaimer b{display:block;color:var(--orange);font-size:13.5px;margin-bottom:6px;font-weight:650}
+
+footer{
+  text-align:center;color:var(--t3);font-size:12.5px;padding:26px 0 10px;
+  border-top:1px solid var(--border);margin-top:22px;
+}
+footer a{color:var(--t2)}
+.share-box{
+  margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:9px 12px;font-size:12.5px;
+}
+.share-label{color:var(--t3)}
+.share-box #pageUrl{
+  max-width:min(520px,100%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:6px 11px;font-size:12px;color:var(--t1);
+}
+@media (max-width:640px){ .share-box #pageUrl{max-width:100%} }
+@media (hover:none){ .btn-primary:hover{background:var(--blue)} .btn-default:hover{border-color:var(--border);color:var(--t1);background:var(--bg-card)} }
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ===== 顶栏 ===== -->
+<div class="topbar" id="topbar">
+  <div class="brand">
+    <svg class="logo" viewBox="232 222 552 566" aria-hidden="true"><defs>
+      <linearGradient id="gS" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#A855F7"/><stop offset="45%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#2563EB"/>
+      </linearGradient>
+      <linearGradient id="gL" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#F5F3FF"/><stop offset="55%" stop-color="#EEF2FF"/><stop offset="100%" stop-color="#E0F2FE"/>
+      </linearGradient>
+      <linearGradient id="gP" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#E0E7FF"/><stop offset="60%" stop-color="#C7D2FE"/><stop offset="100%" stop-color="#BAE6FD"/>
+      </linearGradient>
+    </defs>
+    <clipPath id="rr"><rect x="0" y="0" width="1024" height="1024" rx="205" ry="205"/></clipPath>
+    <g clip-path="url(#rr)"><rect width="1024" height="1024" fill="#EDF2FE"/>
+      <ellipse cx="512" cy="560" rx="330" ry="300" fill="#C7D2FE" opacity=".5"/>
+    </g>
+    <g transform="translate(512 512) scale(1.12) translate(-512 -512)">
+      <rect x="265" y="255" width="430" height="500" rx="46" ry="46" fill="none" stroke="url(#gS)" stroke-width="23"/>
+      <rect x="265" y="255" width="88" height="500" rx="44" ry="44" fill="url(#gL)" stroke="url(#gS)" stroke-width="23"/>
+      <g fill="#8B5CF6"><rect x="400" y="330" width="78" height="24" rx="12"/><rect x="493" y="330" width="78" height="24" rx="12"/><rect x="586" y="330" width="46" height="24" rx="12"/></g>
+      <g fill="#4A4E7A"><rect x="400" y="404" width="232" height="26" rx="13"/><rect x="400" y="456" width="172" height="26" rx="13"/><rect x="400" y="508" width="122" height="26" rx="13"/><rect x="400" y="560" width="88" height="26" rx="13"/></g>
+    </g>
+    <g transform="translate(512 512) scale(1.12) translate(-512 -512)">
+      <g transform="translate(556 692) rotate(45)">
+        <path d="M 0 56 L -28 -12 L 28 -12 Z" fill="#2563EB" stroke="#1D4ED8" stroke-width="7" stroke-linejoin="round"/>
+        <rect x="-28" y="-268" width="56" height="256" rx="18" ry="18" fill="url(#gP)" stroke="#4F46E5" stroke-width="9"/>
+        <g stroke="#4F46E5" stroke-width="7" stroke-linecap="round"><line x1="-28" y1="-226" x2="28" y2="-226"/><line x1="-28" y1="-198" x2="28" y2="-198"/></g>
+      </g>
+    </g>
+    </svg>
+    <span>工作报告生成器</span>
+    <span class="sub" id="verBadge">—</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" title="切换深浅主题" aria-label="切换深浅主题">🌙</button>
+</div>
+
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <h1>工作周报快速生成，多版本可选。</h1>
+  <p class="lead">快速生成加密压缩包，原生版 APP 可直接拉起邮箱 APP 发送周报，所有内容只存在本地，不发送到任何服务器。</p>
+  <div class="badges">
+    <span class="badge primary"><span class="dot"></span><span id="heroVer">原生版 —</span></span>
+    <span class="badge">免费，无广告</span>
+    <span class="badge">手机 / 网页 / 单文件 三种用法</span>
+  </div>
+</section>
+
+<!-- ===== 三个版本 ===== -->
+<section>
+  <h2 class="sec-title"><span class="ico">📦</span>三种用法，挑一个</h2>
+  <p class="sec-desc">三种方式做出来的周报文件完全一样，只是使用场景不同。</p>
+
+  <div class="versions">
+
+    <!-- 原生版 App -->
+    <div class="vcard featured">
+      <div class="vcard-top">
+        <div class="vcard-ico">📱</div>
+        <span class="tag">推荐</span>
+      </div>
+      <h3>手机 App</h3>
+      <div class="ver-line" id="appVerLine">原生版 v—</div>
+      <p class="desc">装到安卓手机上用。填两下就出周报，可以存历史记录，压缩包能直接发到邮箱。</p>
+      <div class="who"><b>适合：</b>每天在手机上写周报的人</div>
+      <div class="actions stack">
+        <a class="btn btn-primary btn-block" id="dlApk" href="#" download>⬇️ 下载安装包</a>
+      </div>
+      <div class="linkrow">
+        <span>固定版本：<a id="dlApkVer" href="#">—</a></span>
+        <span>备用下载：<a id="dlMirror" href="#">—</a></span>
+        <span>源码：<a id="dlSource" href="#">—</a></span>
+      </div>
+
+      <details class="fold">
+        <summary>版本详情与更新记录</summary>
+        <div class="fold-body">
+          <div class="meta-grid">
+            <div class="meta"><div class="k">版本</div><div class="v" id="mVer">—</div></div>
+            <div class="meta"><div class="k">安装包大小</div><div class="v" id="mSize">—</div></div>
+            <div class="meta"><div class="k">支持系统</div><div class="v" id="mAndroid">—</div></div>
+            <div class="meta"><div class="k">发布日期</div><div class="v" id="mDate">—</div></div>
+          </div>
+          <div class="note">
+            <b>安装小提示</b>
+            <p>下载后如果手机提示「未知来源」，去 <code>设置 → 应用 → 特殊应用权限 → 安装未知应用</code>，允许浏览器安装后，再点一次下载链接就行。</p>
+            <p>安装包和之前的版本是同一套，<b>可以直接覆盖安装升级</b>，不会丢数据。</p>
+          </div>
+          <div class="note info">
+            <b>为什么推荐装 App</b>
+            <ul>
+              <li>纯原生界面，不是套壳网页，打开快、不占内存。</li>
+              <li>存过的周报都在手机里，随时翻看、随时重新下载，清缓存也不会丢。</li>
+              <li>压缩包能直接调起邮箱发出去，不用手动挑附件。</li>
+              <li>可以设<b>定时周报提醒</b>：选好星期几，16:00-18:00 到点弹系统通知。</li>
+              <li>存放目录<b>自己挑</b>：可以选一个文件夹存周报，不选就还是手机「下载」目录。</li>
+              <li>历史报告里能认出你手动拷进来的压缩包，<b>直接预览内容</b>，也能分享出去。</li>
+              <li>预览区能<b>全屏放大</b>：双指缩放、双击放大、左右滑动看全部列，长文本一行不裁。</li>
+              <li>做出来的文件和网页版、旧版本<b>一模一样</b>，压缩包用 WinZip、7-Zip、NanaZip 这些常见解压工具都能正常打开。</li>
+            </ul>
+          </div>
+          <div class="note">
+            <b>安装包校验值（SHA-256）</b>
+            <p id="shaLine">—</p>
+          </div>
+          <div class="log" id="appLog"></div>
+        </div>
+      </details>
+    </div>
+
+    <!-- 网页在线版 -->
+    <div class="vcard">
+      <div class="vcard-top">
+        <div class="vcard-ico">🌐</div>
+        <span class="tag grey" id="webTag">—</span>
+      </div>
+      <h3>网页版</h3>
+      <div class="ver-line">打开网址就能用，不用装任何东西</div>
+      <p class="desc">手机和电脑都能用。写周报的功能已经和安卓 App <b>完全对齐</b>：脱敏按处放行、历史周报存档、快捷模板、配置备份都有了。填完点一下就下载带密码的周报压缩包，还能分享到邮件、文件或微信。</p>
+      <div class="who"><b>适合：</b>iPhone 用户，或者只想临时写一份周报的人</div>
+      <div class="actions stack">
+        <a class="btn btn-primary btn-block" id="dlOnline" href="#" target="_blank" rel="noopener">🌐 打开网页版</a>
+      </div>
+      <div class="linkrow">
+        <span>仓库内文件：<a id="dlRepoFile" href="#" target="_blank" rel="noopener">—</a></span>
+      </div>
+
+      <details class="fold">
+        <summary>使用方法与更新记录</summary>
+        <div class="fold-body">
+          <div class="note warn">
+            <b>iPhone 请直接用这里的在线版</b>
+            <p>苹果的系统规定：<b>本地网页文件不会运行里面的程序</b>，所以下载到手机里的那个网页文件在 iPhone 上打不开。</p>
+            <p>所以：<b>iPhone 直接点上面「打开网页版」</b>，用手机浏览器打开就能用，功能和电脑上一模一样。电脑（Windows / Mac）两种都行。</p>
+          </div>
+          <div class="note">
+            <b>电脑上还想离线用？</b>
+            <p>下载下面的单文件版，双击就能用，断网也没问题。网页版和单文件版是<b>同一个文件</b>，功能一模一样。</p>
+          </div>
+          <div class="note warn">
+            <b>网页版做不到这几件事</b>
+            <ul>
+              <li><b>定时周报提醒</b>：网页没有后台运行能力，关掉页面就收不到。要定时提醒请用安卓 App。</li>
+              <li><b>自动带附件发邮件</b>：浏览器不允许网页直接发附件邮件，只能走系统分享面板选「邮件」。</li>
+              <li><b>可靠的系统通知</b>：只有部分桌面浏览器能申请通知权限，iPhone 上基本用不了。</li>
+              <li><b>压缩包直接落进「下载」目录</b>：网页版要自己选保存位置。</li>
+              <li><b>历史长期可靠</b>：历史存在浏览器里，清浏览器数据就没了；安卓 App 存在应用数据库里。</li>
+            </ul>
+            <p>这五项都建议用<a href="#dlApk" class="repo-url">安卓 App</a>，其余功能两边完全一样。</p>
+          </div>
+          <div class="log" id="webLog"></div>
+        </div>
+      </details>
+    </div>
+
+    <!-- 单文件版 -->
+    <div class="vcard">
+      <div class="vcard-top">
+        <div class="vcard-ico">📄</div>
+        <span class="tag grey">单文件</span>
+      </div>
+      <h3>单文件版</h3>
+      <div class="ver-line">一个网页文件，存到电脑就能用</div>
+      <p class="desc">就一个文件，双击用浏览器打开就能生成周报。断网也能用，不装任何软件。<b>和上面的网页版是同一个文件</b>，写周报的功能一模一样：脱敏按处放行、历史存档、快捷模板、配置备份都在里面。</p>
+      <div class="who"><b>适合：</b>用电脑写周报，或者公司不让装软件的人</div>
+      <div class="actions stack">
+        <a class="btn btn-primary btn-block" id="dlSingle" href="#" download>📄 下载单文件版</a>
+        <a class="btn btn-default btn-block" id="dlOffline" href="#" download>🗜️ 下载离线包（含说明）</a>
+      </div>
+      <div class="linkrow">
+        <span>仓库内文件：<a id="dlRepoFile2" href="#" target="_blank" rel="noopener">—</a></span>
+      </div>
+
+      <details class="fold">
+        <summary>使用方法与更新记录</summary>
+        <div class="fold-body">
+          <div class="note">
+            <b>三步就能用上</b>
+            <ul>
+              <li>把 <code>workreport-web.htm</code> 存到电脑任意位置。</li>
+              <li>双击它，用 Chrome / Edge / Safari 打开。</li>
+              <li>填姓名和工作时间，点「生成加密ZIP下载」，就会存到浏览器的下载目录。</li>
+            </ul>
+            <p>弹窗里能看到解压密码（就是本周周四的日期）和文件名。</p>
+          </div>
+          <div class="note">
+            <b>文件说明</b>
+            <p>这个文件里已经装好了全部需要的东西，不会再去连别的网站，所以断网也能正常用。</p>
+          </div>
+          <div class="note warn">
+            <b>两个小提醒</b>
+            <ul>
+              <li><b>iPhone 打不开这个文件</b>：苹果系统不允许本地网页运行程序。手机上请用网页版。</li>
+              <li><b>历史和草稿存在浏览器里</b>：换浏览器或清浏览器数据后会丢。想长期留档，建议用安卓 App。</li>
+            </ul>
+          </div>
+          <div class="log" id="webLog2"></div>
+        </div>
+      </details>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 功能对照 ===== -->
+<section class="card">
+  <h2 class="sec-title"><span class="ico">🔍</span>三种方式的功能差别</h2>
+  <p class="sec-desc">写周报的功能三个版本<b>完全一样</b>；真正的差别在和手机系统的配合上 —— 定时提醒、带附件发邮件、存「下载」目录这几项只有 App 能做。</p>
+  <details class="fold" style="margin-top:0">
+    <summary>展开查看完整对照表</summary>
+    <div class="fold-body">
+      <div class="cmp-wrap">
+      <table class="cmp">
+        <thead><tr><th>功能</th><th>手机 App</th><th>网页版</th><th>单文件版</th></tr></thead>
+        <tbody>
+          <tr class="cmp-group"><td colspan="4">写周报本身的功能 —— 三个版本<b>完全一样</b></td></tr>
+          <tr><td class="feat">生成 Excel 周报 + 带密码的加密 ZIP</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">实时预览，和导出的 Excel 逐字一致</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">敏感词自动转成拼音首字母</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">脱敏<b>按处放行</b>（同一句里只放行其中某几处）</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">工作记录：记录 / 一键汇总 / 上下排序</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">「取回下周计划」拆成一条条</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">历史周报存档：预览 / 再下载 / 再分享 / 载入继续编辑</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c part" data-label="网页版">✔ 存在浏览器</td><td class="c part" data-label="单文件版">✔ 存在浏览器</td></tr>
+          <tr><td class="feat">快捷模板（本周、下周两套，可复制给别人导入）</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">配置备份与恢复（加密 ZIP）</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">浅色 / 深色主题</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">分享到微信 / 文件 / 邮件</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">生成成功后自动清空工作记录</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+        </tbody>
+        <tbody>
+          <tr class="cmp-group"><td colspan="4">和手机系统的配合 —— 这里才有差别</td></tr>
+          <tr><td class="feat">直接调起邮箱并带上附件</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c part" data-label="网页版">走分享面板</td><td class="c part" data-label="单文件版">走分享面板</td></tr>
+          <tr><td class="feat">生成后自动复制文件名</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c yes" data-label="网页版">✔</td><td class="c part" data-label="单文件版">看浏览器</td></tr>
+          <tr><td class="feat"><b>定时周报提醒</b>（选星期几，16:00-18:00 到点通知）</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c no" data-label="网页版">—</td><td class="c no" data-label="单文件版">—</td></tr>
+          <tr><td class="feat">系统通知（关掉 App 也能收到）</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c part" data-label="网页版">只有桌面浏览器</td><td class="c part" data-label="单文件版">只有桌面浏览器</td></tr>
+          <tr><td class="feat">直接存到手机「下载」目录</td>
+              <td class="c yes" data-label="手机 App">✔</td><td class="c part" data-label="网页版">自己选位置</td><td class="c part" data-label="单文件版">自己选位置</td></tr>
+          <tr><td class="feat">历史长期可靠（清缓存 / 换设备后还在）</td>
+              <td class="c yes" data-label="手机 App">✔ 存进 App</td><td class="c part" data-label="网页版">清缓存会丢</td><td class="c part" data-label="单文件版">清缓存会丢</td></tr>
+          <tr><td class="feat">不用装任何东西</td>
+              <td class="c part" data-label="手机 App">要装 APK</td><td class="c yes" data-label="网页版">✔</td><td class="c yes" data-label="单文件版">✔</td></tr>
+          <tr><td class="feat">iPhone 上能不能用</td>
+              <td class="c no" data-label="手机 App">—</td><td class="c yes" data-label="网页版">✔</td><td class="c no" data-label="单文件版">打不开</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="note warn" style="margin-top:16px">
+        <b>表格里带「✔ 存在浏览器」「清缓存会丢」的那些行，就是网页版的短板</b>
+        <p>网页和单文件版是<b>同一个文件</b>，功能完全一样，只是运行的地方不同。它们的共同点是：数据存在浏览器里，关掉网页就收不到后台提醒，也没法直接把附件塞进邮箱。</p>
+        <p><b>想要定时提醒、自动带附件发邮件、压缩包直接落进「下载」目录</b> —— 这几项请用<a href="#dlApk" class="repo-url">安卓 App</a>。</p>
+      </div>
+    </div>
+  </details>
+</section>
+
+<!-- ===== 源码 ===== -->
+<section class="card">
+  <h2 class="sec-title"><span class="ico">💻</span>源码</h2>
+  <p class="sec-desc">全部源码都在 GitHub 上公开，可以自己看，也可以自己编译。</p>
+  <dl class="kv">
+    <dt>仓库地址</dt><dd><a id="repoUrl" href="#" target="_blank" rel="noopener">—</a></dd>
+    <dt>App 工程</dt><dd><a id="repoNative" href="#" target="_blank" rel="noopener">—</a></dd>
+    <dt>历史版本</dt><dd><a id="repoReleases" href="#" target="_blank" rel="noopener">—</a></dd>
+    <dt>自己编译</dt><dd><code>cd native && ./gradlew assembleRelease</code>（需要 JDK 17 和 Android SDK）</dd>
+    <dt>签名证书</dt><dd id="certLine">—</dd>
+  </dl>
+  <div class="note" style="margin-top:14px">
+    <b>关于打包用的证书</b>
+    <p>仓库里<b>不包含</b>签名用的私钥（私钥只留在我本地，不会提交到任何公开仓库）。
+    如果你想自己编译并且直接覆盖安装官方版本，需要用同一个证书；
+    否则就得先把官方版本卸载掉再装 —— 两种做法都会导致无法覆盖升级。</p>
+  </div>
+</section>
+
+<!-- ===== 免责声明 ===== -->
+<section class="card">
+  <h2 class="sec-title"><span class="ico">⚠️</span>免责声明</h2>
+  <div class="disclaimer" style="margin-top:12px"><b>免责声明</b><span id="discText">—</span></div>
+</section>
+
+<footer>
+  工作报告生成器 · 全程本地运行，不上传任何数据 · 压缩包带密码<br>
+  <span id="footMeta">数据更新于 —</span> · <a id="footRepo" href="#" target="_blank" rel="noopener">GitHub 仓库</a>
+  <div class="share-box">
+    <span class="share-label">把这个下载页发给用户：</span>
+    <a id="pageUrl" href="#" target="_blank" rel="noopener">—</a>
+    <button class="btn btn-default btn-sm" id="copyPage">🔗 复制本页地址</button>
+  </div>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var EMBEDDED =   {
+  "updatedAt": "2026-11-21",
+  "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
+  "app": {
+    "name": "工作报告生成器",
+    "version": "1.6.0",
+    "versionCode": 32,
+    "releasedAt": "2026-11-21",
+    "sizeBytes": 12404138,
+    "sizeText": "11.8 MB",
+    "sha256": "c9cfc553e184a2fb3f34e8da50b64f09ad988d4d9c549147f5c4a0f2c53ca418",
+    "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-v1.6.0.apk",
+    "apkMirrorUrl": "https://cbct07rx38099.space.mcode.cn/workreport-native-v1.6.0.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-source-v1.6.0.zip",
+    "minAndroid": "Android 8.0 及以上",
+    "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
+    "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
+    "sourceMirrorUrl": "https://cbct07rx38099.space.mcode.cn/workreport-native-source-v1.6.0.zip"
+  },
+  "web": {
+    "version": "v1.3",
+    "onlineUrl": "https://dxntf9na2dn1l.space.mcode.cn",
+    "singleFileUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-v1.3.htm",
+    "offlineZipUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-offline-v1.3.zip",
+    "repoFileUrl": "https://github.com/ninoelvis/workreport-generator/blob/main/web/workreport-web.htm",
+    "featureParity": "功能已对齐安卓原生版 v1.4.1：脱敏按处放行、历史报告、快捷模板、配置备份、工作记录排序、生成后清空。脱敏算法与原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同。",
+    "notSupported": "网页版做不到：定时周报提醒（无后台能力）、自动拉起邮箱带附件、可靠的通知权限（iPhone 基本不可用）、直接存到手机「下载」目录、长期可靠的历史（localStorage 清缓存即失）。这几项建议用安卓原生版。"
+  },
+  "repo": {
+    "url": "https://github.com/ninoelvis/workreport-generator",
+    "nativeDir": "https://github.com/ninoelvis/workreport-generator/tree/main/native",
+    "releases": "https://github.com/ninoelvis/workreport-generator/releases"
+  },
+  "changelog": [
+    {
+      "version": "v1.6.0",
+      "date": "2026-11-21",
+      "title": "整套图标重做，深浅色自动跟随，底部导航加动画",
+      "items": [
+        "全 App 图标重新画成同一套矢量图标：功能区、底部三个标签页、操作按钮、顶栏 Logo、空状态、列表标签、输入框标题 —— 原来的 emoji 和系统自带图标全部换掉，风格统一、粗细一致",
+        "桌面图标也换了新的：品牌标志 + WorkReport 字样，适配各种屏幕形状与启动器裁切，并另做了一套深色配色",
+        "图标颜色不再写死，跟着 App 的浅色/深色主题自动切换；设计稿里「深→浅」的层次改用透明度实现，切主题时层次照样在",
+        "底部导航改成自绘并加了动画：指示条在三个标签之间平滑平移，选中图标放大一点、没选中的缩一点，文字只在选中时淡入",
+        "页面之间加了轻微的横向滑动 + 淡入淡出过渡",
+        "导出内容、Excel 样式、压缩包文件名、解压密码一个字都没改；单元测试 198/198 通过，并新增 9 项图标体系防回归检查"
+      ],
+      "current": true
+    },
+    {
+      "version": "v1.5.1",
+      "date": "2026-11-20",
+      "title": "修「存放位置显示成文件名」「表头高度不齐」「放大查看一片空白」",
+      "items": [
+        "修复「我的 → 周报存放目录」里的「当前存放位置」显示成目录里第一个文件的文件名 —— 之前查的是子文档列表的第一条而不是目录本身，现在显示目录自己的名字，并补上完整路径，一眼看清选的是哪个文件夹",
+        "修复预览区表头高度不齐：Excel 的表头行高是固定的，现在预览也用固定行高，「客户（及用户）反馈」这类长标题换行时不再把整行撑歪，六列表头一样高、一样居中",
+        "修复点「放大查看」进去一片空白：横向和纵向滚动套在了同一个容器上，把表格宽度压成了 0；现在改成横竖分层滚动、宽度写死，没填内容时也能看到完整的表格样式",
+        "历史报告页的预览（数据库里的报告 + 手动拷进来的压缩包）也加了「放大查看」，和首页一致",
+        "导出格式、压缩包文件名、解压密码依旧一个字没改；单元测试 189/189 通过"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.5.0",
+      "date": "2026-11-20",
+      "title": "存放目录自己挑，预览可以放大",
+      "items": [
+        "新增「周报存放目录」：第一次用可以在引导页选一个文件夹存周报，之后随时在「我的 → 周报存放目录」里改或恢复默认；不选就还是原来的「下载」目录",
+        "用系统官方的文件夹选择器（SAF），不需要申请任何存储权限，卸载或换手机也不影响",
+        "历史报告页能认出你手动拷进该目录的压缩包，直接预览内容、也能分享出去",
+        "预览区新增「放大查看」：全屏显示，双指缩放、双击放大、左右滑动看全部列，长的工作梳理一行都不再被裁掉",
+        "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 187/187 通过"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.4.3",
+      "date": "2026-10-26",
+      "title": "修「滑到最下面输入法自己弹出来」",
+      "items": [
+        "修复 v1.4.2 引入的回归：列表滑到最下面后输入法自己弹出来 —— 那个「输入法嵌套滚动」修饰符会把滑到底后多出来的滚动量交给输入法去唤起键盘",
+        "已去掉该修饰符：内容区本来就被压在键盘上沿，输入框不会被遮住，不需要它",
+        "新增 8 个防回归测试：扫源码禁止再出现该修饰符、禁止页面各自加键盘避让、并把整条避让链路的数学写成端到端布局模型",
+        "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 176/176 通过"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.4.2",
+      "date": "2026-10-26",
+      "title": "修键盘上方的大块空白",
+      "items": [
+        "修复打字时输入法键盘上方多出一大块空白：页面底边已被底部导航栏抬高过一次，输入法又叠了一层避让，等于多减了一个导航栏高度，键盘上沿和内容区之间就空出一大条",
+        "底部避让统一改为「导航栏高度与键盘高度取大值」，在 AppRoot 一处计算，内容区正好停在键盘上沿",
+        "所有输入框所在的列表补上自动滚动：被键盘挡住时会自己滚到能看见的位置",
+        "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 168/168 通过"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.4.1",
+      "date": "2026-10-25",
+      "title": "引导页瘦身 · 隐私说明补上通知权限 · 修输入框被键盘盖住",
+      "items": [
+        "引导页「功能介绍」从 16 条精简到 6 条，并改成默认收起（原来全部铺开，页面太长）",
+        "「数据与隐私」补上通知权限说明：只用于周报提醒，Android 13+ 首次进首页会主动问，点「以后再说」就不问了，不开也不影响其它功能",
+        "「权限最小化」说明更新：除通知权限外只申请 Android 8/9 写「下载」目录的权限，不需要联网，不申请相机等无关权限",
+        "修复引导页填姓名时输入法弹出后看不见自己打的字：底部区域会跟着键盘顶上来",
+        "所有输入框字号统一提到 16sp —— 低于 16sp 时部分 ROM 的输入法会强制放大整页，输入框被放大裁切，文字反而看不见",
+        "首页内容区也会避开键盘，最后几项不会被挡住",
+        "导出格式与公司红线一个字没动：命名规则 / Excel 样式 / 加密三个文件与 v1.3.11 逐字节相同"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.4.0",
+      "date": "2026-10-25",
+      "title": "预览区 = 导出的 Excel · 通知权限引导 · 按处放行脱敏",
+      "items": [
+        "历史报告的预览区和首页预览区现在完全一致：显示的就是 Excel 里 B3 / C3 那两格的原文（已格式化、已脱敏）。新报告直接用数据库里存的那份秒开，旧报告自动解压缩包读 Excel",
+        "导出格式一个字都没动 —— 预览只是把 Excel 照原样画出来，命名规则 / Excel 样式 / 加密三个文件与 v1.3.11 逐字节相同",
+        "填完姓名进首页时弹一次通知权限引导：点「去开启」拉起系统授权框，点「以后再说」以后不再提示",
+        "「取回下周计划」改成放进「工作记录」：一条一条分开，能补内容、能上下调排序，点「汇总」才进「本周已完成工作梳理」",
+        "脱敏预览升级成按处放行：同一句里两次「查询」会列成两行并带上下文，可以只放行其中一处，另一处照常脱敏",
+        "新增系统分享面板、周报提醒（选星期几，16:00-18:00 之间提醒）、个人配置加密备份与恢复、快捷模板复制导入",
+        "脱敏预览的开关换成跟整体风格统一的形式，不再突兀",
+        "单元测试 158 项全部通过；签名证书与历史版本一致，可直接覆盖安装，历史报告和配置都在"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.11",
+      "date": "2026-10-23",
+      "title": "深色模式看清预览 · 生成后自动清空 · 历史报告回填编辑",
+      "items": [
+        "修复预览表在深色模式下看不清的问题：标题行原本是「深色底 + 深灰字」，对比度只有 1.04:1，现在改为主题自适应（11.4:1），表头与边框也一并调亮",
+        "生成压缩包成功后自动清空「工作记录」和「周报内容」，下次打开直接重新填，不用手动删",
+        "历史报告新增「载入首页继续编辑」：看完内容可二次确认后回填首页，改完重新生成"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.10",
+      "date": "2026-10-23",
+      "title": "历史报告预览改成真的解压压缩包",
+      "items": [
+        "历史报告预览改为真正解开压缩包读取：自动带上解压密码，读出里面那份 Excel 的完整内容",
+        "以前版本生成的报告也能看全表格，不再只显示内容摘要",
+        "预览区会一并显示压缩包的解压密码，方便对照",
+        "卡片上直接显示「本周完成」的内容摘要"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.9",
+      "date": "2026-10-23",
+      "title": "历史报告可直接预览 Excel 内容",
+      "items": [
+        "历史报告新增「查看内容」：点开就能看到压缩包里那份 Excel 的样子，表格、合并单元格、列宽跟导出完全一致，不用手动解压",
+        "卡片上直接显示「本周完成」的内容摘要，瞄一眼就知道写了什么",
+        "生成报告时会把内容一并存进本地数据库，因此文件被清理掉也不影响预览"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.8",
+      "date": "2026-10-23",
+      "title": "快捷记录模板 · 「我的」页分页面 · 引导页全屏重做",
+      "items": [
+        "新增「快捷记录模板」：常写的重复内容存成模板，首页点一下就插入，不用每次手敲",
+        "「本周工作记录」与「下周工作计划」两套模板分开配置，互不影响",
+        "「我的」页改成设置首页：个人信息、快捷记录模板、敏感词库、外观、邮件设置、数据管理、关于，各点进去单独编辑",
+        "引导页改为整页全屏展示（原先是弹窗，顶部会露出一条系统灰底），各分区可展开收起"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.7",
+      "date": "2026-10-22",
+      "title": "邮件发送回归标准通道",
+      "items": [
+        "撤销 v1.3.3 起为阿里邮箱增加的专用发送通道，恢复 WebView 旧版即已验证的标准 ACTION_SEND 通道（EXTRA_STREAM + clipData + 主题，正文留空）",
+        "修复专用通道在部分机型上「点击发送即闪退」与「邮箱 App 无法拉起」的问题",
+        "仅对阿里邮箱附加 CLEAR_TASK 标记，规避其写邮件页复用旧实例导致附件不被处理的问题",
+        "新增 MailIntentSpec 纯数据类与 10 条单元测试，将「附件必定写入 Intent、主题非空、正文为空」转化为可自动验证的不变量"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.6",
+      "date": "2026-10-22",
+      "title": "首页表单草稿暂存",
+      "items": [
+        "表单内容在每次输入后暂存至本机，下次打开自动恢复",
+        "生成压缩包成功后才清除草稿，界面内容保留供当场核对",
+        "采用 SharedPreferences + Base64 纯 Kotlin 编解码，不依赖 Android 的 org.json 空壳"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.5",
+      "date": "2026-10-22",
+      "title": "移除收件人功能并加入免责声明",
+      "items": [
+        "按需求彻底移除「自动带入收件人」，邮件仅携带主题与附件，收件人由使用者于邮箱 App 内自行填写",
+        "修复首页文件名显示不全的问题（改为独占一行并允许折行）",
+        "「关于」页加入免责声明"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.4",
+      "date": "2026-10-22",
+      "title": "修复发送闪退",
+      "items": [
+        "修复 v1.3.3 引入的「点击发送闪退」与「邮箱 App 无法拉起」",
+        "根因为 intent.selector 搭配 Intent.createChooser() 触发系统 ResolverActivity NPE，以及 filter 未声明 scheme/mimeType 导致带 data URI 的 Intent 匹配失败"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.3",
+      "date": "2026-10-22",
+      "title": "阿里邮箱专用通道",
+      "items": [
+        "逆向 com.alibaba.cloudmail v4.12.8 后为其增加专用发送通道",
+        "该通道已于 v1.3.7 撤销"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.2",
+      "date": "2026-10-22",
+      "title": "修复收件人未填入",
+      "items": [
+        "修复填写收件人邮箱但拉起邮箱 App 后收件人栏为空的问题",
+        "邮件主题改为与压缩包名完全一致，历史报告二次发送亦携带收件人",
+        "注：收件人功能已于 v1.3.5 移除"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.1",
+      "date": "2026-10-22",
+      "title": "清除二次确认与收件人输入",
+      "items": [
+        "两个内容输入框的清除按钮增加二次确认，防止误删",
+        "生成后的确认弹窗中新增收件人邮箱输入框并自动保存",
+        "注：收件人功能已于 v1.3.5 移除"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.3.0",
+      "date": "2026-10-22",
+      "title": "原生重写正式版",
+      "items": [
+        "整个应用由 WebView 套壳改写为 Kotlin + Jetpack Compose 纯原生实现，不再加载任何网页资源",
+        "导出的 Excel 与加密 ZIP 与旧版逐字节一致（10/10 个 XML 部件实测比对通过）",
+        "交叉验证抓出并修复 3 个真实缺陷：Date 强转 Calendar、周日起始偏移一天、字符串模板标识符解析",
+        "新增首次启动引导页、生成后拉起邮箱 App 发送、内容框独立清除；首页预览按 Excel 真实列宽重新对齐",
+        "单元测试 51 条全部通过"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.2.1",
+      "date": "2026-10-22",
+      "title": "顶栏图标",
+      "items": [
+        "App 内顶栏图标替换为新的卷轴+笔图标，深色主题下自动切换"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.2.0",
+      "date": "2026-10-22",
+      "title": "全新应用图标与状态栏适配",
+      "items": [
+        "全新应用图标（适配 Android 自适应图标）",
+        "状态栏与导航栏颜色跟随页面主题"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.1.0",
+      "date": "2026-10-22",
+      "title": "敏感词管理",
+      "items": [
+        "顶栏可打开管理面板，自行增删改敏感词库，词库长期保存，保存后立即生效"
+      ],
+      "current": false
+    },
+    {
+      "version": "v1.0.0",
+      "date": "2026-10-22",
+      "title": "首个正式版",
+      "items": [
+        "周报内容生成、Excel 导出、AES 加密 ZIP 保存至系统下载目录",
+        "自动计算周数、文件名与解压密码（取本周周四，格式 yyyyMMdd）",
+        "实时预览、工作记录管理、浅深主题切换",
+        "完全离线可用，不申请 INTERNET 权限"
+      ],
+      "current": false
+    }
+  ],
+  "webChangelog": [
+    {
+      "version": "网页版 v1.3",
+      "date": "2026-10-25",
+      "current": true,
+      "items": [
+        "手机端顶栏优化：次要图标收进「☰ 更多」菜单，标题「工作报告生成器」不再被挤成竖排；桌面端布局不变",
+        "功能对齐安卓原生版 v1.4.1：脱敏按处放行（每一处独立开关、带上下文，同句重复出现可只放行其中一处）",
+        "新增历史报告：列表 / 预览（与导出逐字一致）/ 载入继续编辑 / 再下载 / 再分享 / 取回下周计划",
+        "新增快捷模板（本周、下周两套，可复制给别人导入）、配置备份与恢复（加密 ZIP）",
+        "工作记录支持上下排序；「取回下周计划」把上一份报告的计划拆成一条条进工作记录；生成成功后自动清空工作记录与周报内容",
+        "脱敏算法与安卓原生版逐字节对齐（1500 组随机用例对拍），导出的 xlsx 10 个 XML 部件与原生版完全相同 —— 导出格式一个字没动",
+        "已在引导页和说明里标明网页版做不到的几项（定时提醒、自动带附件发邮件等），建议用安卓原生版"
+      ]
+    },
+    {
+      "version": "网页版 v1.2",
+      "date": "2026-10-23",
+      "items": [
+        "引导页精简：更新记录由 11 条压缩至 2 条，功能介绍由 8 条合并为 4 条，页面总高由 4000+ px 降至 2004 px",
+        "新增原生版 App 下载入口与免责声明",
+        "修复「分享 / 发送」「复制密码」按钮无响应：新增全局函数遗漏了 window 导出"
+      ]
+    },
+    {
+      "version": "网页版 v1.1",
+      "date": "2026-10-23",
+      "items": [
+        "跨平台适配 iPhone Safari / Edge / 电脑端浏览器",
+        "iOS 专项：输入框字号提升至 16px（低于该值时 Safari 聚焦会强制放大整页）、dvh 视口高度、刘海屏与底部安全区适配、触屏设备取消 hover 高亮、弹窗内容可滚动",
+        "新增 Web Share API 系统分享，iPhone 可直接分享至「邮件」/「文件」/微信",
+        "剪贴板与文件下载增加降级兜底；加密能力缺失时给出中文提示"
+      ]
+    }
+  ],
+  "disclaimer": "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。使用者应自行确保所填报的工作内容真实、合法，不得用于伪造工作记录、隐瞒实际工作内容或任何违反单位规定及法律法规的用途。因使用本软件生成、填写、发送的内容产生的一切后果由使用者自行承担，软件作者不承担任何法律责任。",
+  "downloadPageUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest"
+};
   /* 取数顺序：同源 → GitHub raw（实时）→ jsDelivr CDN → 页面内嵌副本
      注：jsDelivr 对 @main 分支的同步有分钟级延迟，仅作备用；
      GitHub raw 推送后数秒内即可读到，是保证「版本信息不过期」的主力来源。 */
