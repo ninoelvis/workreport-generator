@@ -19,9 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.workreport.app.ServiceLocator
 import com.workreport.app.ui.common.SettingsDivider
 import com.workreport.app.ui.common.SettingsGroup
 import com.workreport.app.ui.common.SettingsRow
+import androidx.compose.runtime.remember
 
 /**
  * 「我的」页 —— 设置首页。
@@ -37,6 +39,9 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.factory()),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // 用户自选的「周报存放目录」
+    val storageName by remember { ServiceLocator.storageLocation.displayNameFlow }
+        .collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier
@@ -92,6 +97,14 @@ fun ProfileScreen(
                     subtitle = "「纪委」自动变「jw」这类替换规则",
                     value = "${state.sensitiveWords.size} 个",
                     onClick = { onOpen(ProfileRoute.SENSITIVE) },
+                )
+                SettingsDivider()
+                SettingsRow(
+                    icon = "📁",
+                    title = "周报存放目录",
+                    subtitle = "自己挑一个文件夹存周报压缩包",
+                    value = storageName,
+                    onClick = { onOpen(ProfileRoute.STORAGE) },
                 )
                 SettingsDivider()
                 SettingsRow(
@@ -167,6 +180,8 @@ enum class ProfileRoute(val route: String) {
     APPEARANCE("profile/appearance"),
     MAIL("profile/mail"),
     REMINDER("profile/reminder"),
+    /** 周报存放目录（用户自选） */
+    STORAGE("profile/storage"),
     BACKUP("profile/backup"),
     DATA("profile/data"),
     ABOUT("profile/about"),

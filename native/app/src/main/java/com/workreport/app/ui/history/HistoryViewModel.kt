@@ -43,6 +43,32 @@ data class HistoryUiState(
     val message: String? = null,
 )
 
+/**
+ * 用户存放目录里的一个**外部压缩包**（不是 App 自己生成的）。
+ *
+ * 用户把压缩包手动拷进存放目录后，App 会在这里认出来并列出来。
+ */
+data class ExternalReport(
+    /** 完整文件名，例如「张三-2026年10月第3周工作报告.zip」 */
+    val fileName: String,
+    /** 不含扩展名的展示名 */
+    val displayName: String,
+    /** 在 SAF 里的文档 URI */
+    val uri: android.net.Uri,
+    val sizeBytes: Long,
+    val lastModified: Long,
+    /**
+     * 从文件名反推出来的**候选**解压密码。
+     *
+     * ⚠️ 周数对应的是一个 7 天的区间，起始日可能是其中任意一天，
+     * 所以密码有 7 个候选，解压时依次尝试。
+     */
+    val passwordCandidates: List<String>,
+) {
+    /** 候选密码（按可能性排序，第一个最可能） */
+    fun candidates(): List<String> = passwordCandidates
+}
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModel(
     private val repository: ReportRepository,
@@ -63,6 +89,113 @@ class HistoryViewModel(
     /** 每份报告的预览状态，按报告 id 存 */
     private val _previews = MutableStateFlow<Map<Long, PreviewState>>(emptyMap())
     val previews: StateFlow<Map<Long, PreviewState>> = _previews.asStateFlow()
+
+    /** 用户存放目录里的外部压缩包 */
+    private val _externalReports = MutableStateFlow<List<ExternalReport>>(emptyList())
+    val externalReports: StateFlow<List<ExternalReport>> = _externalReports.asStateFlow()
+
+    /** 外部压缩包的预览状态，key 用 uri 字符串 */
+    private val _externalPreviews = MutableStateFlow<Map<String, PreviewState>>(emptyMap())
+    val externalPreviews: StateFlow<Map<String, PreviewState>> = _externalPreviews.asStateFlow()
+
+    /**
+     * 扫描用户存放目录，把里面的压缩包找出来。
+     *
+     * 只列出**不在数据库里的**那些 —— App 自己生成的已经有一份记录了，
+     * 不重复显示。
+     */
+    fun refreshExternal() {
+        viewModelScope.launch {
+            val storage = ServiceLocator.storageLocation
+            val known = repository.allFileNames()
+            val list = withContext(Dispatchers.IO) {
+                storage.listZips().mapNotNull { f ->
+                    if (f.displayName in known) return@mapNotNull null
+                    ExternalReport(
+                        fileName = f.displayName,
+                        displayName = f.displayName.removeSuffix(".zip").removeSuffix(".ZIP"),
+                        uri = f.uri,
+                        sizeBytes = f.sizeBytes,
+                        lastModified = f.lastModified,
+                        passwordCandidates = com.workreport.app.util.ExternalZipPassword.candidates(f.displayName),
+                    )
+                }
+            }
+            _externalReports.value = list
+        }
+    }
+
+    /**
+     * 读一个外部压缩包的内容。
+     *
+     * SAF 里的文件不能直接交给 zip4j，所以先复制一份到缓存目录再解密。
+     *
+     * @param password 密码；传 null 就用从文件名推断出来的
+     */
+    fun loadExternalPreview(item: ExternalReport, password: String? = null) {
+        val key = item.uri.toString()
+        if (_externalPreviews.value[key]?.content != null) return
+        setExternalPreview(key, PreviewState(loading = true))
+        viewModelScope.launch {
+            val content = withContext(Dispatchers.IO) {
+                if (password != null) {
+                    // 用户手输的密码
+                    readExternalContent(item, password)
+                } else {
+                    // 文件名里的周数能推出 7 个候选密码，依次尝试
+                    var found: XlsxContentReader.Content? = null
+                    for (candidate in item.candidates()) {
+                        found = readExternalContent(item, candidate)
+                        if (found != null) break
+                    }
+                    found
+                }
+            }
+            setExternalPreview(
+                key,
+                if (content != null) {
+                    PreviewState(content = content)
+                } else if (password == null) {
+                    // 候选密码都不对 —— 让用户手输一次
+                    PreviewState(error = "NEED_PASSWORD")
+                } else {
+                    PreviewState(error = "密码不对，解不开这个压缩包。")
+                },
+            )
+        }
+    }
+
+    /** 把外部压缩包复制到缓存目录并解密读出内容 */
+    private fun readExternalContent(item: ExternalReport, password: String): XlsxContentReader.Content? {
+        val storage = ServiceLocator.storageLocation
+        val bytes = storage.readBytes(item.uri) ?: return null
+        val cacheDir = File(ServiceLocator.context.cacheDir, "external").apply { mkdirs() }
+        val tmp = File(cacheDir, item.fileName)
+        return try {
+            tmp.writeBytes(bytes)
+            EncryptedZipReader.readContent(tmp, password)
+        } catch (e: Exception) {
+            null
+        } finally {
+            try { tmp.delete() } catch (e: Exception) { /* 忽略 */ }
+        }
+    }
+
+    /** 外部压缩包复制到缓存后的临时文件（用于分享） */
+    fun externalCacheFile(item: ExternalReport): File? {
+        val storage = ServiceLocator.storageLocation
+        val bytes = storage.readBytes(item.uri) ?: return null
+        val cacheDir = File(ServiceLocator.context.cacheDir, "external").apply { mkdirs() }
+        return try {
+            File(cacheDir, item.fileName).also { it.writeBytes(bytes) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun setExternalPreview(key: String, state: PreviewState) {
+        _externalPreviews.value = _externalPreviews.value + (key to state)
+    }
 
     init {
         viewModelScope.launch {
