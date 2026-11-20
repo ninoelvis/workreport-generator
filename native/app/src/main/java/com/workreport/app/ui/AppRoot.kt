@@ -2,6 +2,7 @@ package com.workreport.app.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.platform.LocalDensity
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -63,6 +65,20 @@ enum class TopLevelDestination(
 
 /** 引导页路由 */
 private const val ROUTE_INTRO = "intro"
+
+/**
+ * 当前这次页面切换的方向。
+ *
+ * `AnimatedContentTransitionScope` 里：
+ *   · initialState = 正在退出的那一页
+ *   · targetState  = 正在进入的那一页
+ * 两个 route 一起交给 [navDirection] 算方向。
+ */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.pageDirection(): Int =
+    navDirection(
+        fromRoute = initialState.destination.route,
+        toRoute = targetState.destination.route,
+    )
 
 @Composable
 fun AppRoot() {
@@ -131,15 +147,52 @@ fun AppRoot() {
                 .fillMaxSize()
                 .padding(bottom = bottomAvoidance),
             // 页面切换动画：轻微横向位移 + 淡入淡出
+            //
+            // 方向由 [navDirection] 决定，不能写死：
+            //   底栏 Tab 切换走的是 navigate + popUpTo，navigation-compose 会把 isPop 重置为 false，
+            //   所以 Tab 切换**永远走 enterTransition / exitTransition**。
+            //   如果这里写死「从右滑入」，那么从「我的」切到「历史报告」（往左退）时方向就是反的。
+            // 现在按目标 Tab 的索引算方向：往右切 = 从右滑入，往左切 = 从左滑入。
             enterTransition = {
-                fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full -> full / 6 }
+                val dir = pageDirection()
+                if (dir == 0) {
+                    fadeIn(tween(200))
+                } else {
+                    fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full ->
+                        if (dir > 0) full / 6 else -full / 6
+                    }
+                }
             },
-            exitTransition = { fadeOut(tween(180)) },
+            exitTransition = {
+                val dir = pageDirection()
+                if (dir == 0) {
+                    fadeOut(tween(160))
+                } else {
+                    // 旧页面往反方向退一点，形成轻微视差（位移比新页面小，避免两层内容打架）
+                    fadeOut(tween(180)) + slideOutHorizontally(animationSpec = tween(280)) { full ->
+                        if (dir > 0) -full / 10 else full / 10
+                    }
+                }
+            },
             popEnterTransition = {
-                fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full -> -full / 6 }
+                val dir = pageDirection()
+                if (dir == 0) {
+                    fadeIn(tween(200))
+                } else {
+                    fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full ->
+                        if (dir > 0) full / 6 else -full / 6
+                    }
+                }
             },
             popExitTransition = {
-                fadeOut(tween(180)) + slideOutHorizontally(animationSpec = tween(280)) { full -> full / 6 }
+                val dir = pageDirection()
+                if (dir == 0) {
+                    fadeOut(tween(160))
+                } else {
+                    fadeOut(tween(180)) + slideOutHorizontally(animationSpec = tween(280)) { full ->
+                        if (dir > 0) -full / 10 else full / 10
+                    }
+                }
             },
         ) {
             composable(TopLevelDestination.HOME.route) {
