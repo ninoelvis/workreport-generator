@@ -155,24 +155,28 @@ fun HistoryScreen(
             )
         }
 
-        if (state.reports.isEmpty()) {
-            EmptyState(
-                icon = if (state.keyword.isBlank()) "📭" else "🔍",
-                title = if (state.keyword.isBlank()) "还没有生成过报告" else "没有匹配的报告",
-                description = if (state.keyword.isBlank()) {
-                    "在「首页」填写并生成后，这里会列出全部历史报告，可再次下载或发送邮件。"
-                } else {
-                    "换个关键词试试，搜索是按文件名匹配的。"
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        } else {
-            LazyColumn(
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    start = 14.dp, end = 14.dp, bottom = 20.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
+        // ⚠️ 列表**总是**渲染：数据库里一条记录都没有时，
+        // 用户自己拷进存放目录的压缩包也要能列出来。
+        LazyColumn(
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                start = 14.dp, end = 14.dp, bottom = 20.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (state.reports.isEmpty()) {
+                item {
+                    EmptyState(
+                        icon = if (state.keyword.isBlank()) "📭" else "🔍",
+                        title = if (state.keyword.isBlank()) "还没有生成过报告" else "没有匹配的报告",
+                        description = if (state.keyword.isBlank()) {
+                            "在「首页」填写并生成后，这里会列出全部历史报告，可再次下载或发送邮件。"
+                        } else {
+                            "换个关键词试试，搜索是按文件名匹配的。"
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            } else {
                 items(state.reports, key = { it.id }) { report ->
                     ReportCard(
                         report = report,
@@ -219,9 +223,13 @@ fun HistoryScreen(
                         },
                     )
                 }
+            }   // ← 闭合 else 分支（数据库有记录时的列表）
 
-                // 没选自定义目录时，提醒一下外部文件识别需要先选目录
-                if (externalReports.isEmpty() && !storageCustomized) {
+            // ⚠️ 下面两段**必须在 LazyColumn 层**，不能放进 else 里 ——
+            //    否则数据库里一条记录都没有时，外部压缩包就列不出来了。
+
+            // 没选自定义目录时，提醒一下外部文件识别需要先选目录
+            if (externalReports.isEmpty() && !storageCustomized) {
                     item {
                         Row(
                             modifier = Modifier
@@ -247,8 +255,8 @@ fun HistoryScreen(
                     }
                 }
 
-                // 用户自己拷进存放目录的压缩包
-                if (externalReports.isNotEmpty()) {
+            // 用户自己拷进存放目录的压缩包
+            if (externalReports.isNotEmpty()) {
                     item {
                         Text(
                             "存放目录里的其它压缩包（${externalReports.size} 个）",
@@ -288,7 +296,6 @@ fun HistoryScreen(
                 }
             }
         }
-    }
 
     // 外部压缩包：手输解压密码
     passwordTarget?.let { target ->
