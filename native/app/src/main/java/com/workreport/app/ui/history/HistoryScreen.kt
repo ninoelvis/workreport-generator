@@ -3,6 +3,7 @@ package com.workreport.app.ui.history
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Search
@@ -55,6 +57,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.ui.common.EmptyState
 import androidx.compose.ui.platform.LocalContext
+import com.workreport.app.ui.common.FullscreenPreview
 import com.workreport.app.ui.common.PreviewTable
 import com.workreport.app.ServiceLocator
 import com.workreport.app.util.MailHelper
@@ -65,6 +68,19 @@ import java.util.Locale
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
+
+/**
+ * 全屏预览要展示的内容。
+ *
+ * 首页预览直接来自输入框，历史页预览来自压缩包里的 Excel，
+ * 这里统一成一份，好让两处都能用同一个 [FullscreenPreview]。
+ */
+private data class PreviewContent(
+    val title: String,
+    val timeRange: String,
+    val doneWorks: String,
+    val planWorks: String,
+)
 
 @Composable
 fun HistoryScreen(
@@ -79,6 +95,9 @@ fun HistoryScreen(
     val previews by viewModel.previews.collectAsStateWithLifecycle()
     // 用户存放目录里的外部压缩包（自己拷进去的）
     val externalReports by viewModel.externalReports.collectAsStateWithLifecycle()
+
+    // 全屏预览（点「放大查看」）
+    var fullscreenContent by remember { mutableStateOf<PreviewContent?>(null) }
     val externalPreviews by viewModel.externalPreviews.collectAsStateWithLifecycle()
     // 用户有没有选过自定义存放目录（选了才能识别外部文件）
     val storageCustomized by remember {
@@ -221,6 +240,7 @@ fun HistoryScreen(
                                 if (!ok) toast = "未能拉起系统分享"
                             }
                         },
+                        onFullscreen = { fullscreenContent = it },
                     )
                 }
             }   // ← 闭合 else 分支（数据库有记录时的列表）
@@ -291,11 +311,23 @@ fun HistoryScreen(
                                     if (!ok) toast = "未能拉起系统分享"
                                 }
                             },
+                            onFullscreen = { fullscreenContent = it },
                         )
                     }
                 }
             }
         }
+
+    // 全屏放大预览
+    fullscreenContent?.let { c ->
+        FullscreenPreview(
+            title = c.title,
+            timeRange = c.timeRange,
+            doneWorks = c.doneWorks,
+            planWorks = c.planWorks,
+            onClose = { fullscreenContent = null },
+        )
+    }
 
     // 外部压缩包：手输解压密码
     passwordTarget?.let { target ->
@@ -459,6 +491,8 @@ private fun ReportCard(
     onTakePlan: () -> Unit,
     /** 拉起系统分享面板 */
     onShare: () -> Unit,
+    /** 点「放大查看」→ 全屏预览这份 Excel */
+    onFullscreen: (PreviewContent) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -591,6 +625,33 @@ private fun ReportCard(
                             doneWorks = content.doneWorks,
                             planWorks = content.planWorks,
                         )
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    onFullscreen(
+                                        PreviewContent(
+                                            title = content.title.ifBlank { report.displayName },
+                                            timeRange = content.timeRange,
+                                            doneWorks = content.doneWorks,
+                                            planWorks = content.planWorks,
+                                        ),
+                                    )
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                            ) {
+                                Icon(
+                                    Icons.Filled.Fullscreen,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(15.dp),
+                                )
+                                Spacer(Modifier.width(3.dp))
+                                Text("放大查看", fontSize = 12.sp)
+                            }
+                        }
                         Spacer(Modifier.height(6.dp))
                         Text(
                             "解压密码：${report.password}（压缩包里的 Excel 就是上面这份）",
@@ -760,6 +821,8 @@ private fun ExternalReportCard(
     onTogglePreview: () -> Unit,
     onNeedPassword: () -> Unit,
     onShare: () -> Unit,
+    /** 点「放大查看」→ 全屏预览这份 Excel */
+    onFullscreen: (PreviewContent) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -855,6 +918,33 @@ private fun ExternalReportCard(
                             doneWorks = content.doneWorks,
                             planWorks = content.planWorks,
                         )
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    onFullscreen(
+                                        PreviewContent(
+                                            title = content.title.ifBlank { item.displayName },
+                                            timeRange = content.timeRange,
+                                            doneWorks = content.doneWorks,
+                                            planWorks = content.planWorks,
+                                        ),
+                                    )
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                            ) {
+                                Icon(
+                                    Icons.Filled.Fullscreen,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(15.dp),
+                                )
+                                Spacer(Modifier.width(3.dp))
+                                Text("放大查看", fontSize = 12.sp)
+                            }
+                        }
                         Spacer(Modifier.height(6.dp))
                         Text(
                             "这是压缩包里的 Excel 原样内容（预览即导出）。",
