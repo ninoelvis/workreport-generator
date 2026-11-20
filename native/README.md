@@ -2,7 +2,7 @@
 
 完全重写的 **纯原生 Android** 版本：Kotlin + Jetpack Compose，**不包含任何 WebView、HTML、JS 网页文件**。
 
-> 当前版本 **v1.6.0**（正式版）。
+> 当前版本 **v1.7.0**（正式版）。
 > 包名与签名与旧版一致（`com.workreport.app`），因此**可以直接覆盖安装**，本地数据不会丢。
 
 ---
@@ -122,7 +122,7 @@ native/
 | 权限 | 用途 | 备注 |
 |---|---|---|
 | `INTERNET` | **仅预留** | 当前版本代码不会发起任何网络请求 |
-| `WRITE_EXTERNAL_STORAGE` (maxSdkVersion=28) | Android 8/9 写「下载」目录 | Android 10+ 走 MediaStore，免权限 |
+| ~~`WRITE_EXTERNAL_STORAGE`~~ | ~~Android 8/9 写「下载」目录~~ | **v1.7.0 起已移除**：最低版本提到 Android 12 (API 31)，写「下载」目录一律走 MediaStore，全程免存储权限 |
 
 未申请相机、位置、通讯录、麦克风等任何无关权限。
 
@@ -143,6 +143,36 @@ export ANDROID_HOME=/path/to/android-sdk
 ./gradlew assembleDebug      # 调试包
 ./gradlew assembleRelease    # 正式包（用 keystore/release.keystore 签名）
 ```
+
+## 六点五、液态玻璃底栏（v1.7.0 起）
+
+底部导航从「占布局位置的一条实心色块」改成了**浮在内容之上的玻璃胶囊**。
+
+| 文件 | 作用 |
+|---|---|
+| `ui/common/Glass.kt` | 玻璃核心：背景层录制、采样坐标、模糊层/清晰层拆分 |
+| `ui/AnimatedBottomBar.kt` | 悬浮玻璃胶囊（含 v1.6.0 的指示条平移 / 图标缩放 / 文字淡入） |
+| `ui/AppRoot.kt` | 去掉 `Scaffold`，底栏改为根 `Box` 叠加 |
+
+### 为什么手写而不用第三方库
+用 Compose 的 `GraphicsLayer` 把整屏内容录制成一层（`layer.record { drawContent() }`），
+玻璃控件再从这层里按**坐标差平移采样**，最后用 Android 12 (API 31) 起的
+`RenderEffect.createBlurEffect` 做高斯模糊。零第三方依赖，也不需要联网。
+
+### 两个容易踩的坑
+1. **`RenderEffect` 只能模糊自己这一层画的东西**。
+   单纯给底栏挂 `renderEffect` 没用（模糊的是纯色 tint，等于没模糊），
+   必须先把背景内容录进图层再采样。
+2. **玻璃必须拆成「模糊层 + 清晰层」**。
+   模糊作用在同一层里的所有内容上，边框和文字会被一起糊掉。
+
+### 为什么底栏不再占布局位置
+以前底栏占位置，一进二级页面底栏消失，内容区高度立刻变矮 64dp，
+页面猛地往下跳一下。现在底栏浮在内容之上，**内容区高度全程不变**。
+同样的坑还堵了两道防线：不再用 `Scaffold.bottomBar` 插槽、
+不再用 `innerPadding.calculateBottomPadding()` 算底部避让（那个值会突变）。
+
+`GlassBottomBarTest`（12 项）锁住以上全部约束。
 
 ## 七、图标体系（v1.6.0 起）
 

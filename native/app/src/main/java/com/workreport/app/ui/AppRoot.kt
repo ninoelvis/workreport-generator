@@ -1,30 +1,28 @@
 package com.workreport.app.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.annotation.DrawableRes
 import androidx.compose.ui.platform.LocalDensity
+import androidx.annotation.DrawableRes
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
@@ -34,6 +32,8 @@ import androidx.navigation.compose.rememberNavController
 import com.workreport.app.R
 import com.workreport.app.ServiceLocator
 import com.workreport.app.util.BottomAvoidance
+import com.workreport.app.ui.common.GlassContentHost
+import com.workreport.app.ui.common.rememberGlassBackdrop
 import com.workreport.app.ui.debug.DebugPage
 import com.workreport.app.ui.history.HistoryScreen
 import com.workreport.app.ui.home.HomeScreen
@@ -105,178 +105,200 @@ fun AppRoot() {
     /** 只有主 Tab 页面显示底部导航栏；引导页和配置子页面都是整屏的 */
     val showBottomBar = currentRoute in TopLevelDestination.entries.map { it.route }
 
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                AnimatedBottomBar(
-                    destinations = TopLevelDestination.entries,
-                    selectedRoute = currentRoute,
-                    onSelect = { destination ->
-                        navController.navigate(destination.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
+    /**
+     * 玻璃背景层：整屏内容录制成一层，底栏从这层里采样。
+     *
+     * 底栏**不占布局位置**（它浮在内容之上），
+     * 所以内容区的高度从头到尾都不会因为「底栏出现/消失」而变化——
+     * 这就是 v1.6.0 里「进入二级页面内容瞬间下移 64dp」的根治办法。
+     */
+    val backdrop = rememberGlassBackdrop()
+
+    // 底部避让 = max(系统导航条高度, 输入法高度)
+    //
+    // 为什么不能各页面自己写 imePadding()？
+    //   AppRoot 已经把整个内容区压到键盘上沿了，
+    //   如果页面再叠一层 imePadding()，等于多减一次，键盘上方会凭空多出一条空白带
+    //   （v1.4.2 修过的那个 bug）。
+    //
+    // 注意这里取的是**系统导航条**而不是「底栏高度」：
+    //   底栏现在是浮在内容之上的玻璃胶囊，不占布局，
+    //   内容要从它下面穿过去才有玻璃感，所以内容区只需要避开系统导航条。
+    val density = LocalDensity.current
+    val bottomAvoidance = with(density) {
+        val navBarPx = WindowInsets.navigationBars.getBottom(density)
+        val imePx = WindowInsets.ime.getBottom(density)
+        BottomAvoidance.compute(navBarPx, imePx).toDp()
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        // 内容层：整屏录制成玻璃背景
+        GlassContentHost(backdrop) {
+            NavHost(
+                navController = navController,
+                startDestination = TopLevelDestination.HOME.route,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = bottomAvoidance),
+                // 页面切换动画：轻微横向位移 + 淡入淡出
+                //
+                // 方向由 [navDirection] 决定，不能写死：
+                //   底栏 Tab 切换走的是 navigate + popUpTo，navigation-compose 会把 isPop 重置为 false，
+                //   所以 Tab 切换**永远走 enterTransition / exitTransition**。
+                //   如果这里写死「从右滑入」，那么从「我的」切到「历史报告」（往左退）时方向就是反的。
+                // 现在按目标 Tab 的索引算方向：往右切 = 从右滑入，往左切 = 从左滑入。
+                enterTransition = {
+                    val dir = pageDirection()
+                    if (dir == 0) {
+                        fadeIn(tween(200))
+                    } else {
+                        fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full ->
+                            if (dir > 0) full / 6 else -full / 6
                         }
-                    },
-                )
-            }
-        },
-    ) { innerPadding ->
-        // 底部避让 = max(底部导航栏高度, 输入法高度)
-        //
-        // 为什么不能各页面自己写 imePadding()？
-        //   Scaffold 已经用 innerPadding 把内容区抬高了一个导航栏的高度，
-        //   如果页面再叠一层 imePadding()，等于把「导航栏高度」多减了一次，
-        //   键盘上方就会凭空多出一条空白带（实测就是用户看到的那块灰色）。
-        //
-        // 取两者最大值：
-        //   · 没弹键盘 → 留导航栏的位置，底部 Tab 不会被压住
-        //   · 弹了键盘 → 留键盘的高度，内容正好停在键盘上沿，不多不少
-        val density = LocalDensity.current
-        val bottomAvoidance = with(density) {
-            val navBarPx = innerPadding.calculateBottomPadding().toPx()
-            val imePx = WindowInsets.ime.getBottom(density)
-            BottomAvoidance.compute(navBarPx.toInt(), imePx).toDp()
-        }
-        NavHost(
-            navController = navController,
-            startDestination = TopLevelDestination.HOME.route,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = bottomAvoidance),
-            // 页面切换动画：轻微横向位移 + 淡入淡出
-            //
-            // 方向由 [navDirection] 决定，不能写死：
-            //   底栏 Tab 切换走的是 navigate + popUpTo，navigation-compose 会把 isPop 重置为 false，
-            //   所以 Tab 切换**永远走 enterTransition / exitTransition**。
-            //   如果这里写死「从右滑入」，那么从「我的」切到「历史报告」（往左退）时方向就是反的。
-            // 现在按目标 Tab 的索引算方向：往右切 = 从右滑入，往左切 = 从左滑入。
-            enterTransition = {
-                val dir = pageDirection()
-                if (dir == 0) {
-                    fadeIn(tween(200))
-                } else {
-                    fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full ->
-                        if (dir > 0) full / 6 else -full / 6
                     }
-                }
-            },
-            exitTransition = {
-                val dir = pageDirection()
-                if (dir == 0) {
-                    fadeOut(tween(160))
-                } else {
-                    // 旧页面往反方向退一点，形成轻微视差（位移比新页面小，避免两层内容打架）
-                    fadeOut(tween(180)) + slideOutHorizontally(animationSpec = tween(280)) { full ->
-                        if (dir > 0) -full / 10 else full / 10
-                    }
-                }
-            },
-            popEnterTransition = {
-                val dir = pageDirection()
-                if (dir == 0) {
-                    fadeIn(tween(200))
-                } else {
-                    fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full ->
-                        if (dir > 0) full / 6 else -full / 6
-                    }
-                }
-            },
-            popExitTransition = {
-                val dir = pageDirection()
-                if (dir == 0) {
-                    fadeOut(tween(160))
-                } else {
-                    fadeOut(tween(180)) + slideOutHorizontally(animationSpec = tween(280)) { full ->
-                        if (dir > 0) -full / 10 else full / 10
-                    }
-                }
-            },
-        ) {
-            composable(TopLevelDestination.HOME.route) {
-                HomeScreen(
-                    onOpenShortcuts = { navController.navigate(ProfileRoute.SHORTCUTS.route) },
-                )
-            }
-            composable(TopLevelDestination.HISTORY.route) {
-                HistoryScreen(
-                    onGoHome = {
-                        navController.navigate(TopLevelDestination.HOME.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
+                },
+                exitTransition = {
+                    val dir = pageDirection()
+                    if (dir == 0) {
+                        fadeOut(tween(160))
+                    } else {
+                        // 旧页面往反方向退一点，形成轻微视差（位移比新页面小，避免两层内容打架）
+                        fadeOut(tween(180)) + slideOutHorizontally(animationSpec = tween(280)) { full ->
+                            if (dir > 0) -full / 10 else full / 10
                         }
-                    },
-                )
-            }
-            composable(TopLevelDestination.PROFILE.route) {
-                ProfileScreen(
-                    onShowIntro = {
-                        introForced = false
-                        navController.navigate(ROUTE_INTRO)
-                    },
-                    onOpen = { route -> navController.navigate(route.route) },
-                )
-            }
+                    }
+                },
+                popEnterTransition = {
+                    val dir = pageDirection()
+                    if (dir == 0) {
+                        fadeIn(tween(200))
+                    } else {
+                        fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full ->
+                            if (dir > 0) full / 6 else -full / 6
+                        }
+                    }
+                },
+                popExitTransition = {
+                    val dir = pageDirection()
+                    if (dir == 0) {
+                        fadeOut(tween(160))
+                    } else {
+                        fadeOut(tween(180)) + slideOutHorizontally(animationSpec = tween(280)) { full ->
+                            if (dir > 0) -full / 10 else full / 10
+                        }
+                    }
+                },
+            ) {
+                composable(TopLevelDestination.HOME.route) {
+                    HomeScreen(
+                        onOpenShortcuts = { navController.navigate(ProfileRoute.SHORTCUTS.route) },
+                    )
+                }
+                composable(TopLevelDestination.HISTORY.route) {
+                    HistoryScreen(
+                        onGoHome = {
+                            navController.navigate(TopLevelDestination.HOME.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                    )
+                }
+                composable(TopLevelDestination.PROFILE.route) {
+                    ProfileScreen(
+                        onShowIntro = {
+                            introForced = false
+                            navController.navigate(ROUTE_INTRO)
+                        },
+                        onOpen = { route -> navController.navigate(route.route) },
+                    )
+                }
 
-            // ---------- 「我的」页下的配置子页面 ----------
-            composable(ProfileRoute.NAME.route) {
-                ProfileNamePage(onBack = { navController.popBackStack() })
-            }
-            composable(ProfileRoute.SHORTCUTS.route) {
-                ProfileShortcutsPage(onBack = { navController.popBackStack() })
-            }
-            composable(ProfileRoute.SENSITIVE.route) {
-                ProfileSensitivePage(onBack = { navController.popBackStack() })
-            }
-            composable(ProfileRoute.APPEARANCE.route) {
-                ProfileAppearancePage(onBack = { navController.popBackStack() })
-            }
-            composable(ProfileRoute.MAIL.route) {
-                ProfileMailPage(onBack = { navController.popBackStack() })
-            }
-            composable(ProfileRoute.REMINDER.route) {
-                ReminderPage(onBack = { navController.popBackStack() })
-            }
-            composable(ProfileRoute.STORAGE.route) {
-                ProfileStoragePage(onBack = { navController.popBackStack() })
-            }
-            composable(ProfileRoute.BACKUP.route) {
-                BackupPage(onBack = { navController.popBackStack() })
-            }
-            composable(ProfileRoute.DATA.route) {
-                ProfileDataPage(onBack = { navController.popBackStack() })
-            }
-            composable(ProfileRoute.ABOUT.route) {
-                ProfileAboutPage(
-                    onBack = { navController.popBackStack() },
-                    // 连点版本号 7 次打开隐藏的调试页
-                    onOpenDebug = { navController.navigate(ProfileRoute.DEBUG.route) },
-                )
-            }
+                // ---------- 「我的」页下的配置子页面 ----------
+                composable(ProfileRoute.NAME.route) {
+                    ProfileNamePage(onBack = { navController.popBackStack() })
+                }
+                composable(ProfileRoute.SHORTCUTS.route) {
+                    ProfileShortcutsPage(onBack = { navController.popBackStack() })
+                }
+                composable(ProfileRoute.SENSITIVE.route) {
+                    ProfileSensitivePage(onBack = { navController.popBackStack() })
+                }
+                composable(ProfileRoute.APPEARANCE.route) {
+                    ProfileAppearancePage(onBack = { navController.popBackStack() })
+                }
+                composable(ProfileRoute.MAIL.route) {
+                    ProfileMailPage(onBack = { navController.popBackStack() })
+                }
+                composable(ProfileRoute.REMINDER.route) {
+                    ReminderPage(onBack = { navController.popBackStack() })
+                }
+                composable(ProfileRoute.STORAGE.route) {
+                    ProfileStoragePage(onBack = { navController.popBackStack() })
+                }
+                composable(ProfileRoute.BACKUP.route) {
+                    BackupPage(onBack = { navController.popBackStack() })
+                }
+                composable(ProfileRoute.DATA.route) {
+                    ProfileDataPage(onBack = { navController.popBackStack() })
+                }
+                composable(ProfileRoute.ABOUT.route) {
+                    ProfileAboutPage(
+                        onBack = { navController.popBackStack() },
+                        // 连点版本号 7 次打开隐藏的调试页
+                        onOpenDebug = { navController.navigate(ProfileRoute.DEBUG.route) },
+                    )
+                }
 
-            // 隐藏的调试页：入口在「关于」页连点版本号 7 次
-            composable(ProfileRoute.DEBUG.route) {
-                DebugPage(onBack = { navController.popBackStack() })
-            }
+                // 隐藏的调试页：入口在「关于」页连点版本号 7 次
+                composable(ProfileRoute.DEBUG.route) {
+                    DebugPage(onBack = { navController.popBackStack() })
+                }
 
-            // ---------- 功能介绍页（整屏，不是弹窗）----------
-            composable(ROUTE_INTRO) {
-                // 首次启动时吞掉返回键，避免用户直接退出 App
-                BackHandler(enabled = introForced) { }
-                IntroScreen(
-                    forced = introForced,
-                    onClose = {
-                        if (introForced) settings.setIntroShown(true)
-                        introForced = false
-                        navController.popBackStack()
-                    },
-                )
+                // ---------- 功能介绍页（整屏，不是弹窗）----------
+                composable(ROUTE_INTRO) {
+                    // 首次启动时吞掉返回键，避免用户直接退出 App
+                    BackHandler(enabled = introForced) { }
+                    IntroScreen(
+                        forced = introForced,
+                        onClose = {
+                            if (introForced) settings.setIntroShown(true)
+                            introForced = false
+                            navController.popBackStack()
+                        },
+                    )
+                }
             }
         }
+
+        /**
+         * 悬浮玻璃底栏。
+         *
+         * 它是根 `Box` 的另一个子节点，**不占布局位置**：
+         *   · 一级页面 → 完整显示
+         *   · 二级页面 → 淡出并下沉（常驻悬浮，回来时浮起）
+         *
+         * 因为底栏不参与布局，进入二级页面时内容区高度**一点都没变**，
+         * 所以再也不会出现「内容瞬间下移」的卡顿。
+         */
+        AnimatedBottomBar(
+            backdrop = backdrop,
+            destinations = TopLevelDestination.entries,
+            selectedRoute = currentRoute,
+            visible = showBottomBar,
+            onSelect = { destination ->
+                navController.navigate(destination.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }

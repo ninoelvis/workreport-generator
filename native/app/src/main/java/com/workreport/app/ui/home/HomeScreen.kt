@@ -67,6 +67,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.R
 import com.workreport.app.ServiceLocator
+import com.workreport.app.ui.CAPSULE_SPACE
 import com.workreport.app.ui.common.FieldLabel
 import com.workreport.app.ui.common.FullscreenPreview
 import com.workreport.app.ui.common.InfoStatRow
@@ -139,7 +140,8 @@ fun HomeScreen(
         // 键盘避让统一由 AppRoot 处理（max(导航栏高度, 输入法高度)），
         // 这里绝不能再叠 imePadding()，否则键盘上方会多出一条空白带。
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
-            start = 14.dp, end = 14.dp, top = 0.dp, bottom = 24.dp,
+            // 底部留出悬浮玻璃胶囊的高度：内容从胶囊下面穿过，才有「玻璃」的效果
+            start = 14.dp, end = 14.dp, top = 0.dp, bottom = 24.dp + CAPSULE_SPACE,
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {

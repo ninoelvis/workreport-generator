@@ -58,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.R
 import com.workreport.app.data.local.ReportEntity
+import com.workreport.app.ui.CAPSULE_SPACE
 import com.workreport.app.ui.common.EmptyState
 import androidx.compose.ui.platform.LocalContext
 import com.workreport.app.ui.common.FullscreenPreview
@@ -180,7 +181,8 @@ fun HistoryScreen(
         // 用户自己拷进存放目录的压缩包也要能列出来。
         LazyColumn(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = 14.dp, end = 14.dp, bottom = 20.dp,
+                // 底部留出悬浮玻璃胶囊的高度
+                start = 14.dp, end = 14.dp, bottom = 20.dp + CAPSULE_SPACE,
             ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {

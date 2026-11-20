@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.R
 import com.workreport.app.ServiceLocator
+import com.workreport.app.ui.CAPSULE_SPACE
 import com.workreport.app.ui.common.SettingsDivider
 import com.workreport.app.ui.common.SettingsGroup
 import com.workreport.app.ui.common.SettingsRow
@@ -49,7 +50,8 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(
-            start = 14.dp, end = 14.dp, top = 0.dp, bottom = 24.dp,
+            // 底部留出悬浮玻璃胶囊的高度
+            start = 14.dp, end = 14.dp, top = 0.dp, bottom = 24.dp + CAPSULE_SPACE,
         ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {

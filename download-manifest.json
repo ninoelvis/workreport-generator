@@ -3,20 +3,20 @@
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "1.6.0",
-    "versionCode": 32,
+    "version": "1.7.0",
+    "versionCode": 33,
     "releasedAt": "2026-11-21",
-    "sizeBytes": 12401122,
-    "sizeText": "11.8 MB",
-    "sha256": "d44118cb1f791aef91db5bcebd5778965218c35352a7e7587f9d41f01ef99c16",
+    "sizeBytes": 12318042,
+    "sizeText": "11.7 MB",
+    "sha256": "cb3c513918fd876e623db7081f51e60bcb36f29d524a3b107a2f2a66f4faa115",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-v1.6.0.apk",
-    "apkMirrorUrl": "https://kwczku5lunthe.space.mcode.cn/workreport-native-v1.6.0.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-source-v1.6.0.zip",
-    "minAndroid": "Android 8.0 及以上",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.7.0/workreport-native-v1.7.0.apk",
+    "apkMirrorUrl": "https://kwczku5lunthe.space.mcode.cn/workreport-native-v1.7.0.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.7.0/workreport-native-source-v1.7.0.zip",
+    "minAndroid": "Android 12 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://kwczku5lunthe.space.mcode.cn/workreport-native-source-v1.6.0.zip"
+    "sourceMirrorUrl": "https://kwczku5lunthe.space.mcode.cn/workreport-native-source-v1.7.0.zip"
   },
   "web": {
     "version": "v1.3",
@@ -34,6 +34,20 @@
   },
   "changelog": [
     {
+      "version": "v1.7.0",
+      "date": "2026-11-21",
+      "title": "底部导航换成液态玻璃，进入二级页面不再「卡一下」",
+      "items": [
+        "底部导航栏改成 iOS 风格的**悬浮玻璃胶囊**：不再是一条实心色块压在页面底部，而是浮在内容之上，**真正模糊背后的内容**（滚动时能看到后面的卡片和文字被磨砂），带细边框和顶部高光",
+        "修复进入「我的」等二级页面时**内容瞬间下移约 64dp 的卡顿**：以前底栏是「占位置」的，一消失整个内容区高度就变了，页面会猛地跳一下；现在底栏浮在内容之上不占位置，进出二级页面内容一点都不会动",
+        "进入二级页面时玻璃胶囊**淡出并下沉**，返回时**浮起**，动效连贯不突兀",
+        "玻璃的深浅色分别调了参数：浅色下是通透的白色毛玻璃，深色下压得更低，保证文字始终看得清",
+        "因为玻璃背景模糊依赖 Android 12 起的系统渲染接口，**最低支持版本从 Android 8 提升到 Android 12**；同时把安装包里的代码重新压缩，下载体积仍是 12 MB 上下（不然会涨到 44 MB）",
+        "导出内容、Excel 样式、压缩包文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**，相关文件与 v1.6.0 逐字节相同；单元测试 219/219 通过，并新增 12 项玻璃与底栏防回归检查"
+      ],
+      "current": true
+    },
+    {
       "version": "v1.6.0",
       "date": "2026-11-21",
       "title": "整套图标重做，深浅色自动跟随，底部导航加动画",
@@ -45,7 +59,7 @@
         "页面之间加了轻微的横向滑动 + 淡入淡出过渡",
         "导出内容、Excel 样式、压缩包文件名、解压密码一个字都没改；单元测试 198/198 通过，并新增 9 项图标体系防回归检查"
       ],
-      "current": true
+      "current": false
     },
     {
       "version": "v1.5.1",

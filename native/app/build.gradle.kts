@@ -11,11 +11,13 @@ android {
 
     defaultConfig {
         applicationId = "com.workreport.app"
-        // 最低支持 Android 8.0 (API 26)
-        minSdk = 26
+        // 最低支持 Android 12 (API 31)
+        // 原因：v1.7.0 起底部导航栏改为液态玻璃，需要 RenderEffect（API 31+）做背景模糊；
+        //       低于 Android 12 没有这个 API，做不出真玻璃，只能半透明降级。
+        minSdk = 31
         targetSdk = 34
-        versionCode = 32
-        versionName = "1.6.0"
+        versionCode = 33
+        versionName = "1.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -78,6 +80,13 @@ android {
                 "/META-INF/*.kotlin_module",
                 "DebugProbesKt.bin",
             )
+        }
+        // AGP 在 minSdk ≥ 28 时默认把 DEX 以「不压缩」方式打进 APK，
+        // 下载体积会涨到 3 倍多（12 MB → 44 MB）。
+        // 这里强制压缩 DEX：APK 体积回到 12 MB 上下，下载快得多；
+        // 代价只是安装时多一步解压，忽略不计。
+        dex {
+            useLegacyPackaging = true
         }
     }
 
