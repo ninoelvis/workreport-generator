@@ -148,25 +148,33 @@ fun FullscreenPreview(
                             },
                         ),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .width(FULL_TABLE_WIDTH)
-                            .horizontalScroll(hScroll)
-                            .verticalScroll(vScroll),
+                    // ⚠️ 横竖两个滚动容器必须**分层**，不能套在同一个 Box 上：
+                    //    `horizontalScroll` 会给子内容「宽度无上界」的约束，
+                    //    而 PreviewTable 里的 `fillMaxWidth()` 在无上界时宽度会退化成 0
+                    //    —— 结果就是表格整个看不见（点「放大查看」里面一片空白）。
+                    //
+                    //    这里：外层竖向滚，内层横向滚，表格宽度写死在 PreviewTable 的 modifier 上。
+                    Column(
+                        modifier = Modifier.verticalScroll(vScroll),
                     ) {
-                        PreviewTable(
-                            title = title,
-                            timeRange = timeRange,
-                            doneWorks = doneWorks,
-                            planWorks = planWorks,
-                            // 高度随内容增长 —— 长文本一行都不裁
-                            cellHeight = null,
-                            // 字号放大一点，手机上更易读
-                            textScale = 1.25f,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        Box(
+                            modifier = Modifier.horizontalScroll(hScroll),
+                        ) {
+                            PreviewTable(
+                                title = title,
+                                timeRange = timeRange,
+                                doneWorks = doneWorks,
+                                planWorks = planWorks,
+                                // 高度随内容增长 —— 长文本一行都不裁
+                                cellHeight = null,
+                                // 字号放大一点，手机上更易读
+                                textScale = 1.25f,
+                                // 明确给出宽度（不能只靠 fillMaxWidth）
+                                modifier = Modifier.width(FULL_TABLE_WIDTH),
+                            )
+                        }
                     }
-                }
+            }
             }
 
             // ---------- 底部提示 ----------

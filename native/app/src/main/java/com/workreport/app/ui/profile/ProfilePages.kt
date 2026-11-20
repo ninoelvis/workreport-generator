@@ -1046,6 +1046,7 @@ fun ProfileStoragePage(
     val storage = remember { ServiceLocator.storageLocation }
     val treeUri by storage.treeUri.collectAsStateWithLifecycle()
     val dirName by storage.displayNameFlow.collectAsStateWithLifecycle()
+    val dirPath by storage.pathFlow.collectAsStateWithLifecycle()
 
     // 目录里的压缩包数量
     var zipCount by remember { mutableIntStateOf(0) }
@@ -1089,6 +1090,21 @@ fun ProfileStoragePage(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
+                        // 完整路径（等宽小字，方便一眼看清到底选的是哪个文件夹）
+                        if (treeUri != null && dirPath.isNotEmpty()) {
+                            Text(
+                                dirPath,
+                                fontSize = 11.sp,
+                                lineHeight = 16.sp,
+                                fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                            )
+                        }
                         Text(
                             if (treeUri != null) {
                                 "生成的周报压缩包会直接放进这个文件夹，" +

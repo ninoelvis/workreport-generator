@@ -630,20 +630,20 @@ footer a{color:var(--t2)}
     "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
     "app": {
       "name": "工作报告生成器",
-      "version": "1.5.0",
-      "versionCode": 30,
+      "version": "1.5.1",
+      "versionCode": 31,
       "releasedAt": "2026-11-20",
       "sizeBytes": 12325329,
       "sizeText": "11.8 MB",
-      "sha256": "76a97362bcabed1a9553eb9a1b39c76eefb4f02cda4c2256e00ff0d2d9f24888",
+      "sha256": "d0179eb50d389797b4144c2149f725b29e33c60f4c2f9498e7648e4865cf6a74",
       "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
       "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.0/workreport-native-v1.5.0.apk",
-      "apkMirrorUrl": "https://y0f0wwnef39gn.space.mcode.cn/workreport-native-v1.5.0.apk",
+      "apkMirrorUrl": "https://qq6e8ktowljcp.space.mcode.cn/workreport-native-v1.5.1.apk",
       "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.0/workreport-native-source-v1.5.0.zip",
       "minAndroid": "Android 8.0 及以上",
       "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
       "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-      "sourceMirrorUrl": "https://y0f0wwnef39gn.space.mcode.cn/workreport-native-source-v1.5.0.zip"
+      "sourceMirrorUrl": "https://qq6e8ktowljcp.space.mcode.cn/workreport-native-source-v1.5.1.zip"
     },
     "web": {
       "version": "v1.3",
@@ -661,6 +661,19 @@ footer a{color:var(--t2)}
     },
     "changelog": [
       {
+        "version": "v1.5.1",
+        "date": "2026-11-20",
+        "title": "修「存放位置显示成文件名」「表头高度不齐」「放大查看一片空白」",
+        "items": [
+          "修复「我的 → 周报存放目录」里的「当前存放位置」显示成目录里第一个文件的文件名 —— 之前查的是子文档列表的第一条而不是目录本身，现在显示目录自己的名字，并补上完整路径，一眼看清选的是哪个文件夹",
+          "修复预览区表头高度不齐：Excel 的表头行高是固定的，现在预览也用固定行高，「客户（及用户）反馈」这类长标题换行时不再把整行撑歪，六列表头一样高、一样居中",
+          "修复点「放大查看」进去一片空白：横向和纵向滚动套在了同一个容器上，把表格宽度压成了 0；现在改成横竖分层滚动、宽度写死，没填内容时也能看到完整的表格样式",
+          "历史报告页的预览（数据库里的报告 + 手动拷进来的压缩包）也加了「放大查看」，和首页一致",
+          "导出格式、压缩包文件名、解压密码依旧一个字没改；单元测试 189/189 通过"
+        ],
+        "current": true
+      },
+      {
         "version": "v1.5.0",
         "date": "2026-11-20",
         "title": "存放目录自己挑，预览可以放大",
@@ -671,7 +684,7 @@ footer a{color:var(--t2)}
           "预览区新增「放大查看」：全屏显示，双指缩放、双击放大、左右滑动看全部列，长的工作梳理一行都不再被裁掉",
           "导出格式、压缩包文件名、解压密码一个字都没动；单元测试 187/187 通过"
         ],
-        "current": true
+        "current": false
       },
       {
         "version": "v1.4.3",
