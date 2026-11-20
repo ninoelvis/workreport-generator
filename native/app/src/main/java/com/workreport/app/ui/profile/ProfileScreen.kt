@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.workreport.app.R
 import com.workreport.app.ServiceLocator
 import com.workreport.app.ui.common.SettingsDivider
 import com.workreport.app.ui.common.SettingsGroup
@@ -76,7 +77,7 @@ fun ProfileScreen(
         item {
             SettingsGroup {
                 SettingsRow(
-                    icon = "👤",
+                    icon = R.drawable.ic_user,
                     title = "个人信息",
                     subtitle = "姓名，用于生成文件名",
                     value = state.userName.ifEmpty { "未填写" },
@@ -84,7 +85,7 @@ fun ProfileScreen(
                 )
                 SettingsDivider()
                 SettingsRow(
-                    icon = "⚡",
+                    icon = R.drawable.ic_bolt,
                     title = "快捷记录模板",
                     subtitle = "把常写的重复内容存成模板，一键插入",
                     value = "${state.workShortcuts.size + state.planShortcuts.size} 条",
@@ -92,7 +93,7 @@ fun ProfileScreen(
                 )
                 SettingsDivider()
                 SettingsRow(
-                    icon = "🛡️",
+                    icon = R.drawable.ic_shield,
                     title = "敏感词库",
                     subtitle = "「纪委」自动变「jw」这类替换规则",
                     value = "${state.sensitiveWords.size} 个",
@@ -100,7 +101,7 @@ fun ProfileScreen(
                 )
                 SettingsDivider()
                 SettingsRow(
-                    icon = "📁",
+                    icon = R.drawable.ic_folder,
                     title = "周报存放目录",
                     subtitle = "自己挑一个文件夹存周报压缩包",
                     value = storageName,
@@ -108,7 +109,7 @@ fun ProfileScreen(
                 )
                 SettingsDivider()
                 SettingsRow(
-                    icon = "🌗",
+                    icon = R.drawable.ic_theme,
                     title = "外观",
                     subtitle = "浅色 / 深色 / 跟随系统",
                     value = when (state.themeMode) {
@@ -120,7 +121,7 @@ fun ProfileScreen(
                 )
                 SettingsDivider()
                 SettingsRow(
-                    icon = "📨",
+                    icon = R.drawable.ic_mail,
                     title = "邮件设置",
                     subtitle = "生成后是否自动拉起邮箱",
                     value = if (state.autoSendMail) "自动发送" else "每次询问",
@@ -128,7 +129,7 @@ fun ProfileScreen(
                 )
                 SettingsDivider()
                 SettingsRow(
-                    icon = "⏰",
+                    icon = R.drawable.ic_clock,
                     title = "周报提醒",
                     subtitle = "选好周几，16:00–18:00 之间提醒你写周报",
                     value = if (state.reminderEnabled) "已开启" else "未开启",
@@ -140,28 +141,28 @@ fun ProfileScreen(
         item {
             SettingsGroup {
                 SettingsRow(
-                    icon = "📄",
+                    icon = R.drawable.ic_document,
                     title = "功能介绍与更新记录",
                     subtitle = "看看这个版本都改了什么",
                     onClick = onShowIntro,
                 )
                 SettingsDivider()
                 SettingsRow(
-                    icon = "💾",
+                    icon = R.drawable.ic_save,
                     title = "配置备份",
                     subtitle = "导出/恢复个人配置（加密 ZIP）",
                     onClick = { onOpen(ProfileRoute.BACKUP) },
                 )
                 SettingsDivider()
                 SettingsRow(
-                    icon = "🧹",
+                    icon = R.drawable.ic_broom,
                     title = "数据管理",
                     subtitle = "清除本机保存的所有数据",
                     onClick = { onOpen(ProfileRoute.DATA) },
                 )
                 SettingsDivider()
                 SettingsRow(
-                    icon = "ℹ️",
+                    icon = R.drawable.ic_info,
                     title = "关于",
                     subtitle = "版本号、仓库地址与免责声明",
                     value = com.workreport.app.BuildConfig.VERSION_NAME,

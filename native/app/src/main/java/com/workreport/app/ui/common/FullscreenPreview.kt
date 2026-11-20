@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.workreport.app.R
 import com.workreport.app.ui.theme.LocalPreviewColors
 import kotlinx.coroutines.launch
 
@@ -117,10 +119,10 @@ fun FullscreenPreview(
                         vScroll.animateScrollTo(0)
                     }
                 }) {
-                    Icon(Icons.Filled.Refresh, contentDescription = "还原")
+                    Icon(painterResource(R.drawable.ic_refresh), contentDescription = "还原")
                 }
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Filled.Close, contentDescription = "关闭")
+                    Icon(painterResource(R.drawable.ic_close), contentDescription = "关闭")
                 }
             }
 

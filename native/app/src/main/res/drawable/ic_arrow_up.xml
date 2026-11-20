@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ic_arrowUp —— 工作报告生成器图标体系（纯矢量，无位图） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12,19.4 V5"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+    <path
+        android:pathData="M5.8,11.2 L12,5 L18.2,11.2"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+</vector>

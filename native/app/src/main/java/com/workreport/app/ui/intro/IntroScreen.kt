@@ -42,16 +42,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.workreport.app.R
 import com.workreport.app.BuildConfig
 import com.workreport.app.ServiceLocator
 import com.workreport.app.ui.common.AppTopBar
@@ -131,7 +133,7 @@ fun IntroScreen(
             item {
                 IntroSection(
                     title = "功能介绍",
-                    icon = Icons.Filled.Star,
+                    icon = R.drawable.ic_star,
                 ) {
                     IntroBullet(
                         "填一次姓名和时间",
@@ -170,11 +172,39 @@ fun IntroScreen(
                         "配置备份",
                         "姓名、词库、模板、提醒设置可加密备份，换手机时一键恢复。",
                     )
+                    IntroBullet(
+                        "全新图标与动效",
+                        "全 App 的图标重新画成同一套矢量图，桌面图标也换了新的；" +
+                            "深浅色模式自动跟随，" +
+                            "底部三个标签页切换时指示条会平滑滑动、图标轻轻缩放，" +
+                            "页面之间也有淡入淡出的过渡。",
+                    )
                 }
             }
 
             item {
-                IntroSection(title = "历史版本更新记录", icon = Icons.Filled.History) {
+                IntroSection(title = "历史版本更新记录", icon = R.drawable.ic_nav_history) {
+                    ChangeLogItem(
+                        "v1.6.0",
+                        "**整套图标重做**：App 里所有带图标的地方 —— " +
+                            "功能区、底部三个标签页、操作按钮、顶栏 Logo、" +
+                            "空状态、列表标签、输入框标题 —— " +
+                            "原来的 emoji 和系统自带图标**全部换成同一套自绘矢量图标**，" +
+                            "风格统一、粗细一致。" +
+                            "**桌面图标也换了新的**：标志 + WorkReport 字样，" +
+                            "适配各种屏幕形状和启动器裁切，" +
+                            "深色模式另有一套配色。" +
+                            "**深浅色自动跟随**：图标颜色不再写死，" +
+                            "跟着 App 的浅色/深色主题走，" +
+                            "设计稿里「深→浅」的层次改用透明度实现，切换主题时层次照样在。" +
+                            "**底部导航加了动画**：指示条在三个标签之间平滑平移，" +
+                            "选中的图标放大一点、没选中的缩一点，" +
+                            "文字只在选中时淡入；" +
+                            "页面之间也加了轻微的滑动 + 淡入淡出过渡。" +
+                            "⚠️ **导出内容、Excel 样式、压缩包文件名、解压密码一个字都没改** —— " +
+                            "这一版只动界面长相和动效。",
+                        current = true,
+                    )
                     ChangeLogItem(
                         "v1.5.1",
                         "修三个真机反馈的问题：**「我的 → 周报存放目录」里显示的" +
@@ -187,7 +217,7 @@ fun IntroScreen(
                             "把表格宽度压成了 0，所以点开什么也看不见，" +
                             "现在改成横竖分层滚动、宽度写死，**没填内容时也能看到完整的表格样式**。" +
                             "⚠️ 导出格式、压缩包文件名、解压密码依旧一个字没改。",
-                        current = true,
+                        current = false,
                     )
                     ChangeLogItem(
                         "v1.5.0",
@@ -311,7 +341,7 @@ fun IntroScreen(
             }
 
             item {
-                IntroSection(title = "数据与隐私", icon = Icons.Filled.Lock) {
+                IntroSection(title = "数据与隐私", icon = R.drawable.ic_lock) {
                     IntroBullet("完全本地", "所有内容只保存在本机，不上传任何服务器。")
                     IntroBullet(
                         "自动保存",
@@ -334,7 +364,7 @@ fun IntroScreen(
             }
 
             item {
-                IntroSection(title = "源码与更新记录", icon = Icons.Filled.Code) {
+                IntroSection(title = "源码与更新记录", icon = R.drawable.ic_code) {
                     IntroBullet(
                         "仓库地址",
                         "github.com/ninoelvis/workreport-generator（原生版源码在同仓库的 native 目录）",
@@ -420,7 +450,7 @@ fun IntroScreen(
 @Composable
 private fun IntroSection(
     title: String,
-    icon: ImageVector,
+    @DrawableRes icon: Int,
     initiallyExpanded: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -462,7 +492,7 @@ private fun IntroSection(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    icon,
+                    painter = painterResource(icon),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp),
@@ -477,7 +507,7 @@ private fun IntroSection(
                 modifier = Modifier.weight(1f),
             )
             Icon(
-                imageVector = Icons.Filled.ExpandMore,
+                painter = painterResource(R.drawable.ic_expand_more),
                 contentDescription = if (expanded) "收起" else "展开",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -602,8 +632,7 @@ private fun StoragePickerCard() {
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    Icons.Filled.Folder,
+                Icon(painterResource(R.drawable.ic_folder),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp),

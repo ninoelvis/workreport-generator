@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ic_send —— 工作报告生成器图标体系（纯矢量，无位图） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M21,3.4 L10.6,13.8"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+    <path
+        android:pathData="M21,3.4 L14.2,21 L10.6,13.8 L3.4,10.2 Z"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+</vector>

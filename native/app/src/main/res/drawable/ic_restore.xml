@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ic_restore —— 工作报告生成器图标体系（纯矢量，无位图） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M5.2,13.0 a7.2,7.2 0 1,0 14.4,0 a7.2,7.2 0 1,0 -14.4,0 Z"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+    <path
+        android:pathData="M12.4,9.2 V13 L15,14.6"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.8"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+    <path
+        android:pathData="M5.6,7.6 A7.2,7.2 0 0 1 8.4,5.2"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.8"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+    <path
+        android:pathData="M5,4.6 V8.2 H8.6"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.8"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+</vector>

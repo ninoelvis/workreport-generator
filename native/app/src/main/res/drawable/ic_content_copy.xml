@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ic_contentCopy —— 工作报告生成器图标体系（纯矢量，无位图） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M10.8,3.6 H18.0 A2.4,2.4 0 0 1 20.4,6.0 V13.2 A2.4,2.4 0 0 1 18.0,15.6 H10.8 A2.4,2.4 0 0 1 8.4,13.2 V6.0 A2.4,2.4 0 0 1 10.8,3.6 Z"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+    <path
+        android:pathData="M15.6,18.4 V19.2 A2.2,2.2 0 0 1 13.4,21.4 H6.6 A2.2,2.2 0 0 1 4.4,19.2 V12.4 A2.2,2.2 0 0 1 6.6,10.2 H7.6"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+</vector>

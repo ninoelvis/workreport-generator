@@ -1,16 +1,16 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v1.5.1-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v1.6.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
-**原生版 Android App（v1.5.1，推荐）**:
-[workreport-native-v1.5.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.1/workreport-native-v1.5.1.apk)
+**原生版 Android App（v1.6.0，推荐）**:
+[workreport-native-v1.6.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-v1.6.0.apk)
 （11.8 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版）
 
 源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
-[工程源码包 v1.5.1](https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.1/workreport-native-source-v1.5.1.zip)
+[工程源码包 v1.6.0](https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-source-v1.6.0.zip)
 
 **旧版 WebView App**：
 [workreport-generator-v1.2.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.2.1/workreport-generator-v1.2.1.apk)
@@ -43,6 +43,7 @@
 
 *原生版 App*
 
+- `v1.6.0` **整套图标重做**：功能区、底部导航、操作按钮、顶栏 Logo 等**所有带图标的位置**全部换成同一套自绘矢量图标（emoji 与系统图标全部清空）；**深浅色自动跟随**主题；桌面图标换成「标志 + WorkReport 字样」并另做深色配色；底部导航改为自绘并加了动画（指示条平滑平移、图标选中放大 1.12、文字淡入淡出），页面之间也加了滑动 + 淡入淡出过渡
 - `v1.5.1` 修三个真机反馈的问题：**存放位置显示成文件名**（现在显示目录名 + 完整路径）、**预览表头高度不齐**（改成固定行高，六列一样高）、**「放大查看」全屏一片空白**（横竖滚动套在同一容器上把表格宽度压成 0，现在分层滚动、宽度写死，没填内容也能看到完整表格样式）；历史报告页也加上了「放大查看」
 - `v1.5.0` 新增**存放目录自选**（首次引导选文件夹，「我的 → 周报存放目录」随时改）；历史报告页能认出手动拷进目录的压缩包并预览、分享；预览区新增**全屏放大**（双指缩放、双击放大、左右滑动看全部列，长文本一行不裁）
 - `v1.3.11` 修复预览表在**深色模式**下看不清的问题（表头、标题、边框全部改成跟随主题）；生成压缩包后**自动清空**「工作记录」和「周报内容」；历史报告新增**「载入首页继续编辑」**，二次确认后可回填首页改完重新生成

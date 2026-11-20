@@ -50,6 +50,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.workreport.app.R
 import com.workreport.app.BuildConfig
 import com.workreport.app.data.local.ThemeMode
 import com.workreport.app.domain.model.SensitiveWord
@@ -130,7 +132,7 @@ fun ProfileNamePage(
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 28.dp),
         ) {
             item {
-                SectionCard(title = "姓名", icon = "👤") {
+                SectionCard(title = "姓名", icon = R.drawable.ic_user) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         LabeledField(
                             label = "你的姓名",
@@ -199,7 +201,7 @@ fun ProfileShortcutsPage(
                 item {
                     SectionCard(
                         title = slot.title,
-                        icon = if (tab == 0) "📋" else "🗒️",
+                        icon = if (tab == 0) R.drawable.ic_clipboard else R.drawable.ic_note,
                         hint = "${templates.size} 条",
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -235,7 +237,7 @@ fun ProfileShortcutsPage(
                                     shape = RoundedCornerShape(8.dp),
                                     contentPadding = PaddingValues(horizontal = 14.dp),
                                 ) {
-                                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(4.dp))
                                     Text("添加", fontSize = 13.sp)
                                 }
@@ -247,7 +249,7 @@ fun ProfileShortcutsPage(
                 if (templates.isEmpty()) {
                     item {
                         EmptyState(
-                            icon = "⚡",
+                            icon = R.drawable.ic_bolt,
                             title = "还没有模板",
                             description = "把每周都要重复写的内容存进来，" +
                                 "之后在首页点一下就能插进去，不用每次都手敲。",
@@ -267,7 +269,7 @@ fun ProfileShortcutsPage(
                 item {
                     SectionCard(
                         title = "复制与分享",
-                        icon = "📤",
+                        icon = R.drawable.ic_upload,
                         hint = "给同事用",
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -290,7 +292,7 @@ fun ProfileShortcutsPage(
                                     enabled = templates.isNotEmpty(),
                                     shape = RoundedCornerShape(8.dp),
                                 ) {
-                                    Icon(Icons.Filled.ContentCopy, null, Modifier.size(15.dp))
+                                    Icon(painterResource(R.drawable.ic_content_copy), null, Modifier.size(15.dp))
                                     Spacer(Modifier.width(5.dp))
                                     Text("复制全部", fontSize = 12.5.sp)
                                 }
@@ -299,7 +301,7 @@ fun ProfileShortcutsPage(
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(8.dp),
                                 ) {
-                                    Icon(Icons.Filled.ContentPaste, null, Modifier.size(15.dp))
+                                    Icon(painterResource(R.drawable.ic_content_paste), null, Modifier.size(15.dp))
                                     Spacer(Modifier.width(5.dp))
                                     Text("从剪贴板导入", fontSize = 12.5.sp)
                                 }
@@ -392,16 +394,14 @@ private fun ShortcutTemplateRow(
             modifier = Modifier.weight(1f),
         )
         IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
-            Icon(
-                Icons.Filled.Edit,
+            Icon(painterResource(R.drawable.ic_edit),
                 contentDescription = "编辑",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp),
             )
         }
         IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-            Icon(
-                Icons.Filled.Delete,
+            Icon(painterResource(R.drawable.ic_delete),
                 contentDescription = "删除",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp),
@@ -470,7 +470,7 @@ fun ProfileSensitivePage(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                SectionCard(title = "替换规则", icon = "🛡️", hint = "${state.sensitiveWords.size} 个词") {
+                SectionCard(title = "替换规则", icon = R.drawable.ic_shield, hint = "${state.sensitiveWords.size} 个词") {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
                             "输入内容里的敏感词会被自动替换成小写拼音首字母，例如「纪委」→「jw」。",
@@ -484,7 +484,7 @@ fun ProfileSensitivePage(
                                 modifier = Modifier.weight(1f).height(40.dp),
                                 shape = RoundedCornerShape(8.dp),
                             ) {
-                                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(15.dp))
                                 Spacer(Modifier.width(4.dp))
                                 Text("添加敏感词", fontSize = 12.sp)
                             }
@@ -503,7 +503,7 @@ fun ProfileSensitivePage(
             if (state.sensitiveWords.isEmpty()) {
                 item {
                     EmptyState(
-                        icon = "🛡️",
+                        icon = R.drawable.ic_shield,
                         title = "词库是空的",
                         description = "添加一个试试，比如「纪委」会自动变成「jw」。",
                     )
@@ -597,16 +597,14 @@ private fun SensitiveWordRow(
             modifier = Modifier.width(56.dp),
         )
         IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
-            Icon(
-                Icons.Filled.Edit,
+            Icon(painterResource(R.drawable.ic_edit),
                 contentDescription = "编辑",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp),
             )
         }
         IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-            Icon(
-                Icons.Filled.Delete,
+            Icon(painterResource(R.drawable.ic_delete),
                 contentDescription = "删除",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp),
@@ -683,7 +681,7 @@ fun ProfileAppearancePage(
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
-                SectionCard(title = "主题模式", icon = "🌗") {
+                SectionCard(title = "主题模式", icon = R.drawable.ic_theme) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             ThemeMode.entries.forEach { mode ->
@@ -739,7 +737,7 @@ fun ProfileMailPage(
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
-                SectionCard(title = "发送方式", icon = "📨") {
+                SectionCard(title = "发送方式", icon = R.drawable.ic_mail) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(
                             "拉起邮箱 App 时会自动带上邮件主题和压缩包附件，收件人由你在邮箱里填写。",
@@ -863,8 +861,7 @@ private fun MailAppPickerDialog(
                                 modifier = Modifier.weight(1f),
                             )
                             if (selected) {
-                                Icon(
-                                    Icons.Filled.Check,
+                                Icon(painterResource(R.drawable.ic_check),
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(17.dp),
@@ -902,7 +899,7 @@ fun ProfileDataPage(
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
-                SectionCard(title = "清除本地数据", icon = "🧹") {
+                SectionCard(title = "清除本地数据", icon = R.drawable.ic_broom) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
                             "清除后姓名、敏感词库、快捷记录模板与主题设置都会恢复默认" +
@@ -980,7 +977,7 @@ fun ProfileAboutPage(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                SectionCard(title = "关于", icon = "ℹ️") {
+                SectionCard(title = "关于", icon = R.drawable.ic_info) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             "工作报告生成器 · 原生版",
@@ -1010,7 +1007,7 @@ fun ProfileAboutPage(
             }
 
             item {
-                SectionCard(title = "免责声明", icon = "⚖️") {
+                SectionCard(title = "免责声明", icon = R.drawable.ic_scale) {
                     Text(
                         "本软件为个人自用的效率工具，仅用于自动汇总与整理本人工作内容。" +
                             "使用者应自行确保所填报的工作内容真实、合法，" +
@@ -1082,7 +1079,7 @@ fun ProfileStoragePage(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                SectionCard(title = "当前存放位置", icon = "📁") {
+                SectionCard(title = "当前存放位置", icon = R.drawable.ic_folder) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
                             if (treeUri != null) dirName else "系统「下载」目录",
@@ -1141,7 +1138,7 @@ fun ProfileStoragePage(
             }
 
             item {
-                SectionCard(title = "这个文件夹里", icon = "🗂️") {
+                SectionCard(title = "这个文件夹里", icon = R.drawable.ic_folder_open) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             "$zipCount 个压缩包",
@@ -1166,7 +1163,7 @@ fun ProfileStoragePage(
             }
 
             item {
-                SectionCard(title = "说明", icon = "ℹ️") {
+                SectionCard(title = "说明", icon = R.drawable.ic_info) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             "· 文件名、压缩包里的 Excel、解压密码都和以前完全一样，" +

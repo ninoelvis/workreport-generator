@@ -2,7 +2,7 @@
 
 完全重写的 **纯原生 Android** 版本：Kotlin + Jetpack Compose，**不包含任何 WebView、HTML、JS 网页文件**。
 
-> 当前版本 **v1.3.11**（正式版）。
+> 当前版本 **v1.6.0**（正式版）。
 > 包名与签名与旧版一致（`com.workreport.app`），因此**可以直接覆盖安装**，本地数据不会丢。
 
 ---
@@ -143,3 +143,31 @@ export ANDROID_HOME=/path/to/android-sdk
 ./gradlew assembleDebug      # 调试包
 ./gradlew assembleRelease    # 正式包（用 keystore/release.keystore 签名）
 ```
+
+## 七、图标体系（v1.6.0 起）
+
+App 内**所有带图标的位置**（功能区、底部导航、操作按钮、顶栏 Logo、空状态、列表标签、
+输入框标题）统一使用 `res/drawable/ic_*.xml` 里的 **VectorDrawable**，不再有 emoji，
+也不再用 Material Icons。
+
+| 规则 | 说明 |
+|---|---|
+| 单一色源 | 矢量里只写 `@color/icon_primary`，**不写 `android:tint`** —— 颜色由 Compose 的 `Icon(tint = MaterialTheme.colorScheme.primary)` 接管，自动跟随深浅色主题 |
+| 层次感 | 设计稿的「深→浅」三档色阶改用**透明度**实现（`strokeAlpha` 1.0 / 0.66 / 0.40），既保住层次，又能整体换色 |
+| 资源命名 | 只能用小写字母、数字、下划线（Android 限制），如 `ic_arrow_back_ios` |
+| 状态栏图标 | `ic_notification.xml` 单独手写，必须是**白色实心剪影**（系统会做模板着色） |
+| 桌面图标 | `mipmap-anydpi-v26/ic_launcher.xml`（自适应）+ 各密度传统 PNG + `mipmap-night-*` 深色版；因启动图标会被裁成圆形，采用**竖版堆叠**（标志在上、WorkReport 字样在下） |
+
+图标源文件与生成脚本：
+
+| 文件 | 作用 |
+|---|---|
+| `scripts/icons.py` | 全部图标的 SVG 定义（导航 / 功能区 / 操作 / 品牌） |
+| `scripts/gen_vector_icons.py` | SVG → Android VectorDrawable（含色阶→透明度转换） |
+| `scripts/gen_launcher_icons.py` | 桌面图标（自适应前景 + 各密度 PNG + 深色版） |
+| `scripts/render_icon_set.py` | 渲染整套图标的实际观感（浅色/深色两套） |
+| `scripts/check_drawable_refs.py` | 校验源码里的 `R.drawable.ic_*` 引用与资源文件一致 |
+
+改完图标后跑 `./gradlew testDebugUnitTest` —— `IconSystemTest` 会拦住回归：
+禁止再出现 emoji、禁止再使用 Material Icons、禁止在矢量里写死 tint、
+要求全部引用都有资源、要求自绘底栏与页面过渡存在、要求桌面图标资源齐全。

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ic_nav_profile —— 工作报告生成器图标体系（纯矢量，无位图） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M8.0,7.8 a4.0,4.0 0 1,0 8.0,0 a4.0,4.0 0 1,0 -8.0,0 Z"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+    <path
+        android:pathData="M4.6,20.6 C4.6,16.2 7.9,13.6 12,13.6 C16.1,13.6 19.4,16.2 19.4,20.6"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+</vector>

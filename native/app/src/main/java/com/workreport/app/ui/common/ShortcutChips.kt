@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.workreport.app.R
 import com.workreport.app.domain.model.ShortcutTemplate
 
 /**
@@ -68,7 +70,7 @@ fun ShortcutChips(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Filled.Bolt,
+                painter = painterResource(R.drawable.ic_bolt),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(15.dp),
@@ -89,7 +91,7 @@ fun ShortcutChips(
             Spacer(Modifier.weight(1f))
             if (templates.isNotEmpty()) {
                 Icon(
-                    imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.ExpandMore,
+                    painter = painterResource(if (expanded) R.drawable.ic_arrow_up else R.drawable.ic_expand_more),
                     contentDescription = if (expanded) "收起" else "展开",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
@@ -113,7 +115,7 @@ fun ShortcutChips(
                         )
                         TextButton(onClick = onManage) {
                             Icon(
-                                imageVector = Icons.Filled.Add,
+                                painter = painterResource(R.drawable.ic_add),
                                 contentDescription = null,
                                 modifier = Modifier.size(14.dp),
                             )

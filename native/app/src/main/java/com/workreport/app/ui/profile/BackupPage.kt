@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.workreport.app.R
 import com.workreport.app.data.backup.ConfigBackupManager
 import com.workreport.app.ui.common.EmptyState
 import com.workreport.app.ui.common.SectionCard
@@ -109,7 +111,7 @@ fun BackupPage(
         ) {
             SectionCard(
                 title = "导出备份",
-                icon = "💾",
+                icon = R.drawable.ic_save,
                 hint = "存成加密 ZIP",
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -160,7 +162,7 @@ fun BackupPage(
                             containerColor = MaterialTheme.colorScheme.primary,
                         ),
                     ) {
-                        Icon(Icons.Filled.Download, null, Modifier.size(16.dp))
+                        Icon(painterResource(R.drawable.ic_download), null, Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
                         Text("导出备份到「下载」目录", fontSize = 13.sp)
                     }
@@ -169,7 +171,7 @@ fun BackupPage(
 
             SectionCard(
                 title = "导入备份",
-                icon = "📥",
+                icon = R.drawable.ic_download,
                 hint = "从文件恢复",
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -211,7 +213,7 @@ fun BackupPage(
                         enabled = importPassword.isNotBlank(),
                         shape = RoundedCornerShape(8.dp),
                     ) {
-                        Icon(Icons.Filled.Upload, null, Modifier.size(16.dp))
+                        Icon(painterResource(R.drawable.ic_upload), null, Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
                         Text("选择备份文件", fontSize = 13.sp)
                     }
@@ -221,7 +223,7 @@ fun BackupPage(
             if (hasRollback) {
                 SectionCard(
                     title = "回滚",
-                    icon = "↩️",
+                    icon = R.drawable.ic_arrow_back,
                     hint = "后悔了可以用",
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -236,7 +238,7 @@ fun BackupPage(
                             modifier = Modifier.fillMaxWidth().height(44.dp),
                             shape = RoundedCornerShape(8.dp),
                         ) {
-                            Icon(Icons.Filled.Restore, null, Modifier.size(16.dp))
+                            Icon(painterResource(R.drawable.ic_restore), null, Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
                             Text("恢复到导入前的配置", fontSize = 13.sp)
                         }
@@ -260,7 +262,7 @@ fun BackupPage(
 
             if (hasRollback.not() && pendingImport == null) {
                 EmptyState(
-                    icon = "💡",
+                    icon = R.drawable.ic_bulb,
                     title = "换手机或者重装之前",
                     description = "先导出一份备份，到新手机上导入，姓名、敏感词库和模板都能接着用。",
                 )

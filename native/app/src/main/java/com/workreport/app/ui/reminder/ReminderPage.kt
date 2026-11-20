@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -38,9 +40,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.workreport.app.R
 import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.data.local.SettingsStore
@@ -94,7 +98,7 @@ fun ReminderPage(
         ) {
             // ---------------- 开关 ----------------
             item {
-                SectionCard(title = "提醒开关", icon = "🔔") {
+                SectionCard(title = "提醒开关", icon = R.drawable.ic_bell) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(
@@ -132,7 +136,7 @@ fun ReminderPage(
             item {
                 SectionCard(
                     title = "提醒星期",
-                    icon = "📅",
+                    icon = R.drawable.ic_calendar,
                     hint = if (weekdays.isEmpty()) "未选择" else "已选 ${weekdays.size} 天",
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -189,7 +193,7 @@ fun ReminderPage(
 
             // ---------------- 固定时间 + 下次提醒 ----------------
             item {
-                SectionCard(title = "提醒时间", icon = "⏰") {
+                SectionCard(title = "提醒时间", icon = R.drawable.ic_clock) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
                             "提醒时间：" +
@@ -226,7 +230,7 @@ fun ReminderPage(
                 !hasPermission
             ) {
                 item {
-                    SectionCard(title = "通知权限", icon = "🔕") {
+                    SectionCard(title = "通知权限", icon = R.drawable.ic_bell_off) {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Text(
                                 "Android 13 及以上需要通知权限，不然收不到提醒。",
@@ -303,7 +307,12 @@ fun ReminderBanner(
             .padding(start = 12.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("📝", fontSize = 16.sp, lineHeight = 16.sp)
+        Icon(
+            painter = painterResource(R.drawable.ic_edit),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(16.dp),
+        )
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f)) {
             Text(

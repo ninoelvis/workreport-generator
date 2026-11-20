@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,7 +45,8 @@ import com.workreport.app.R
 @Composable
 fun SectionCard(
     title: String,
-    icon: String,
+    /** 标题左侧的图标（纯矢量资源；深浅色由 Compose 的 tint 跟随主题） */
+    @DrawableRes icon: Int,
     modifier: Modifier = Modifier,
     hint: String? = null,
     /** 标题行右侧的额外操作（例如「放大查看」按钮）；默认没有 */
@@ -59,7 +61,12 @@ fun SectionCard(
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(icon, fontSize = 16.sp, lineHeight = 16.sp)
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(17.dp),
+                )
                 Spacer(Modifier.width(7.dp))
                 Text(
                     text = title,
@@ -137,15 +144,28 @@ fun LabeledField(
     singleLine: Boolean = true,
     minLines: Int = 1,
     enabled: Boolean = true,
+    /** 标签左侧的图标（矢量资源） */
+    labelIcon: Int? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     Column(modifier) {
-        Text(
-            text = label,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (labelIcon != null) {
+                Icon(
+                    painter = painterResource(labelIcon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(14.dp),
+                )
+                Spacer(Modifier.width(5.dp))
+            }
+            Text(
+                text = label,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
         Spacer(Modifier.height(6.dp))
         OutlinedTextField(
             value = value,
@@ -187,7 +207,7 @@ fun FieldLabel(text: String, modifier: Modifier = Modifier) {
 /** 空状态占位 */
 @Composable
 fun EmptyState(
-    icon: String,
+    @DrawableRes icon: Int,
     title: String,
     description: String,
     modifier: Modifier = Modifier,
@@ -204,7 +224,12 @@ fun EmptyState(
                 .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(26.dp)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(icon, fontSize = 24.sp)
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(26.dp),
+            )
         }
         Spacer(Modifier.height(12.dp))
         Text(
@@ -239,7 +264,7 @@ fun NoticeBar(
         verticalAlignment = Alignment.Top,
     ) {
         Icon(
-            imageVector = Icons.Filled.Info,
+            painter = painterResource(R.drawable.ic_info),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(15.dp),
@@ -293,7 +318,7 @@ fun SettingsGroup(
  */
 @Composable
 fun SettingsRow(
-    icon: String,
+    @DrawableRes icon: Int,
     title: String,
     modifier: Modifier = Modifier,
     value: String? = null,
@@ -307,7 +332,12 @@ fun SettingsRow(
             .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(icon, fontSize = 17.sp, lineHeight = 17.sp)
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp),
+        )
         Spacer(Modifier.width(11.dp))
         Column(Modifier.weight(1f)) {
             Text(
@@ -338,7 +368,7 @@ fun SettingsRow(
         }
         if (onClick != null) {
             Icon(
-                imageVector = Icons.Filled.ChevronRight,
+                painter = painterResource(R.drawable.ic_chevron_right),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier.size(20.dp),
@@ -378,7 +408,7 @@ fun SubPageTopBar(
     ) {
         IconButton(onClick = onBack) {
             Icon(
-                imageVector = Icons.Filled.ArrowBackIosNew,
+                painter = painterResource(R.drawable.ic_arrow_back_ios),
                 contentDescription = "返回",
                 tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(19.dp),
@@ -437,9 +467,10 @@ fun AppTopBar(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_app_logo),
+                painter = painterResource(R.drawable.ic_brand),
                 contentDescription = null,
-                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(30.dp),
             )
         }
         Spacer(Modifier.width(10.dp))

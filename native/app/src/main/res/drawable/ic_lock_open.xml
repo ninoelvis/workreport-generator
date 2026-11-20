@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ic_lockOpen —— 工作报告生成器图标体系（纯矢量，无位图） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M7.199999999999999,10.4 H16.799999999999997 A2.6,2.6 0 0 1 19.4,13.0 V17.799999999999997 A2.6,2.6 0 0 1 16.799999999999997,20.4 H7.199999999999999 A2.6,2.6 0 0 1 4.6,17.799999999999997 V13.0 A2.6,2.6 0 0 1 7.199999999999999,10.4 Z"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+    <path
+        android:pathData="M8,10.4 V7.6 A4,4 0 0 1 15.4,5.4"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_primary"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            />
+</vector>

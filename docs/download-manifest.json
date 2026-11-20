@@ -1,22 +1,22 @@
 {
-  "updatedAt": "2026-11-20",
+  "updatedAt": "2026-11-21",
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "1.5.1",
-    "versionCode": 31,
-    "releasedAt": "2026-11-20",
-    "sizeBytes": 12325329,
+    "version": "1.6.0",
+    "versionCode": 32,
+    "releasedAt": "2026-11-21",
+    "sizeBytes": 12404138,
     "sizeText": "11.8 MB",
-    "sha256": "d0179eb50d389797b4144c2149f725b29e33c60f4c2f9498e7648e4865cf6a74",
+    "sha256": "c9cfc553e184a2fb3f34e8da50b64f09ad988d4d9c549147f5c4a0f2c53ca418",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.1/workreport-native-v1.5.1.apk",
-    "apkMirrorUrl": "https://qq6e8ktowljcp.space.mcode.cn/workreport-native-v1.5.1.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.1/workreport-native-source-v1.5.1.zip",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-v1.6.0.apk",
+    "apkMirrorUrl": "https://qq6e8ktowljcp.space.mcode.cn/workreport-native-v1.6.0.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.6.0/workreport-native-source-v1.6.0.zip",
     "minAndroid": "Android 8.0 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://qq6e8ktowljcp.space.mcode.cn/workreport-native-source-v1.5.1.zip"
+    "sourceMirrorUrl": "https://qq6e8ktowljcp.space.mcode.cn/workreport-native-source-v1.6.0.zip"
   },
   "web": {
     "version": "v1.3",
@@ -34,6 +34,20 @@
   },
   "changelog": [
     {
+      "version": "v1.6.0",
+      "date": "2026-11-21",
+      "title": "整套图标重做，深浅色自动跟随，底部导航加动画",
+      "items": [
+        "全 App 图标重新画成同一套矢量图标：功能区、底部三个标签页、操作按钮、顶栏 Logo、空状态、列表标签、输入框标题 —— 原来的 emoji 和系统自带图标全部换掉，风格统一、粗细一致",
+        "桌面图标也换了新的：品牌标志 + WorkReport 字样，适配各种屏幕形状与启动器裁切，并另做了一套深色配色",
+        "图标颜色不再写死，跟着 App 的浅色/深色主题自动切换；设计稿里「深→浅」的层次改用透明度实现，切主题时层次照样在",
+        "底部导航改成自绘并加了动画：指示条在三个标签之间平滑平移，选中图标放大一点、没选中的缩一点，文字只在选中时淡入",
+        "页面之间加了轻微的横向滑动 + 淡入淡出过渡",
+        "导出内容、Excel 样式、压缩包文件名、解压密码一个字都没改；单元测试 198/198 通过，并新增 9 项图标体系防回归检查"
+      ],
+      "current": true
+    },
+    {
       "version": "v1.5.1",
       "date": "2026-11-20",
       "title": "修「存放位置显示成文件名」「表头高度不齐」「放大查看一片空白」",
@@ -44,7 +58,7 @@
         "历史报告页的预览（数据库里的报告 + 手动拷进来的压缩包）也加了「放大查看」，和首页一致",
         "导出格式、压缩包文件名、解压密码依旧一个字没改；单元测试 189/189 通过"
       ],
-      "current": true
+      "current": false
     },
     {
       "version": "v1.5.0",

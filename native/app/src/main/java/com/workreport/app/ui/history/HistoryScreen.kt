@@ -45,8 +45,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.workreport.app.R
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.ui.common.EmptyState
 import androidx.compose.ui.platform.LocalContext
@@ -156,8 +159,7 @@ fun HistoryScreen(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("搜索文件名…", fontSize = 13.sp) },
                 leadingIcon = {
-                    Icon(
-                        Icons.Filled.Search,
+                    Icon(painterResource(R.drawable.ic_search),
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -185,7 +187,7 @@ fun HistoryScreen(
             if (state.reports.isEmpty()) {
                 item {
                     EmptyState(
-                        icon = if (state.keyword.isBlank()) "📭" else "🔍",
+                        icon = if (state.keyword.isBlank()) R.drawable.ic_document else R.drawable.ic_search,
                         title = if (state.keyword.isBlank()) "还没有生成过报告" else "没有匹配的报告",
                         description = if (state.keyword.isBlank()) {
                             "在「首页」填写并生成后，这里会列出全部历史报告，可再次下载或发送邮件。"
@@ -259,9 +261,11 @@ fun HistoryScreen(
                                 .padding(horizontal = 12.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(
-                                "💡",
-                                fontSize = 13.sp,
+                            Icon(
+                                painter = painterResource(R.drawable.ic_bulb),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(15.dp),
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
@@ -511,11 +515,11 @@ private fun ReportCard(
             )
             Spacer(Modifier.height(8.dp))
             Row {
-                MetaChip("🗓", formatTime(report.createdAt))
+                MetaChip(R.drawable.ic_calendar, formatTime(report.createdAt))
                 Spacer(Modifier.width(8.dp))
-                MetaChip("🔑", report.password)
+                MetaChip(R.drawable.ic_lock, report.password)
                 Spacer(Modifier.width(8.dp))
-                MetaChip("📦", formatSize(report.sizeBytes))
+                MetaChip(R.drawable.ic_folder, formatSize(report.sizeBytes))
             }
             Spacer(Modifier.height(10.dp))
 
@@ -546,13 +550,13 @@ private fun ReportCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmallAction(
-                    icon = if (previewExpanded) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    icon = if (previewExpanded) R.drawable.ic_visibility_off else R.drawable.ic_eye,
                     label = if (previewExpanded) "收起内容" else "查看内容",
                     modifier = Modifier.weight(1f),
                     onClick = onTogglePreview,
                 )
-                SmallAction(Icons.Filled.Download, "再次下载", Modifier.weight(1f), onDownload)
-                SmallAction(Icons.Filled.Mail, "发送邮件", Modifier.weight(1f), onMail)
+                SmallAction(R.drawable.ic_download, "再次下载", Modifier.weight(1f), onDownload)
+                SmallAction(R.drawable.ic_mail, "发送邮件", Modifier.weight(1f), onMail)
                 IconButton(
                     onClick = onDelete,
                     modifier = Modifier
@@ -560,8 +564,7 @@ private fun ReportCard(
                         .clip(RoundedCornerShape(8.dp))
                         .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)),
                 ) {
-                    Icon(
-                        Icons.Filled.Delete,
+                    Icon(painterResource(R.drawable.ic_delete),
                         contentDescription = "删除",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
@@ -575,14 +578,14 @@ private fun ReportCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (report.planWorks.isNotBlank()) {
                         SmallAction(
-                            icon = Icons.AutoMirrored.Filled.PlaylistAdd,
+                            icon = R.drawable.ic_playlist_add,
                             label = "取回下周计划",
                             modifier = Modifier.weight(1f),
                             onClick = onTakePlan,
                         )
                     }
                     SmallAction(
-                        icon = Icons.Filled.Share,
+                        icon = R.drawable.ic_share,
                         label = "分享",
                         modifier = Modifier.weight(1f),
                         onClick = onShare,
@@ -643,8 +646,7 @@ private fun ReportCard(
                                 },
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                             ) {
-                                Icon(
-                                    Icons.Filled.Fullscreen,
+                                Icon(painterResource(R.drawable.ic_fullscreen),
                                     contentDescription = null,
                                     modifier = Modifier.size(15.dp),
                                 )
@@ -674,8 +676,7 @@ private fun ReportCard(
                                 Spacer(Modifier.width(8.dp))
                                 Text("正在载入…", fontSize = 12.5.sp)
                             } else {
-                                Icon(
-                                    Icons.Filled.Edit,
+                                Icon(painterResource(R.drawable.ic_edit),
                                     contentDescription = null,
                                     modifier = Modifier.size(15.dp),
                                 )
@@ -725,7 +726,7 @@ private fun ReportCard(
 }
 
 @Composable
-private fun MetaChip(icon: String, text: String) {
+private fun MetaChip(@DrawableRes icon: Int, text: String) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
@@ -733,7 +734,12 @@ private fun MetaChip(icon: String, text: String) {
             .padding(horizontal = 7.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(icon, fontSize = 10.sp)
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(11.dp),
+        )
         Spacer(Modifier.width(3.dp))
         Text(
             text,
@@ -745,7 +751,7 @@ private fun MetaChip(icon: String, text: String) {
 
 @Composable
 private fun SmallAction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    @DrawableRes icon: Int,
     label: String,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
@@ -756,7 +762,11 @@ private fun SmallAction(
         shape = RoundedCornerShape(8.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp),
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(15.dp))
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            modifier = Modifier.size(15.dp),
+        )
         Spacer(Modifier.width(4.dp))
         Text(label, fontSize = 12.sp)
     }
@@ -871,13 +881,13 @@ private fun ExternalReportCard(
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmallAction(
-                    icon = if (previewExpanded) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    icon = if (previewExpanded) R.drawable.ic_visibility_off else R.drawable.ic_eye,
                     label = if (previewExpanded) "收起内容" else "查看内容",
                     modifier = Modifier.weight(1f),
                     onClick = onTogglePreview,
                 )
                 SmallAction(
-                    icon = Icons.Filled.Share,
+                    icon = R.drawable.ic_share,
                     label = "分享",
                     modifier = Modifier.weight(1f),
                     onClick = onShare,
@@ -936,8 +946,7 @@ private fun ExternalReportCard(
                                 },
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                             ) {
-                                Icon(
-                                    Icons.Filled.Fullscreen,
+                                Icon(painterResource(R.drawable.ic_fullscreen),
                                     contentDescription = null,
                                     modifier = Modifier.size(15.dp),
                                 )
@@ -966,8 +975,7 @@ private fun ExternalReportCard(
                                 modifier = Modifier.fillMaxWidth().height(40.dp),
                                 shape = RoundedCornerShape(8.dp),
                             ) {
-                                Icon(
-                                    Icons.Filled.LockOpen,
+                                Icon(painterResource(R.drawable.ic_lock_open),
                                     contentDescription = null,
                                     modifier = Modifier.size(15.dp),
                                 )

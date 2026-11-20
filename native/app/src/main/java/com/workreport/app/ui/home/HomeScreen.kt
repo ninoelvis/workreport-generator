@@ -52,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.workreport.app.R
 import com.workreport.app.ServiceLocator
 import com.workreport.app.ui.common.FieldLabel
 import com.workreport.app.ui.common.FullscreenPreview
@@ -176,7 +178,7 @@ fun HomeScreen(
         }
 
         item {
-            SectionCard(title = "填写周报", icon = "📝", hint = "填写本周工作内容") {
+            SectionCard(title = "填写周报", icon = R.drawable.ic_edit, hint = "填写本周工作内容") {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Text(
                         "填的内容会自动暂存在本机，中途退出也不会丢；生成压缩包后自动清除。",
@@ -185,19 +187,22 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     LabeledField(
-                        label = "👤 姓名",
+                        label = "姓名",
+                        labelIcon = R.drawable.ic_user,
                         value = state.userName,
                         onValueChange = viewModel::onUserNameChange,
                         placeholder = "首次填写后自动保存，可随时修改",
                     )
                     LabeledField(
-                        label = "📅 本周工作时间",
+                        label = "本周工作时间",
+                        labelIcon = R.drawable.ic_calendar,
                         value = state.timeRange,
                         onValueChange = viewModel::onTimeRangeChange,
                         placeholder = "yyyy.MM.dd-yyyy.MM.dd",
                     )
                     LabeledField(
-                        label = "🏷️ 报告标题",
+                        label = "报告标题",
+                        labelIcon = R.drawable.ic_tag,
                         value = state.title,
                         onValueChange = viewModel::onTitleChange,
                         placeholder = "默认按年月自动生成，可手动修改",
@@ -209,7 +214,7 @@ fun HomeScreen(
         item {
             SectionCard(
                 title = "工作记录",
-                icon = "📋",
+                icon = R.drawable.ic_clipboard,
                 hint = "做完一项随手记一条，上报前统一汇总",
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -231,7 +236,7 @@ fun HomeScreen(
                                 horizontal = 12.dp, vertical = 8.dp,
                             ),
                         ) {
-                            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
                             Text("添加", fontSize = 12.sp)
                         }
@@ -269,14 +274,23 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                     ) {
-                        Text("🔗 汇总到「本周已完成工作梳理」", fontSize = 12.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_merge),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Spacer(Modifier.width(5.dp))
+                            Text("汇总到「本周已完成工作梳理」", fontSize = 12.sp)
+                        }
                     }
                 }
             }
         }
 
         item {
-            SectionCard(title = "周报内容", icon = "🗒️", hint = "支持多行，每行一条") {
+            SectionCard(title = "周报内容", icon = R.drawable.ic_note, hint = "支持多行，每行一条") {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     LabeledField(
                         label = "本周已完成工作梳理",
@@ -288,8 +302,7 @@ fun HomeScreen(
                         trailingIcon = {
                             if (state.doneWorks.isNotEmpty()) {
                                 IconButton(onClick = { confirmClearDone = true }) {
-                                    Icon(
-                                        Icons.Filled.Close,
+                                    Icon(painterResource(R.drawable.ic_close),
                                         contentDescription = "清空本周已完成工作梳理",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(17.dp),
@@ -308,8 +321,7 @@ fun HomeScreen(
                         trailingIcon = {
                             if (state.planWorks.isNotEmpty()) {
                                 IconButton(onClick = { confirmClearPlan = true }) {
-                                    Icon(
-                                        Icons.Filled.Close,
+                                    Icon(painterResource(R.drawable.ic_close),
                                         contentDescription = "清空下周工作计划",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(17.dp),
@@ -332,15 +344,14 @@ fun HomeScreen(
         item {
             SectionCard(
                 title = "预览区",
-                icon = "👁️",
+                icon = R.drawable.ic_eye,
                 hint = "最终 Excel 效果",
                 trailing = {
                     TextButton(
                         onClick = { showFullscreenPreview = true },
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                     ) {
-                        Icon(
-                            Icons.Filled.Fullscreen,
+                        Icon(painterResource(R.drawable.ic_fullscreen),
                             contentDescription = null,
                             modifier = Modifier.size(15.dp),
                         )
@@ -386,7 +397,7 @@ fun HomeScreen(
                     Spacer(Modifier.width(8.dp))
                     Text("生成中…", fontSize = 14.sp)
                 } else {
-                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.size(17.dp))
+                    Icon(painterResource(R.drawable.ic_send), contentDescription = null, modifier = Modifier.size(17.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("生成加密 ZIP 下载", fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 }
@@ -692,8 +703,7 @@ private fun RecordRow(
             enabled = canMoveUp,
             modifier = Modifier.size(30.dp),
         ) {
-            Icon(
-                Icons.Filled.KeyboardArrowUp,
+            Icon(painterResource(R.drawable.ic_arrow_up),
                 contentDescription = "上移",
                 tint = if (canMoveUp) {
                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -708,8 +718,7 @@ private fun RecordRow(
             enabled = canMoveDown,
             modifier = Modifier.size(30.dp),
         ) {
-            Icon(
-                Icons.Filled.KeyboardArrowDown,
+            Icon(painterResource(R.drawable.ic_arrow_down),
                 contentDescription = "下移",
                 tint = if (canMoveDown) {
                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -720,8 +729,7 @@ private fun RecordRow(
             )
         }
         IconButton(onClick = onDelete, modifier = Modifier.size(30.dp)) {
-            Icon(
-                Icons.Filled.Delete,
+            Icon(painterResource(R.drawable.ic_delete),
                 contentDescription = "删除",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp),
