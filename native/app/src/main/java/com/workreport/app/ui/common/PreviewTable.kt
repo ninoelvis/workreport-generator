@@ -46,6 +46,13 @@ private val PREVIEW_COL_WEIGHTS: FloatArray = floatArrayOf(
     FloatArray(raw.size) { raw[it] / total }
 }
 
+/**
+ * 表头行的固定高度。
+ *
+ * 对应 Excel 里表头行的固定行高（28pt），够放两行 8.5sp 的表头文字。
+ */
+private val HEADER_ROW_HEIGHT: Dp = 34.dp
+
 private val PREVIEW_HEADERS = listOf(
     "本周工作时间",
     "本周已完成工作梳理",
@@ -118,17 +125,25 @@ fun PreviewTable(
         PreviewDivider(border)
 
         // 第 2 行：表头（Excel 里黑体 10pt、填充 B5C6EA、水平垂直居中）
+        //
+        // ⚠️ Excel 的表头行高是**固定**的（ROW_HEIGHTS[1] = 28pt），
+        //    不会因为某一列的文字换行而变高。所以这里也用**固定高度**：
+        //    「客户（及用户）反馈」这种长标题在窄屏上会换到两行，
+        //    但所有列的表头框一样高、一样垂直居中 —— 不会出现
+        //    「其他」孤零零顶在上面、而别的列撑高整行的情况。
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(headerBg),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             PREVIEW_HEADERS.forEachIndexed { index, label ->
                 Box(
                     modifier = Modifier
                         .weight(PREVIEW_COL_WEIGHTS[index])
+                        .height(HEADER_ROW_HEIGHT)
                         .border(0.5.dp, border)
-                        .padding(horizontal = 1.dp, vertical = 6.dp),
+                        .padding(horizontal = 1.dp, vertical = 3.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(

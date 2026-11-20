@@ -34,8 +34,15 @@ class StorageLocation(private val context: Context) {
     val customized: StateFlow<Boolean> = _customized.asStateFlow()
 
     /** 目录的显示名（选目录时查一次并缓存，避免在界面上同步查 ContentResolver） */
+    /** 外部存储主卷的 document id 前缀 */
+    private val PRIMARY_PREFIX = "primary:"
+
     private val _displayName = MutableStateFlow(prefs.getString(KEY_DIR_NAME, null).orEmpty())
     val displayNameFlow: StateFlow<String> = _displayName.asStateFlow()
+
+    /** 当前目录的可读路径，例如 `/storage/emulated/0/Download/周报` */
+    private val _path = MutableStateFlow(prefs.getString(KEY_DIR_PATH, null).orEmpty())
+    val pathFlow: StateFlow<String> = _path.asStateFlow()
 
     /**
      * 保存用户选中的目录，并**持久化读写授权**。
@@ -53,14 +60,17 @@ class StorageLocation(private val context: Context) {
             false
         }
         val name = queryDisplayName(uri)
+        val path = queryPath(uri)
         prefs.edit()
             .putString(KEY_TREE_URI, uri.toString())
             .putString(KEY_DIR_NAME, name)
+            .putString(KEY_DIR_PATH, path)
             .putBoolean(KEY_CUSTOMIZED, true)
             .apply()
         _treeUri.value = uri
         _customized.value = true
         _displayName.value = name
+        _path.value = path
         return granted
     }
 
@@ -69,11 +79,13 @@ class StorageLocation(private val context: Context) {
         prefs.edit()
             .remove(KEY_TREE_URI)
             .remove(KEY_DIR_NAME)
+            .remove(KEY_DIR_PATH)
             .putBoolean(KEY_CUSTOMIZED, false)
             .apply()
         _treeUri.value = null
         _customized.value = false
         _displayName.value = ""
+        _path.value = ""
     }
 
     /** 当前还有效的授权吗 */
@@ -179,18 +191,47 @@ class StorageLocation(private val context: Context) {
         if (_treeUri.value == null) "系统「下载」目录"
         else _displayName.value.ifEmpty { "自定义目录" }
 
-    /** 同步查一次目录名（只在选目录时调） */
+    /**
+     * 查这个目录**本身**的名字。
+     *
+     * ⚠️ 千万别去查「子文档列表的第一条」—— 那样拿到的是**目录里第一个文件的文件名**，
+     *    不是目录名。（v1.5.0 就是踩了这个坑，用户看到「存放位置」显示成了某个文件名。）
+     *
+     * 正确做法：用 `buildDocumentUriUsingTree` 把 tree URI 转成**目录自身**的 document URI 再查。
+     */
     private fun queryDisplayName(uri: Uri): String {
         return try {
             val docId = DocumentsContract.getTreeDocumentId(uri)
-            val children = DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId)
+            val docUri = DocumentsContract.buildDocumentUriUsingTree(uri, docId)
             val projection = arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
-            context.contentResolver.query(children, projection, null, null, null)?.use { cursor ->
+            context.contentResolver.query(docUri, projection, null, null, null)?.use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
-            } ?: uri.lastPathSegment
+            }
         } catch (e: Exception) {
-            uri.lastPathSegment
-        } ?: "自定义目录"
+            null
+        } ?: uri.lastPathSegment ?: "自定义目录"
+    }
+
+    /**
+     * 这个目录的**可读路径**，尽量还原成 `/storage/emulated/0/Download/xxx` 这样的样子。
+     *
+     * SAF 不直接给真实路径，但外部存储 provider 的 tree document id 形如
+     * `primary:Download/周报`，可以还原成 `/storage/emulated/0/Download/周报`。
+     * 还原不出来就退回显示 document id（至少比空白强）。
+     */
+    fun queryPath(uri: Uri): String {
+        return try {
+            val docId = DocumentsContract.getTreeDocumentId(uri)
+            when {
+                docId.startsWith(PRIMARY_PREFIX) -> {
+                    val rest = docId.removePrefix(PRIMARY_PREFIX)
+                    "/storage/emulated/0" + if (rest.startsWith("/")) rest else "/$rest"
+                }
+                else -> docId.replace(':', '/')
+            }
+        } catch (e: Exception) {
+            uri.lastPathSegment ?: ""
+        }
     }
 
     // ---------------- 内部 ----------------
@@ -278,6 +319,7 @@ class StorageLocation(private val context: Context) {
         private const val KEY_TREE_URI = "tree_uri"
         private const val KEY_CUSTOMIZED = "customized"
         private const val KEY_DIR_NAME = "dir_name"
+        private const val KEY_DIR_PATH = "dir_path"
         const val MIME_ZIP = "application/zip"
 
         /** 供测试与调试用：把 resolver 抽象出来方便替换 */
