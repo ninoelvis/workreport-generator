@@ -45,6 +45,7 @@ import com.workreport.app.ui.profile.ProfileNamePage
 import com.workreport.app.ui.profile.ProfileRoute
 import com.workreport.app.ui.profile.ProfileScreen
 import com.workreport.app.ui.profile.ProfileSensitivePage
+import com.workreport.app.ui.profile.ProfileStoragePage
 import com.workreport.app.ui.profile.ProfileShortcutsPage
 import com.workreport.app.ui.reminder.ReminderPage
 
@@ -185,6 +186,9 @@ fun AppRoot() {
             }
             composable(ProfileRoute.REMINDER.route) {
                 ReminderPage(onBack = { navController.popBackStack() })
+            }
+            composable(ProfileRoute.STORAGE.route) {
+                ProfileStoragePage(onBack = { navController.popBackStack() })
             }
             composable(ProfileRoute.BACKUP.route) {
                 BackupPage(onBack = { navController.popBackStack() })

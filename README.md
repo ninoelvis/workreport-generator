@@ -1,16 +1,16 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v1.3.11-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v1.5.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
-**原生版 Android App（v1.3.11，推荐）**：
-[workreport-native-v1.3.11.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.11/workreport-native-v1.3.11.apk)
-（12 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版）
+**原生版 Android App（v1.5.0，推荐）**：
+[workreport-native-v1.5.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.0/workreport-native-v1.5.0.apk)
+（11.8 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版）
 
 源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
-[工程源码包 v1.3.11](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.11/workreport-native-source-v1.3.11.zip)
+[工程源码包 v1.5.0](https://github.com/ninoelvis/workreport-generator/releases/download/v1.5.0/workreport-native-source-v1.5.0.zip)
 
 **旧版 WebView App**：
 [workreport-generator-v1.2.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.2.1/workreport-generator-v1.2.1.apk)
@@ -20,9 +20,9 @@
 
 | 版本 | 入口 |
 |---|---|
-| 🌐 **在线版**（iPhone 推荐） | https://glzdekjuw015y.space.mcode.cn |
-| 📄 **单文件版** | [`web/workreport-web.htm`](web/workreport-web.htm) ｜ [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.11/workreport-web-v1.2.htm) |
-| 🗜️ **离线包**（HTML + 使用说明） | [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.3.11/workreport-web-offline-v1.2.zip) |
+| 🌐 **在线版**（iPhone 推荐） | https://dxntf9na2dn1l.space.mcode.cn |
+| 📄 **单文件版** | [`web/workreport-web.htm`](web/workreport-web.htm) ｜ [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-v1.3.htm) |
+| 🗜️ **离线包**（HTML + 使用说明） | [Releases 下载](https://github.com/ninoelvis/workreport-generator/releases/download/v1.4.1/workreport-web-offline-v1.3.zip) |
 
 网页版已适配 **iPhone Safari / Edge / 电脑端浏览器**：iPhone 上生成后点「分享 / 发送」
 可直接调起系统分享面板发到「邮件」App、存到「文件」或发微信；剪贴板、下载都有降级兜底。
@@ -43,6 +43,7 @@
 
 *原生版 App*
 
+- `v1.5.0` 新增**存放目录自选**（首次引导选文件夹，「我的 → 周报存放目录」随时改）；历史报告页能认出手动拷进目录的压缩包并预览、分享；预览区新增**全屏放大**（双指缩放、双击放大、左右滑动看全部列，长文本一行不裁）
 - `v1.3.11` 修复预览表在**深色模式**下看不清的问题（表头、标题、边框全部改成跟随主题）；生成压缩包后**自动清空**「工作记录」和「周报内容」；历史报告新增**「载入首页继续编辑」**，二次确认后可回填首页改完重新生成
 - `v1.3.10` 历史报告预览改成**真的把压缩包解开**（自动带上解压密码），**以前生成的报告也能看全表格**，不再只显示摘要
 - `v1.3.9` 历史报告新增**「查看内容」**：点开就能看到压缩包里那份 Excel 长什么样（表格、合并单元格、列宽跟导出完全一致），不用手动解压；卡片上也会直接显示「本周完成」摘要

@@ -4,6 +4,7 @@ import android.content.Context
 import com.workreport.app.data.local.ReportDao
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.export.ExportResult
+import com.workreport.app.ServiceLocator
 import com.workreport.app.export.ReportExporter
 import com.workreport.app.domain.model.SensitiveWord
 import com.workreport.app.util.MaskAnchor
@@ -55,6 +56,8 @@ class ReportRepository(
             sensitiveWords = sensitiveWords,
             outputDir = ReportExporter.reportsDir(context.applicationContext),
             excludedAnchors = excludedAnchors,
+            // 用户选过存放目录就写那里，没选过就沿用系统「下载」目录
+            storage = ServiceLocator.storageLocation,
         )
 
         dao.insert(
@@ -91,12 +94,24 @@ class ReportRepository(
     suspend fun findById(id: Long): ReportEntity? = dao.findById(id)
 
     /** 把历史报告复制到系统「下载」目录（供用户另存） */
+    /**
+     * 「再下载」：把报告再落一份到用户看得见的地方。
+     *
+     *  - 用户选过存放目录 → 写进那个目录
+     *  - 没选过 → 沿用系统「下载」目录
+     *
+     * ⚠️ 文件名原样使用（entity.fileName），不加分隔符、不加序号。
+     */
+    /** 所有已入库报告的文件名（用来和存放目录里的外部文件去重） */
+    suspend fun allFileNames(): Set<String> = withContext(Dispatchers.IO) {
+        dao.all().map { it.fileName }.toSet()
+    }
+
     suspend fun copyToDownloads(entity: ReportEntity): Boolean = withContext(Dispatchers.IO) {
         val source = File(entity.filePath)
         if (!source.exists()) return@withContext false
         ReportExporter(context.applicationContext).let { exporter ->
-            // 复用导出器里的下载目录写入逻辑
-            exporter.copyExistingToDownloads(source, entity.fileName)
+            exporter.saveOutside(source, entity.fileName, ServiceLocator.storageLocation)
         }
     }
 }

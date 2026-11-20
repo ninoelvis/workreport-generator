@@ -3,6 +3,7 @@ package com.workreport.app
 import android.content.Context
 import androidx.room.Room
 import com.workreport.app.data.local.ReportDatabase
+import com.workreport.app.data.storage.StorageLocation
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.repository.ReportRepository
 import com.workreport.app.data.remote.ApiClient
@@ -34,6 +35,7 @@ object ServiceLocator {
 
     @Volatile
     private var reportRepositoryInstance: ReportRepository? = null
+    private var storageLocationInstance: StorageLocation? = null
 
     fun init(context: Context) {
         appContext = context.applicationContext
@@ -121,6 +123,12 @@ object ServiceLocator {
     val settings: SettingsStore
         get() = settingsStoreInstance ?: synchronized(this) {
             settingsStoreInstance ?: SettingsStore(requireContext()).also { settingsStoreInstance = it }
+        }
+
+    /** 用户自选的「周报存放目录」 */
+    val storageLocation: StorageLocation
+        get() = storageLocationInstance ?: synchronized(this) {
+            storageLocationInstance ?: StorageLocation(requireContext()).also { storageLocationInstance = it }
         }
 
     val reportRepository: ReportRepository

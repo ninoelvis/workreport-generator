@@ -38,4 +38,8 @@ interface ReportDao {
 
     @Query("SELECT COUNT(*) FROM reports")
     suspend fun count(): Int
+
+    /** 全部记录（用来和存放目录里的外部文件去重） */
+    @Query("SELECT * FROM reports")
+    suspend fun all(): List<ReportEntity>
 }

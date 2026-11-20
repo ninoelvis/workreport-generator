@@ -72,6 +72,11 @@ import com.workreport.app.ui.common.LabeledField
 import com.workreport.app.ui.common.SectionCard
 import com.workreport.app.ui.common.SubPageTopBar
 import com.workreport.app.util.MailApp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.workreport.app.ServiceLocator
 
 /** 子页面统一外壳：顶部返回栏 + 内容 */
 @Composable
@@ -1016,6 +1021,157 @@ fun ProfileAboutPage(
                         lineHeight = 18.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+            }
+        }
+    }
+}
+
+// ===================== 周报存放目录 =====================
+
+/**
+ * 让用户自己挑一个文件夹存周报压缩包。
+ *
+ * 用的是 Android 官方的 SAF（Storage Access Framework）：
+ * 系统文件选择器 → 拿到一个 tree URI → 持久化授权 → 之后直接读写。
+ * **不需要任何存储权限**。
+ *
+ * 另外：这个目录里如果用户自己拷了压缩包进来，「历史报告」页也会一并列出来。
+ */
+@Composable
+fun ProfileStoragePage(
+    onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    val storage = remember { ServiceLocator.storageLocation }
+    val treeUri by storage.treeUri.collectAsStateWithLifecycle()
+    val dirName by storage.displayNameFlow.collectAsStateWithLifecycle()
+
+    // 目录里的压缩包数量
+    var zipCount by remember { mutableIntStateOf(0) }
+    LaunchedEffect(treeUri) {
+        zipCount = withContext(Dispatchers.IO) { storage.listZips().size }
+    }
+
+    // 系统目录选择器
+    val picker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri != null) {
+            val ok = storage.select(uri)
+            if (!ok) {
+                Toast.makeText(context, "没有拿到这个目录的访问权限，请再选一次", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "已切换到「${storage.displayName()}」", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    ProfileSubPage(
+        title = "周报存放目录",
+        subtitle = "自己挑一个文件夹存压缩包",
+        onBack = onBack,
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize(),
+            // ⚠️ 不要加 imeNestedScroll()：滑到底会自己唤起输入法。
+            // 输入框不会被键盘遮住 —— AppRoot 已把内容区压到键盘上沿。
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            item {
+                SectionCard(title = "当前存放位置", icon = "📁") {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            if (treeUri != null) dirName else "系统「下载」目录",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            if (treeUri != null) {
+                                "生成的周报压缩包会直接放进这个文件夹，" +
+                                    "在这里也能看到你自己拷进来的压缩包（历史报告页会一并列出）。"
+                            } else {
+                                "目前用的是系统「下载」目录。选一个自己的文件夹之后，" +
+                                    "压缩包会直接放进去，也更容易在文件管理器里找到。"
+                            },
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { picker.launch(null) },
+                                shape = RoundedCornerShape(9.dp),
+                            ) {
+                                Text("选择文件夹", fontSize = 13.sp)
+                            }
+                            if (treeUri != null) {
+                                OutlinedButton(
+                                    onClick = {
+                                        storage.reset()
+                                        Toast.makeText(context, "已恢复为系统「下载」目录", Toast.LENGTH_SHORT).show()
+                                    },
+                                    shape = RoundedCornerShape(9.dp),
+                                ) {
+                                    Text("恢复默认", fontSize = 13.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionCard(title = "这个文件夹里", icon = "🗂️") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "$zipCount 个压缩包",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            if (treeUri == null) {
+                                "选了自定义目录之后，这里会统计文件夹里的压缩包数量，" +
+                                    "你自己拷进来的也会算上。"
+                            } else {
+                                "这些压缩包里有 App 生成的，也有你自己拷进来的。" +
+                                    "在「历史报告」页都能预览、再下载、再分享。"
+                            },
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            item {
+                SectionCard(title = "说明", icon = "ℹ️") {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            "· 文件名、压缩包里的 Excel、解压密码都和以前完全一样，" +
+                                "只是换个地方存。",
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            "· 选目录这一步用的是系统文件选择器，不需要额外申请存储权限。",
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            "· 手机重启或换机后，系统可能会让你重新授权一次，属于正常现象。",
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }

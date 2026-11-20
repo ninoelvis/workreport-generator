@@ -47,6 +47,8 @@ fun SectionCard(
     icon: String,
     modifier: Modifier = Modifier,
     hint: String? = null,
+    /** 标题行右侧的额外操作（例如「放大查看」按钮）；默认没有 */
+    trailing: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     Card(
@@ -64,8 +66,8 @@ fun SectionCard(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
+                Spacer(Modifier.weight(1f))
                 if (hint != null) {
-                    Spacer(Modifier.weight(1f))
                     Text(
                         text = hint,
                         fontSize = 11.sp,
@@ -73,6 +75,10 @@ fun SectionCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                }
+                if (trailing != null) {
+                    Spacer(Modifier.width(4.dp))
+                    trailing()
                 }
             }
             Spacer(Modifier.height(14.dp))

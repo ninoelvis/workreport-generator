@@ -56,11 +56,15 @@ import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.ui.common.EmptyState
 import androidx.compose.ui.platform.LocalContext
 import com.workreport.app.ui.common.PreviewTable
+import com.workreport.app.ServiceLocator
 import com.workreport.app.util.MailHelper
 import com.workreport.app.util.ShareHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun HistoryScreen(
@@ -73,13 +77,30 @@ fun HistoryScreen(
     val context = LocalContext.current
     val preferredMail by viewModel.preferredMailPackage.collectAsStateWithLifecycle()
     val previews by viewModel.previews.collectAsStateWithLifecycle()
+    // 用户存放目录里的外部压缩包（自己拷进去的）
+    val externalReports by viewModel.externalReports.collectAsStateWithLifecycle()
+    val externalPreviews by viewModel.externalPreviews.collectAsStateWithLifecycle()
+    // 用户有没有选过自定义存放目录（选了才能识别外部文件）
+    val storageCustomized by remember {
+        ServiceLocator.storageLocation.customized
+    }.collectAsStateWithLifecycle()
     var mailPickerFor by remember { mutableStateOf<ReportEntity?>(null) }
     var deleteTarget by remember { mutableStateOf<ReportEntity?>(null) }
     var toast by remember { mutableStateOf<String?>(null) }
     /** 当前展开预览的历史报告（同一时刻只展开一张） */
     var previewId by remember { mutableStateOf<Long?>(null) }
+    /** 正在展开的外部压缩包 */
+    var expandedExternal by remember { mutableStateOf<String?>(null) }
+    /** 需要手输密码的外部压缩包 */
+    var passwordTarget by remember { mutableStateOf<ExternalReport?>(null) }
+    var passwordInput by remember { mutableStateOf("") }
     /** 待载入首页的历史报告（等用户二次确认） */
     var loadTarget by remember { mutableStateOf<ReportEntity?>(null) }
+
+    // 进页面就扫一遍存放目录，把用户自己拷进去的压缩包找出来
+    LaunchedEffect(Unit) {
+        viewModel.refreshExternal()
+    }
     /** 待取回「下周计划」的历史报告（等用户二次确认） */
     var planTarget by remember { mutableStateOf<ReportEntity?>(null) }
     /** 载入过程中的报告（用于置灰按钮、防止重复点） */
@@ -198,8 +219,112 @@ fun HistoryScreen(
                         },
                     )
                 }
+
+                // 没选自定义目录时，提醒一下外部文件识别需要先选目录
+                if (externalReports.isEmpty() && !storageCustomized) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "💡",
+                                fontSize = 13.sp,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "在「我的 → 周报存放目录」里选一个自己的文件夹，" +
+                                    "你手动拷进去的压缩包也会在这里列出来。",
+                                fontSize = 11.5.sp,
+                                lineHeight = 17.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+
+                // 用户自己拷进存放目录的压缩包
+                if (externalReports.isNotEmpty()) {
+                    item {
+                        Text(
+                            "存放目录里的其它压缩包（${externalReports.size} 个）",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 6.dp, bottom = 2.dp),
+                        )
+                    }
+                    items(externalReports, key = { it.uri.toString() }) { item ->
+                        ExternalReportCard(
+                            item = item,
+                            previewExpanded = expandedExternal == item.uri.toString(),
+                            previewState = externalPreviews[item.uri.toString()] ?: PreviewState(),
+                            onTogglePreview = {
+                                val key = item.uri.toString()
+                                val expanding = expandedExternal != key
+                                expandedExternal = if (expanding) key else null
+                                if (expanding) {
+                                    viewModel.loadExternalPreview(item)
+                                }
+                            },
+                            onNeedPassword = {
+                                passwordTarget = item
+                                passwordInput = ""
+                            },
+                            onShare = {
+                                val file = viewModel.externalCacheFile(item)
+                                if (file == null) {
+                                    toast = "读不出这个文件"
+                                } else {
+                                    val ok = ShareHelper.shareFile(context, file)
+                                    if (!ok) toast = "未能拉起系统分享"
+                                }
+                            },
+                        )
+                    }
+                }
             }
         }
+    }
+
+    // 外部压缩包：手输解压密码
+    passwordTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { passwordTarget = null },
+            title = { Text("输入解压密码", fontSize = 16.sp) },
+            text = {
+                Column {
+                    Text(
+                        target.fileName,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = passwordInput,
+                        onValueChange = { passwordInput = it },
+                        singleLine = true,
+                        label = { Text("解压密码") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val pwd = passwordInput.trim()
+                    passwordTarget = null
+                    if (pwd.isNotEmpty()) {
+                        viewModel.loadExternalPreview(target, pwd)
+                    }
+                }) { Text("打开") }
+            },
+            dismissButton = {
+                TextButton(onClick = { passwordTarget = null }) { Text("取消") }
+            },
+        )
     }
 
     // 邮件应用选择
@@ -613,3 +738,159 @@ private fun formatSize(bytes: Long): String = when {
     bytes < 1024 * 1024 -> "${bytes / 1024} KB"
     else -> String.format(Locale.US, "%.1f MB", bytes / 1024.0 / 1024.0)
 }
+
+/**
+ * 用户存放目录里的**外部压缩包**卡片。
+ *
+ * 这不是 App 自己生成的（那种在上面的列表里），是用户自己拷进去的。
+ * 能预览内容（自动推断密码，推不出来就手输）、能分享。
+ */
+@Composable
+private fun ExternalReportCard(
+    item: ExternalReport,
+    previewExpanded: Boolean,
+    previewState: PreviewState,
+    onTogglePreview: () -> Unit,
+    onNeedPassword: () -> Unit,
+    onShare: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Text(
+                    item.displayName,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(20),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Text(
+                        "外部文件",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
+            Text(
+                buildString {
+                    append(formatSize(item.sizeBytes))
+                    if (item.lastModified > 0) {
+                        append(" · ")
+                        append(formatTime(item.lastModified))
+                    }
+                },
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SmallAction(
+                    icon = if (previewExpanded) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    label = if (previewExpanded) "收起内容" else "查看内容",
+                    modifier = Modifier.weight(1f),
+                    onClick = onTogglePreview,
+                )
+                SmallAction(
+                    icon = Icons.Filled.Share,
+                    label = "分享",
+                    modifier = Modifier.weight(1f),
+                    onClick = onShare,
+                )
+            }
+
+            if (previewExpanded) {
+                Spacer(Modifier.height(12.dp))
+                when {
+                    previewState.loading -> {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                "正在解压压缩包、读取里面的 Excel…",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    previewState.content != null -> {
+                        val content = previewState.content
+                        PreviewTable(
+                            title = content.title.ifBlank { item.displayName },
+                            timeRange = content.timeRange,
+                            doneWorks = content.doneWorks,
+                            planWorks = content.planWorks,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "这是压缩包里的 Excel 原样内容（预览即导出）。",
+                            fontSize = 10.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    previewState.error == "NEED_PASSWORD" -> {
+                        Column {
+                            Text(
+                                "这个压缩包的文件名看不出密码，需要你手动输入一次。",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = onNeedPassword,
+                                modifier = Modifier.fillMaxWidth().height(40.dp),
+                                shape = RoundedCornerShape(8.dp),
+                            ) {
+                                Icon(
+                                    Icons.Filled.LockOpen,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(15.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("输入解压密码", fontSize = 12.5.sp)
+                            }
+                        }
+                    }
+
+                    previewState.error != null -> {
+                        Text(
+                            previewState.error,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+

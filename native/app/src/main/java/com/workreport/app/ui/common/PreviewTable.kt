@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.workreport.app.ui.theme.LocalPreviewColors
+import androidx.compose.ui.unit.Dp
 
 /**
  * Excel 效果预览表。
@@ -68,6 +70,18 @@ fun PreviewTable(
     doneWorks: String,
     planWorks: String,
     modifier: Modifier = Modifier,
+    /**
+     * 数据区每个单元格的高度。
+     *
+     * 默认 132.dp —— 和原来完全一样，首页预览区的表现**一个字都没变**。
+     * 传 null 则高度随内容增长（长的工作梳理不再被裁掉），全屏预览用这个。
+     */
+    cellHeight: Dp? = 132.dp,
+    /**
+     * 字号缩放。默认 1f —— 和原来完全一样。
+     * 全屏预览传 1.25f，手机上更易读。
+     */
+    textScale: Float = 1f,
 ) {
     // 表头、标题与边框的颜色跟随深浅色主题，
     // 避免深色模式下出现「深底深字」以及表格轮廓糊掉
@@ -92,7 +106,7 @@ fun PreviewTable(
         ) {
             Text(
                 title.ifEmpty { "-" },
-                fontSize = 14.sp,
+                fontSize = (14 * textScale).sp,
                 fontWeight = FontWeight.Bold,
                 color = previewColors.titleInk,
                 textAlign = TextAlign.Center,
@@ -119,8 +133,8 @@ fun PreviewTable(
                 ) {
                     Text(
                         label,
-                        fontSize = 8.5.sp,
-                        lineHeight = 11.sp,
+                        fontSize = (8.5 * textScale).sp,
+                        lineHeight = (11 * textScale).sp,
                         fontWeight = FontWeight.Medium,
                         color = headerInk,
                         textAlign = TextAlign.Center,
@@ -143,17 +157,18 @@ fun PreviewTable(
                 text = timeRange,
                 weight = PREVIEW_COL_WEIGHTS[0],
                 border = border,
-                fontSize = 8.5.sp,
+                fontSize = (8.5 * textScale).sp,
                 wrapText = false,
                 centerVertically = true,
+                cellHeight = cellHeight,
             )
             // B / C 列：仿宋 9pt、左对齐、换行
-            PreviewCell(doneWorks, PREVIEW_COL_WEIGHTS[1], border, 8.5.sp)
-            PreviewCell(planWorks, PREVIEW_COL_WEIGHTS[2], border, 8.5.sp)
+            PreviewCell(doneWorks, PREVIEW_COL_WEIGHTS[1], border, (8.5 * textScale).sp, cellHeight = cellHeight)
+            PreviewCell(planWorks, PREVIEW_COL_WEIGHTS[2], border, (8.5 * textScale).sp, cellHeight = cellHeight)
             // D / E / F 列：仿宋 11pt、左对齐、换行（内容留空，供以后扩展）
-            PreviewCell("", PREVIEW_COL_WEIGHTS[3], border, 8.5.sp)
-            PreviewCell("", PREVIEW_COL_WEIGHTS[4], border, 8.5.sp)
-            PreviewCell("", PREVIEW_COL_WEIGHTS[5], border, 8.5.sp)
+            PreviewCell("", PREVIEW_COL_WEIGHTS[3], border, (8.5 * textScale).sp, cellHeight = cellHeight)
+            PreviewCell("", PREVIEW_COL_WEIGHTS[4], border, (8.5 * textScale).sp, cellHeight = cellHeight)
+            PreviewCell("", PREVIEW_COL_WEIGHTS[5], border, (8.5 * textScale).sp, cellHeight = cellHeight)
         }
     }
 }
@@ -177,11 +192,17 @@ private fun RowScope.PreviewCell(
     fontSize: TextUnit,
     wrapText: Boolean = true,
     centerVertically: Boolean = false,
+    cellHeight: Dp? = 132.dp,
 ) {
     Box(
         modifier = Modifier
             .weight(weight)
-            .height(132.dp)
+            // 传 null 时高度随内容增长，长文本不再被裁掉；
+            // 传具体值时和原来的表现一模一样（132.dp）。
+            .then(
+                if (cellHeight != null) Modifier.height(cellHeight)
+                else Modifier.heightIn(min = 132.dp)
+            )
             .border(0.5.dp, border)
             .padding(horizontal = 3.dp, vertical = 4.dp),
         contentAlignment = if (centerVertically) Alignment.Center else Alignment.TopStart,

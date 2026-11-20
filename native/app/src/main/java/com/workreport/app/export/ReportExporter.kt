@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
+import com.workreport.app.data.storage.StorageLocation
 import com.workreport.app.domain.model.SensitiveWord
 import com.workreport.app.util.DateUtils
 import com.workreport.app.util.MaskAnchor
@@ -65,6 +66,15 @@ class ReportExporter(
         outputDir: File,
         now: Date = Date(),
         excludedAnchors: Set<MaskAnchor> = emptySet(),
+        /**
+         * 用户自选的存放目录。
+         *
+         * 为 null 或用户没选过目录时，沿用原来的行为（系统「下载」目录）。
+         *
+         * ⚠️ 红线：这里只决定「文件落到哪个目录」，
+         * 文件名、内容、密码、ZIP 内部结构**一个字都不改**。
+         */
+        storage: StorageLocation? = null,
     ): ExportResult {
         // 命名与密码规则集中在 ReportNaming 里（可单元测试，避免改动时破坏兼容性）
         val plan = ReportNaming.plan(userName, timeRangeText)
@@ -106,7 +116,7 @@ class ReportExporter(
             entries = listOf(xlsxFileName to xlsxBytes),
         )
 
-        val saved = copyToDownloads(target, zipFileName)
+        val saved = saveOutside(target, zipFileName, storage)
 
         return ExportResult(
             fileName = zipFileName,
@@ -128,6 +138,27 @@ class ReportExporter(
      */
     fun copyExistingToDownloads(source: File, displayName: String): Boolean =
         copyToDownloads(source, displayName)
+
+    /**
+     * 把文件落到「用户看得见」的地方。
+     *
+     *  - 用户选过存放目录 → 写进那个目录（SAF）
+     *  - 没选过 → 沿用系统「下载」目录（MediaStore，Android 10+ 免权限）
+     *
+     * ⚠️ 文件名原样使用，**不做任何改名**。
+     *    加「(1)」后缀会破坏红线 —— 下载目录 / 邮件附件 / 系统分享必须是同一个名字。
+     */
+    fun saveOutside(source: File, displayName: String, storage: StorageLocation?): Boolean {
+        if (storage != null && storage.treeUri.value != null) {
+            val bytes = try {
+                source.readBytes()
+            } catch (e: Exception) {
+                return false
+            }
+            return storage.writeZip(displayName, bytes) != null
+        }
+        return copyToDownloads(source, displayName)
+    }
 
     /**
      * 复制到系统「下载」目录。

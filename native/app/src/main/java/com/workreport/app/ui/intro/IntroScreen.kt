@@ -55,6 +55,13 @@ import androidx.compose.ui.unit.sp
 import com.workreport.app.BuildConfig
 import com.workreport.app.ServiceLocator
 import com.workreport.app.ui.common.AppTopBar
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material.icons.filled.Folder
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.widget.Toast
 
 /**
  * 功能介绍与更新记录（整页）。
@@ -116,6 +123,11 @@ fun IntroScreen(
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 18.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            // ---------- 首次使用：挑一个存放周报的文件夹 ----------
+            item {
+                StoragePickerCard()
+            }
+
             item {
                 IntroSection(
                     title = "功能介绍",
@@ -127,7 +139,7 @@ fun IntroScreen(
                     )
                     IntroBullet(
                         "记工作 → 汇总 → 生成",
-                        "做完一项记一条，可上下调顺序；汇总后导出加密 ZIP 存到「下载」目录，" +
+                        "做完一项记一条，可上下调顺序；汇总后导出加密 ZIP 存进你选好的文件夹，" +
                             "也能一键拉起邮箱发送。",
                     )
                     IntroBullet(
@@ -145,6 +157,16 @@ fun IntroScreen(
                         "选好星期几，到点提醒你写周报；压缩包可走系统分享面板发给任何人。",
                     )
                     IntroBullet(
+                        "存放目录自己挑",
+                        "第一次用就可以选一个自己的文件夹存周报压缩包；" +
+                            "你手动拷进去的压缩包，App 也会认出来列在历史报告里。",
+                    )
+                    IntroBullet(
+                        "预览可以放大",
+                        "预览区点「放大查看」进全屏：内容不再被裁掉，" +
+                            "双指捏合缩放、双击放大，左右滑动能看完每一列。",
+                    )
+                    IntroBullet(
                         "配置备份",
                         "姓名、词库、模板、提醒设置可加密备份，换手机时一键恢复。",
                     )
@@ -153,6 +175,19 @@ fun IntroScreen(
 
             item {
                 IntroSection(title = "历史版本更新记录", icon = Icons.Filled.History) {
+                    ChangeLogItem(
+                        "v1.5.0",
+                        "**存放目录自己挑**：第一次用就能选一个自己的文件夹存周报压缩包，" +
+                            "在「我的 → 周报存放目录」里随时能改；" +
+                            "你手动拷进这个文件夹的压缩包，App 也会认出来，" +
+                            "在历史报告页一并列出 —— 能预览内容（文件名能推出密码就自动推，" +
+                            "推不出来让你手输一次）、也能分享。" +
+                            "**预览可以放大**：预览区点「放大查看」进全屏，" +
+                            "长的工作梳理不再被裁掉，双指捏合缩放、双击放大，左右滑动看全六列。" +
+                            "⚠️ **文件名、压缩包里的 Excel、解压密码一个字都没改** —— " +
+                            "只是换个地方存、预览画得更大一点。",
+                        current = true,
+                    )
                     ChangeLogItem(
                         "v1.4.3",
                         "修复**列表滑到最下面后输入法自己弹出来**的问题 —— " +
@@ -164,7 +199,7 @@ fun IntroScreen(
                             "同时加了三道**自动检查**（扫源码）锁住这个行为：" +
                             "代码里不许再出现它、页面里不许再各自加键盘避让、" +
                             "底部避让必须由 AppRoot 统一计算，以后再出类似问题会被测试直接拦下。",
-                        current = true,
+                        current = false,
                     )
                     ChangeLogItem(
                         "v1.4.2",
@@ -504,5 +539,104 @@ private fun ChangeLogItem(version: String, desc: String, current: Boolean = fals
             lineHeight = 18.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/**
+ * 首次启动时挑一个「周报存放目录」的卡片。
+ *
+ * 用的是系统文件选择器（SAF），不需要额外存储权限。
+ * 用户不选也能继续用 —— 那就沿用系统「下载」目录，行为和以前一模一样。
+ */
+@Composable
+private fun StoragePickerCard() {
+    val context = LocalContext.current
+    val storage = remember { ServiceLocator.storageLocation }
+    val treeUri by storage.treeUri.collectAsStateWithLifecycle()
+    val dirName by storage.displayNameFlow.collectAsStateWithLifecycle()
+
+    val picker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri != null) {
+            val ok = storage.select(uri)
+            Toast.makeText(
+                context,
+                if (ok) "已选择「${storage.displayName()}」" else "没有拿到访问权限，请再选一次",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                shape = RoundedCornerShape(14.dp),
+            )
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Filled.Folder,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "存放周报的文件夹",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            if (treeUri != null) {
+                "现在存到：$dirName。点下面可以换一个，" +
+                    "以后在「我的 → 周报存放目录」里随时改。"
+            } else {
+                "挑一个你自己的文件夹，生成的周报压缩包会直接放进去，" +
+                    "在文件管理器里一眼就能找到。也可以跳过，" +
+                    "那会用系统「下载」目录（和以前一样）。"
+            },
+            fontSize = 12.5.sp,
+            lineHeight = 19.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = { picker.launch(null) },
+                shape = RoundedCornerShape(9.dp),
+            ) {
+                Text(if (treeUri != null) "换一个文件夹" else "选择文件夹", fontSize = 13.sp)
+            }
+            if (treeUri != null) {
+                OutlinedButton(
+                    onClick = {
+                        storage.reset()
+                        Toast.makeText(context, "已恢复为系统「下载」目录", Toast.LENGTH_SHORT).show()
+                    },
+                    shape = RoundedCornerShape(9.dp),
+                ) {
+                    Text("用默认的", fontSize = 13.sp)
+                }
+            }
+        }
     }
 }

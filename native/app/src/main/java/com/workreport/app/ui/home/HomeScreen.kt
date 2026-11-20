@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -65,6 +66,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.ServiceLocator
 import com.workreport.app.ui.common.FieldLabel
+import com.workreport.app.ui.common.FullscreenPreview
 import com.workreport.app.ui.common.InfoStatRow
 import com.workreport.app.ui.common.LabeledField
 import com.workreport.app.ui.common.AppTopBar
@@ -77,6 +79,7 @@ import com.workreport.app.util.MailApp
 import com.workreport.app.util.MailHelper
 import com.workreport.app.util.ShareHelper
 import android.widget.Toast
+import androidx.compose.foundation.layout.PaddingValues
 
 @Composable
 fun HomeScreen(
@@ -87,6 +90,10 @@ fun HomeScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val mailApps by viewModel.mailApps.collectAsStateWithLifecycle()
     val workShortcuts by viewModel.workShortcuts.collectAsStateWithLifecycle()
+    // 用户自选的「周报存放目录」（没选过就是系统「下载」目录）
+    val storageName by remember {
+        ServiceLocator.storageLocation.displayNameFlow
+    }.collectAsStateWithLifecycle()
     val planShortcuts by viewModel.planShortcuts.collectAsStateWithLifecycle()
     var errorDialog by remember { mutableStateOf<String?>(null) }
 
@@ -108,6 +115,8 @@ fun HomeScreen(
     var confirmClearDone by remember { mutableStateOf(false) }
     /** 清空「下周工作计划」的二次确认 */
     var confirmClearPlan by remember { mutableStateOf(false) }
+    /** 预览区是否全屏放大 */
+    var showFullscreenPreview by remember { mutableStateOf(false) }
     val autoSendMail by settings.autoSendMail.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.message) {
@@ -321,7 +330,25 @@ fun HomeScreen(
         }
 
         item {
-            SectionCard(title = "预览区", icon = "👁️", hint = "最终 Excel 效果") {
+            SectionCard(
+                title = "预览区",
+                icon = "👁️",
+                hint = "最终 Excel 效果",
+                trailing = {
+                    TextButton(
+                        onClick = { showFullscreenPreview = true },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    ) {
+                        Icon(
+                            Icons.Filled.Fullscreen,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                        )
+                        Spacer(Modifier.width(3.dp))
+                        Text("放大查看", fontSize = 12.sp)
+                    }
+                },
+            ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     PreviewTable(
                         title = state.previewTitle,
@@ -413,13 +440,23 @@ fun HomeScreen(
     }
 
     // 第一步：确认是否生成
+    if (showFullscreenPreview) {
+        FullscreenPreview(
+            title = state.previewTitle,
+            timeRange = state.previewTimeRange,
+            doneWorks = state.previewDone,
+            planWorks = state.previewPlan,
+            onClose = { showFullscreenPreview = false },
+        )
+    }
+
     if (confirmGenerate) {
         AlertDialog(
             onDismissRequest = { confirmGenerate = false },
             title = { Text("确认生成加密 ZIP？") },
             text = {
                 Column {
-                    Text("将生成 Excel 并打包为 AES-256 加密的 ZIP，保存到系统「下载」目录。")
+                    Text("将生成 Excel 并打包为 AES-256 加密的 ZIP，保存到「$storageName」。")
                     Spacer(Modifier.height(8.dp))
                     Text(
                         "文件名：${state.fileName.ifEmpty { "-" }}",
