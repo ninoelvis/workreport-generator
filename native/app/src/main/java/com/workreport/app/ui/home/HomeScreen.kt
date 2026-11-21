@@ -72,6 +72,7 @@ import com.workreport.app.ui.common.FieldLabel
 import com.workreport.app.ui.common.FullscreenPreview
 import com.workreport.app.ui.common.InfoStatRow
 import com.workreport.app.ui.common.LabeledField
+import com.workreport.app.util.DateUtils
 import com.workreport.app.ui.common.AppTopBar
 import com.workreport.app.ui.common.CarryOverBanner
 import com.workreport.app.ui.common.MaskPanel
@@ -201,6 +202,14 @@ fun HomeScreen(
                         value = state.timeRange,
                         onValueChange = viewModel::onTimeRangeChange,
                         placeholder = "yyyy.MM.dd-yyyy.MM.dd",
+                    )
+                    // 快捷选择（v2.0.0 起）：补做上周的周报时不用手打日期
+                    //
+                    // ⚠️ 这里必须走 DateUtils 的现成函数，
+                    // 不能自己拼字符串 —— 时间范围会写进 Excel 的 B2 格（红线），
+                    // 格式必须与用户手填时的默认格式逐字一致。
+                    TimeRangeShortcuts(
+                        onPick = { viewModel.onTimeRangeChange(it) },
                     )
                     LabeledField(
                         label = "报告标题",
@@ -830,4 +839,41 @@ private fun MailPickerDialog(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     )
+}
+
+/**
+ * 「本周工作时间」的快捷选择（v2.0.0 起）。
+ *
+ * 补做上周（或再上周）的周报时不用手打日期，点一下就行。
+ *
+ * ⚠️ 取值一律走 [DateUtils] 的现成函数，
+ * **绝不在这里自己拼日期字符串** ——
+ * 时间范围最终会写进 Excel 的 B2 格（公司红线），
+ * 格式必须与用户手填时的默认格式**逐字一致**。
+ */
+@Composable
+private fun TimeRangeShortcuts(onPick: (String) -> Unit) {
+    val options = remember {
+        listOf(
+            "本周" to DateUtils.currentWeekRangeText(),
+            "上周" to DateUtils.previousWeekRangeText(),
+        )
+    }
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(start = 2.dp, top = 6.dp),
+    ) {
+        options.forEach { (label, value) ->
+            OutlinedButton(
+                onClick = { onPick(value) },
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = 12.dp, vertical = 0.dp,
+                ),
+                modifier = Modifier.height(30.dp),
+            ) {
+                Text(label, fontSize = 12.sp)
+            }
+        }
+    }
 }

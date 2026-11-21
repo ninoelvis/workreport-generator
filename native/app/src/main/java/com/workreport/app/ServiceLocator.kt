@@ -8,8 +8,11 @@ import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.repository.ReportRepository
 import com.workreport.app.data.remote.ApiClient
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * 轻量依赖容器。
@@ -50,6 +53,22 @@ object ServiceLocator {
     private val _draftReload = MutableSharedFlow<Unit>(replay = 1, extraBufferCapacity = 1)
 
     val draftReload: SharedFlow<Unit> = _draftReload.asSharedFlow()
+
+    // ---------------- 多选模式（v2.0.0）----------------
+
+    /**
+     * App 是否处于「多选模式」。
+     *
+     * 历史报告页进入多选时置 true，退出时置 false。
+     * AppRoot 收集它来决定**底栏玻璃胶囊要不要淡出** ——
+     * 多选时底部让位给批量操作条。
+     */
+    private val _selectionMode = MutableStateFlow(false)
+    val selectionMode: StateFlow<Boolean> = _selectionMode.asStateFlow()
+
+    fun setSelectionMode(enabled: Boolean) {
+        _selectionMode.value = enabled
+    }
 
     /** 通知首页：草稿变了，重新读一次 */
     fun notifyDraftReloaded() {

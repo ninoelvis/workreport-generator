@@ -3,6 +3,8 @@ package com.workreport.app.data.local
 import android.content.Context
 import android.content.SharedPreferences
 import com.workreport.app.domain.model.SensitiveWord
+import com.workreport.app.util.SecretBox
+import com.workreport.app.util.SensitiveWordsCipher
 import com.workreport.app.domain.model.ShortcutSlot
 import com.workreport.app.domain.model.ShortcutTemplate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,17 +63,21 @@ class SettingsStore(context: Context) {
     private val _sensitiveWords = MutableStateFlow(loadSensitiveWords())
     val sensitiveWords: StateFlow<List<SensitiveWord>> = _sensitiveWords.asStateFlow()
 
+    /**
+     * 保存敏感词库。
+     *
+     * v2.0.0 起**以 AES-256-GCM 密文落盘**（密钥在 Android Keystore 里，不进备份、不可导出）。
+     * 密文格式见 [SensitiveWordsCipher]。
+     *
+     * ⚠️ Keystore 不可用时（极少数 ROM / 用户重置了锁屏密码）
+     * 会退回明文存储 —— 宁可明文也不能让 App 因为加密失败而用不了。
+     */
     fun setSensitiveWords(words: List<SensitiveWord>) {
-        val array = JSONArray()
-        words.forEach { w ->
-            array.put(
-                JSONObject()
-                    .put("w", w.word)
-                    .put("p", w.pinyin)
-                    .put("a", w.auto),
-            )
-        }
-        prefs.edit().putString(KEY_SENSITIVE_WORDS, array.toString()).apply()
+        val plain = sensitiveWordsToJson(words)
+        val encrypted = SecretBox.encrypt(plain.toByteArray(Charsets.UTF_8))
+        prefs.edit()
+            .putString(KEY_SENSITIVE_WORDS, encrypted ?: plain)
+            .apply()
         _sensitiveWords.value = words
     }
 
@@ -335,8 +341,54 @@ class SettingsStore(context: Context) {
         _notificationPromptHandled.value = false
     }
 
+    /**
+     * 读取敏感词库。
+     *
+     * v2.0.0 起的读取顺序：
+     *   1. 值带 `enc:v1:` 前缀 → **密文**，用 Keystore 密钥解密；
+     *   2. 值没有前缀 → **旧版明文**（v1.x 存下来的），按明文解析，
+     *      然后**立刻写回密文**（自动迁移，用户不用做任何事）。
+     *
+     * 解析失败一律回落到默认词库 —— 宁可给一套默认的，也不要让 App 起不来。
+     */
     private fun loadSensitiveWords(): List<SensitiveWord> {
         val raw = prefs.getString(KEY_SENSITIVE_WORDS, null) ?: return defaultSensitiveWords()
+
+        if (SensitiveWordsCipher.isEncrypted(raw)) {
+            val plain = SecretBox.decrypt(raw)
+            if (plain == null) {
+                // 密钥失效 / 密文损坏 —— 回落到默认词库
+                return defaultSensitiveWords()
+            }
+            return parseSensitiveWords(plain.toString(Charsets.UTF_8))
+        }
+
+        // 旧版明文：解析出来，并顺手迁移成密文
+        val words = parseSensitiveWords(raw)
+        val plain = sensitiveWordsToJson(words).toByteArray(Charsets.UTF_8)
+        val encrypted = SecretBox.encrypt(plain)
+        if (encrypted != null) {
+            prefs.edit().putString(KEY_SENSITIVE_WORDS, encrypted).apply()
+        }
+        return words
+    }
+
+    /** 敏感词库 → JSON 文本 */
+    private fun sensitiveWordsToJson(words: List<SensitiveWord>): String {
+        val array = JSONArray()
+        words.forEach { w ->
+            array.put(
+                JSONObject()
+                    .put("w", w.word)
+                    .put("p", w.pinyin)
+                    .put("a", w.auto),
+            )
+        }
+        return array.toString()
+    }
+
+    /** JSON 文本 → 敏感词库；解析失败返回空列表 */
+    private fun parseSensitiveWords(raw: String): List<SensitiveWord> {
         return try {
             val array = JSONArray(raw)
             buildList {
@@ -354,7 +406,7 @@ class SettingsStore(context: Context) {
                 }
             }
         } catch (e: Exception) {
-            defaultSensitiveWords()
+            emptyList()
         }
     }
 

@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    ⚠️ v2.0.0 起**刻意不做任何系统备份**。
+
+    Manifest 里已经设了 `android:allowBackup="false"`，这两个 XML 只是**双保险**：
+    就算以后有人把 allowBackup 改回 true，这里也不会漏出去任何东西。
+
+    为什么不做系统备份：
+      · App 对外承诺「所有内容只存在本地，不发送到任何服务器」；
+      · 历史报告正文与敏感词库都属于「不想让任何人看到」的内容。
+
+    换手机请用「我的 → 配置备份 / 恢复」（AES-256 加密 ZIP），
+    已生成的周报 ZIP 就在用户自己选的存放目录里。
+-->
 <full-backup-content>
-    <include domain="database" path="." />
-    <include domain="sharedpref" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="external" path="." />
+    <exclude domain="root" path="." />
 </full-backup-content>

@@ -2,7 +2,7 @@
 
 完全重写的 **纯原生 Android** 版本：Kotlin + Jetpack Compose，**不包含任何 WebView、HTML、JS 网页文件**。
 
-> 当前版本 **v1.8.0**（正式版）。
+> 当前版本 **v2.0.0**（正式版）。
 > 包名与签名与旧版一致（`com.workreport.app`），因此**可以直接覆盖安装**，本地数据不会丢。
 
 ---
@@ -208,6 +208,54 @@ export ANDROID_HOME=/path/to/android-sdk
 - 玻璃：模糊半径 `16.dp → 26.dp`；遮盖 alpha 深色 `0.10 → 0.055`、浅色 `0.55 → 0.38`
 
 `GlassBottomBarTest` 增补 5 项深色模式与底栏形态的防回归检查（合计 225 项单元测试）。
+
+---
+
+## 六点七、v2.0.0：搜索 / 统计 / 批量 / 隐私加固
+
+### 搜索覆盖正文
+| 文件 | 作用 |
+|---|---|
+| `util/LikeEscape.kt` | SQLite `LIKE` 通配符转义（`\` `%` `_`），纯函数可测 |
+| `domain/model/SearchScope.kt` | 搜索范围：仅文件名 / 全部内容 |
+| `data/local/ReportDao.kt` | `searchByName` / `searchAll`，两条查询都声明 `ESCAPE '\'` |
+| `data/repository/ReportRepository.kt` | `search(keyword, scope)`，转义后进查询 |
+
+**搜的是 `done_works`（原始条目）而不是 `done_works_exported`（脱敏格式化后的文本）** ——
+用户写的是原文，搜脱敏文本会搜不到。
+
+### 统计
+`domain/model/ReportStats.kt` 是纯计算（按年月归并、条目数按非空行数），
+`ui/history/StatsContent.kt` 用 Compose `Canvas` **手绘**柱状图，零第三方依赖。
+
+> 统计**只覆盖本 App 生成的报告** —— 外部 ZIP 没有 `year/month/week_num` 字段。
+> 界面上必须写明，否则用户会以为漏了文件。
+
+### 批量操作
+`ServiceLocator.selectionMode` 是全局状态：历史页进入多选时置 true，
+`AppRoot` 收集它让底栏玻璃胶囊淡出下沉（复用 `AnimatedBottomBar` 已有的 `visible` 机制），
+底部让位给批量操作条。
+
+**只做批量删除 + 批量再下载**：
+- 「载入首页」「取回下周计划」是单选语义（会互相覆盖）；
+- 「批量发邮件」的多附件 `ACTION_SEND` Intent 可能超限或被邮箱拒收。
+
+### 隐私加固
+| 文件 | 作用 |
+|---|---|
+| `util/SecretBox.kt` | Android Keystore + AES-256-GCM 加解密；**失败返回 null 而不抛异常** |
+| `util/SensitiveWordsCipher.kt` | 密文格式 `enc:v1:<base64(iv‖ciphertext)>`，纯逻辑可测 |
+| `data/local/SettingsStore.kt` | 读时区分密文/旧明文，**旧明文自动迁移成密文** |
+| `AndroidManifest.xml` | `android:allowBackup="false"` |
+| `res/xml/backup_rules.xml` / `data_extraction_rules.xml` | 排除全部（双保险） |
+
+**为什么关掉系统云备份**：App 承诺「所有内容只存在本地」，
+但系统备份会把数据库（历史报告正文）和 SharedPreferences（敏感词库明文）一起打包带走。
+
+**降级路径**：Keystore 在少数场景不可用（用户重置锁屏密码、某些 ROM 的 bug），
+此时退回明文存储 —— 宁可明文也不能让 App 用不了。
+
+新增 34 项单元测试（225 → 259）。
 
 ## 七、图标体系（v1.6.0 起）
 

@@ -89,6 +89,12 @@ object DateUtils {
     }.time
 
     /** 取某天所在自然周（周日~周六）。对应旧版 getWeekRange()。 */
+    /**
+     * 取某天所在「周」的起止：返回 **周日 ~ 周六**。
+     *
+     * ⚠️ 本 App 的一周是从**周日**开始的（和旧版 JS 的 `getDay() === 0` 一致），
+     * 所以周日 ~ 周六，不是周一 ~ 周日。
+     */
     fun getWeekRange(date: Date): Pair<Date, Date> {
         val c = Calendar.getInstance().apply { time = date }
         // ⚠️ Calendar.DAY_OF_WEEK 里周日 = 1，而 JS 的 getDay() 里周日 = 0，
@@ -103,9 +109,36 @@ object DateUtils {
         return sunday to saturday
     }
 
-    /** 本周时间范围文本，例如 2026.10.19-2026.10.25 */
+    /**
+     * 本周时间范围文本，例如 2026.11.15-2026.11.21
+     *
+     * ⚠️ 本 App 的「一周」是**周日 ~ 周六**（见 [getWeekRange]），
+     * 不是「周一 ~ 周日」。
+     */
     fun currentWeekRangeText(today: Date = Date()): String {
         val (sunday, saturday) = getWeekRange(today)
         return "${fmtDate(sunday)}-${fmtDate(saturday)}"
+    }
+
+    /**
+     * 上周的时间范围文本，格式与 [currentWeekRangeText] 完全一致。
+     *
+     * 给首页「时间范围」的快捷选择用（v2.0.0 起）。
+     *
+     * ⚠️ 必须复用 [getWeekRange] + [fmtDate]，
+     * **不要自己拼字符串** —— 这个文本会写进 Excel 的 B2 格（红线），
+     * 格式必须和用户手填时用的默认格式一模一样。
+     */
+    fun previousWeekRangeText(today: Date = Date()): String {
+        val (sunday, saturday) = getWeekRange(today)
+        val prevSunday = Calendar.getInstance().apply {
+            time = sunday
+            add(Calendar.DAY_OF_MONTH, -7)
+        }.time
+        val prevSaturday = Calendar.getInstance().apply {
+            time = saturday
+            add(Calendar.DAY_OF_MONTH, -7)
+        }.time
+        return "${fmtDate(prevSunday)}-${fmtDate(prevSaturday)}"
     }
 }

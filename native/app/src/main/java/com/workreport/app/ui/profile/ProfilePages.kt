@@ -899,6 +899,37 @@ fun ProfileDataPage(
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 28.dp),
         ) {
             item {
+                SectionCard(title = "数据存在哪里", icon = R.drawable.ic_shield) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "所有内容都只存在这台手机上，不会自动上传到任何服务器。" +
+                                "v2.0.0 起连系统的云备份也一并关闭了 —— " +
+                                "历史报告正文、敏感词库都不会被系统悄悄打包带走。",
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            "换手机时这样迁移：",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            "· 设置、模板、敏感词库 → 用「配置备份 / 恢复」导出一个加密 ZIP，" +
+                                "在新手机上导入；\n" +
+                                "· 已生成的周报 → 压缩包就在你选的存放目录里，直接拷过去；\n" +
+                                "· 历史报告的**列表记录**不随系统迁移 —— 这是关掉云备份的代价，\n" +
+                                "  但压缩包本身没丢，拷过去放进同一个目录就能重新认出来。",
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            item {
                 SectionCard(title = "清除本地数据", icon = R.drawable.ic_broom) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(

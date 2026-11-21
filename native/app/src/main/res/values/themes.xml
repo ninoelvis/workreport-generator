@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    ⚠️ 关于深浅色：请勿创建 `values-night/` 目录，也不要加 `values-night` 资源限定符。
+
+    本 App 的深色模式是**在 App 内手动切换**的（ThemeMode.LIGHT / DARK / SYSTEM），
+    跟系统的深浅色**不是一回事**：
+      · 系统的 `values-night` 跟随的是**系统**深浅色，
+        用户在 App 里选了「深色」而系统是浅色时，它根本不会生效；
+      · 更糟的是，`enableEdgeToEdge()` 的**默认参数**也会按**系统**深浅色
+        给导航条套一层浅色 scrim —— 深色模式下底部就会浮出一条白杠
+        （v1.8.0 修过一次，见 Theme.kt / MainActivity.kt）。
+
+    深色外观由 `Theme.WorkReport.Dark` 在**运行时**按 App 自己的主题切换，
+    `GlassBottomBarTest` 里有防回归测试守着这条规则。
+-->
 <resources>
     <style name="Theme.WorkReport" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/page_bg</item>

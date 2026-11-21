@@ -1,16 +1,16 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v1.8.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v2.0.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
-**原生版 Android App（v1.8.0，推荐）**:
-[workreport-native-v1.8.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.8.0/workreport-native-v1.8.0.apk)
+**原生版 Android App（v2.0.0，推荐）**:
+[workreport-native-v2.0.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.0/workreport-native-v2.0.0.apk)
 （11.7 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版 · **需 Android 12 及以上**）
 
 源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
-[工程源码包 v1.8.0](https://github.com/ninoelvis/workreport-generator/releases/download/v1.8.0/workreport-native-source-v1.8.0.zip)
+[工程源码包 v2.0.0](https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.0/workreport-native-source-v2.0.0.zip)
 
 **旧版 WebView App**：
 [workreport-generator-v1.2.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.2.1/workreport-generator-v1.2.1.apk)
@@ -43,6 +43,7 @@
 
 *原生版 App*
 
+- `v2.0.0` **搜索能搜正文了**（新增「文件名 / 全部内容」范围切换，搜的是原文不是脱敏文本，`%` `_` 做了正确转义）；**新增「周报统计」**（历史页顶部 tab，含每月工作条目柱状图与明细表，统计只含本 App 生成的报告并已写明）；**历史报告支持批量操作**（长按进入多选，卡片精简为「标题 + 勾选框」，底部浮出全选 / 再次下载 / 删除，删除会连压缩包一起删）；**时间范围可一键选**（本周 / 上周，走与默认值相同的格式化逻辑）；**隐私加固**：系统云备份彻底关闭（含设备迁移），敏感词库改用 Android Keystore 的 AES-256-GCM 加密存储（密钥不进备份、不可导出，老版本自动迁移）；导出格式与公司红线一字未改（8 个红线文件 + 3 个导出方法体与 v1.8.0 逐字节相同），单元测试 259/259
 - `v1.8.0` **修深色模式底部白杠**（根因是主题文件把窗口底色写死成浅色、而内容区为避开系统导航条整体上抬，导航条那条没人绘制的区域就露出了浅色窗口底；现改为窗口底色跟随 App 主题 + 根容器整屏铺底 + 系统栏全透明 + 关掉导航条对比度遮罩，并顺手修掉深色模式启动闪白）；**底部导航缩成约一半宽的窄胶囊并整体靠右**，去掉文字只留图标、选中时浮起小圆点高亮 + 短指示条；点击切换加了**按压回弹**动效；玻璃**更毛也更透**（模糊半径 16dp → 26dp，遮盖深色 10% → 5.5%、浅色 55% → 38%），滚动时能透过胶囊看到下面内容；导出格式与公司红线一字未改
 - `v1.7.0` **底部导航换成液态玻璃**：改成 iOS 风格的**悬浮玻璃胶囊**，浮在内容之上、**真正模糊背后的内容**（手写官方 `GraphicsLayer` + `RenderEffect`，零第三方依赖）；**修复进入二级页面时内容瞬间下移 64dp 的卡顿**（底栏不再占布局位置，内容区高度全程不变），二级页面玻璃胶囊淡出下沉、返回时浮起；深浅色分别调参；因玻璃依赖 Android 12 渲染接口，**最低版本从 Android 8 提升到 Android 12**（并强制恢复代码压缩，下载体积仍为 12 MB 上下）；导出格式与公司红线一字未改
 - `v1.6.0` **整套图标重做**：功能区、底部导航、操作按钮、顶栏 Logo 等**所有带图标的位置**全部换成同一套自绘矢量图标（emoji 与系统图标全部清空）；**深浅色自动跟随**主题；桌面图标换成「标志 + WorkReport 字样」并另做深色配色；底部导航改为自绘并加了动画（指示条平滑平移、图标选中放大 1.12、文字淡入淡出），页面之间也加了滑动 + 淡入淡出过渡

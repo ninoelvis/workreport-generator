@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,6 +41,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +56,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -58,7 +68,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.R
 import com.workreport.app.data.local.ReportEntity
+import com.workreport.app.domain.model.SearchScope
 import com.workreport.app.ui.CAPSULE_SPACE
+import com.workreport.app.ui.BULK_BAR_SPACE
 import com.workreport.app.ui.common.EmptyState
 import androidx.compose.ui.platform.LocalContext
 import com.workreport.app.ui.common.FullscreenPreview
@@ -103,6 +115,7 @@ fun HistoryScreen(
     // 全屏预览（点「放大查看」）
     var fullscreenContent by remember { mutableStateOf<PreviewContent?>(null) }
     val externalPreviews by viewModel.externalPreviews.collectAsStateWithLifecycle()
+    val stats by viewModel.stats.collectAsStateWithLifecycle()
     // 用户有没有选过自定义存放目录（选了才能识别外部文件）
     val storageCustomized by remember {
         ServiceLocator.storageLocation.customized
@@ -129,10 +142,22 @@ fun HistoryScreen(
     /** 载入过程中的报告（用于置灰按钮、防止重复点） */
     var loadingId by remember { mutableStateOf<Long?>(null) }
 
-    Column(
+    // 顶部两个视图的切换：0 = 列表，1 = 统计（v2.0.0 起）
+    var tab by remember { mutableStateOf(0) }
+
+    // 当前选中的报告实体（按 id 取，顺序跟列表一致）
+    val selectedEntities = remember(state.reports, state.selectedIds) {
+        state.reports.filter { state.selectedIds.contains(it.id) }
+    }
+
+    // 最外层用 Box：批量操作条要**浮**在内容之上（v2.0.0 起）
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
+    ) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
     ) {
         // 顶部
         Column(
@@ -149,16 +174,34 @@ fun HistoryScreen(
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
-                "共 ${state.totalCount} 份 · 支持按文件名搜索",
+                "共 ${state.totalCount} 份 · " + when (state.searchScope) {
+                    SearchScope.FILE_NAME -> "按文件名搜索"
+                    SearchScope.ALL_CONTENT -> "按文件名与正文搜索"
+                },
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(10.dp))
+
+            // 列表 / 统计 两个视图的切换（v2.0.0 起）
+            HistoryTabBar(
+                selected = tab,
+                onSelect = { tab = it },
+            )
+
+            // 搜索框只在「列表」视图里出现
+            if (tab == 0) {
             OutlinedTextField(
                 value = state.keyword,
                 onValueChange = viewModel::onKeywordChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("搜索文件名…", fontSize = 13.sp) },
+                placeholder = {
+                    Text(
+                        if (state.searchScope == SearchScope.FILE_NAME) "搜索文件名…"
+                        else "搜索文件名或正文内容…",
+                        fontSize = 13.sp,
+                    )
+                },
                 leadingIcon = {
                     Icon(painterResource(R.drawable.ic_search),
                         contentDescription = null,
@@ -175,14 +218,57 @@ fun HistoryScreen(
                     color = MaterialTheme.colorScheme.onSurface,
                 ),
             )
+            }
+
+            // 搜索范围切换（v2.0.0 起）
+            //
+            // 「仅文件名」是原有行为；「全部内容」把本周完成、下周计划也纳入匹配 ——
+            // 用户真正想找的往往是内容，而不是「张三-2026年10月第3周工作报告」这种文件名。
+            if (tab == 0) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(top = 8.dp),
+            ) {
+                SearchScope.entries.forEach { scope ->
+                    FilterChip(
+                        selected = state.searchScope == scope,
+                        onClick = { viewModel.onSearchScopeChange(scope) },
+                        label = { Text(scope.label, fontSize = 12.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = state.searchScope == scope,
+                            borderColor = MaterialTheme.colorScheme.outline,
+                            selectedBorderColor = MaterialTheme.colorScheme.primary,
+                        ),
+                    )
+                }
+            }
+            }
+        }
+
+        // 统计视图（v2.0.0 起）
+        if (tab == 1) {
+            StatsContent(
+                stats = stats,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 8.dp),
+            )
+            return@Column
         }
 
         // ⚠️ 列表**总是**渲染：数据库里一条记录都没有时，
         // 用户自己拷进存放目录的压缩包也要能列出来。
         LazyColumn(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                // 底部留出悬浮玻璃胶囊的高度
-                start = 14.dp, end = 14.dp, bottom = 20.dp + CAPSULE_SPACE,
+                // 底部留出悬浮玻璃胶囊的高度；
+                // 多选模式下胶囊淡出，改留批量操作条的位置。
+                start = 14.dp, end = 14.dp,
+                bottom = 20.dp + if (state.selectionMode) BULK_BAR_SPACE else CAPSULE_SPACE,
             ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -194,7 +280,11 @@ fun HistoryScreen(
                         description = if (state.keyword.isBlank()) {
                             "在「首页」填写并生成后，这里会列出全部历史报告，可再次下载或发送邮件。"
                         } else {
-                            "换个关键词试试，搜索是按文件名匹配的。"
+                            if (state.searchScope == SearchScope.FILE_NAME) {
+                                "换个关键词试试，搜索是按文件名匹配的。"
+                            } else {
+                                "换个关键词试试，搜索会匹配文件名与周报正文。"
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -203,6 +293,10 @@ fun HistoryScreen(
                 items(state.reports, key = { it.id }) { report ->
                     ReportCard(
                         report = report,
+                        selectionMode = state.selectionMode,
+                        selected = state.selectedIds.contains(report.id),
+                        onLongClick = { viewModel.enterSelection(report.id) },
+                        onToggleSelect = { viewModel.toggleSelection(report.id) },
                         previewExpanded = previewId == report.id,
                         previewState = previews[report.id] ?: PreviewState(),
                         onTogglePreview = {
@@ -478,11 +572,35 @@ fun HistoryScreen(
             confirmButton = { TextButton(onClick = { toast = null }) { Text("好的") } },
         )
     }
+
+        // 批量操作条（v2.0.0 起）
+        // 多选时底部让位给它，玻璃胶囊同时淡出（AppRoot 监听 selectionMode）。
+        if (state.selectionMode) {
+            BulkActionBar(
+                selectedCount = state.selectedIds.size,
+                totalCount = state.reports.size,
+                onCancel = { viewModel.exitSelection() },
+                onToggleSelectAll = { viewModel.toggleSelectAll(state.reports.map { it.id }) },
+                onDelete = { viewModel.deleteSelected(selectedEntities) { n -> toast = "已删除 $n 份" } },
+                onDownload = { viewModel.downloadSelected(selectedEntities) { n -> toast = "已重新保存 $n 份" } },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+    }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ReportCard(
     report: ReportEntity,
+    /** 是否处于多选模式（v2.0.0）：卡片精简，只留标题与勾选框 */
+    selectionMode: Boolean,
+    /** 多选模式下是否已勾选 */
+    selected: Boolean,
+    /** 长按卡片 → 进入多选并选中这一份 */
+    onLongClick: () -> Unit,
+    /** 多选模式下点卡片 → 切换勾选 */
+    onToggleSelect: () -> Unit,
     previewExpanded: Boolean,
     previewState: PreviewState,
     onTogglePreview: () -> Unit,
@@ -501,20 +619,70 @@ private fun ReportCard(
     onFullscreen: (PreviewContent) -> Unit,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            // 长按进入多选；多选模式下点一下就是切换勾选
+            .combinedClickable(
+                onClick = {
+                    if (selectionMode) onToggleSelect() else onTogglePreview()
+                },
+                onLongClick = onLongClick,
+            ),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(Modifier.padding(14.dp)) {
-            Text(
-                report.displayName,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    report.displayName,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                // 多选模式：右上角一个勾选框
+                if (selectionMode) {
+                    Spacer(Modifier.width(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primary
+                                else Color.Transparent,
+                            )
+                            .border(
+                                width = 1.5.dp,
+                                color = if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outline,
+                                shape = RoundedCornerShape(11.dp),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (selected) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_check),
+                                contentDescription = "已选中",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            // 多选模式：卡片**精简** —— 只留标题与勾选框，
+            // 其余（时间/密码/大小/摘要/预览/操作按钮）全部收起，
+            // 一眼就能看清有哪些、选中了哪些。
+            if (!selectionMode) {
             Spacer(Modifier.height(8.dp))
             Row {
                 MetaChip(R.drawable.ic_calendar, formatTime(report.createdAt))
@@ -549,7 +717,10 @@ private fun ReportCard(
                 }
                 Spacer(Modifier.height(10.dp))
             }
+            }
 
+            // 操作按钮区：多选模式下整块收起（多选的操作统一走底部操作条）
+            if (!selectionMode) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmallAction(
                     icon = if (previewExpanded) R.drawable.ic_visibility_off else R.drawable.ic_eye,
@@ -593,6 +764,8 @@ private fun ReportCard(
                         onClick = onShare,
                     )
                 }
+            }
+
             }
 
             // 展开：直接看到压缩包里那份 Excel 的样子
@@ -1001,3 +1174,141 @@ private fun ExternalReportCard(
 }
 
 
+
+
+/**
+ * 历史报告页顶部的「列表 / 统计」切换（v2.0.0 起）。
+ *
+ * 自己画而不用 Material3 的 TabRow —— 少一层 API 变动风险，
+ * 也能完全跟着本 App 的配色走。
+ */
+@Composable
+private fun HistoryTabBar(
+    selected: Int,
+    onSelect: (Int) -> Unit,
+) {
+    val labels = listOf("列表", "统计")
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant,
+                RoundedCornerShape(10.dp),
+            )
+            .padding(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        labels.forEachIndexed { index, label ->
+            val isSelected = selected == index
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
+                    )
+                    .clickable { onSelect(index) }
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label,
+                    fontSize = 13.sp,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 批量操作条（v2.0.0 起）。
+ *
+ * 多选模式时浮在页面**底部居中**，玻璃胶囊同时淡出。
+ * 只提供两个真正适合批量的操作：
+ *  · **再次下载** —— 只是复制文件，稳；
+ *  · **删除** —— 删数据库记录 + 本机压缩包。
+ *
+ * 「载入首页」「取回下周计划」是单选语义（会互相覆盖），
+ * 「批量发邮件」的多附件 Intent 可能超限或被邮箱拒收，所以都没做。
+ */
+@Composable
+private fun BulkActionBar(
+    selectedCount: Int,
+    totalCount: Int,
+    onCancel: () -> Unit,
+    onToggleSelectAll: () -> Unit,
+    onDelete: () -> Unit,
+    onDownload: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(bottom = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Surface(
+            shape = RoundedCornerShape(26.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+            modifier = Modifier.padding(horizontal = 14.dp),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                TextButton(onClick = onCancel) {
+                    Text("取消", fontSize = 13.sp)
+                }
+                TextButton(onClick = onToggleSelectAll) {
+                    Text(
+                        if (selectedCount == totalCount && totalCount > 0) "取消全选" else "全选",
+                        fontSize = 13.sp,
+                    )
+                }
+                Text(
+                    "已选 $selectedCount",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+                FilledTonalIconButton(
+                    onClick = onDownload,
+                    enabled = selectedCount > 0,
+                    modifier = Modifier.size(38.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_download),
+                        contentDescription = "再次下载",
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                FilledTonalIconButton(
+                    onClick = onDelete,
+                    enabled = selectedCount > 0,
+                    modifier = Modifier.size(38.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    ),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_delete),
+                        contentDescription = "删除",
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
+    }
+}

@@ -34,15 +34,31 @@
 
     <application
         android:name=".WorkReportApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WorkReport"
         tools:targetApi="31">
+
+        <!--
+            ⚠️ allowBackup="false"：**刻意关闭**系统云备份（v2.0.0 起）。
+
+            为什么关：
+              · App 对外承诺「所有内容只存在本地，不发送到任何服务器」；
+              · 但系统备份会把 **数据库（历史报告正文）** 和
+                **SharedPreferences（敏感词库明文、姓名、草稿）** 一起打包上传云端，
+                与上面那句承诺对不上；
+              · 敏感词库与工作记录属于「我不想让任何人看到」的内容。
+
+            换手机怎么办：
+              · 设置、模板、敏感词库 → 用「我的 → 配置备份 / 恢复」导出加密 ZIP 再导入；
+              · 已生成的周报 → 就在你选的存放目录里（ZIP 文件），自己拷过去即可。
+            历史报告的**列表记录**不随系统迁移，这是关掉云备份的代价，已在
+            「我的 → 数据管理」里写明。
+        -->
 
         <activity
             android:name=".MainActivity"

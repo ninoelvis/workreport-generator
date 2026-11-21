@@ -8,6 +8,9 @@ import com.workreport.app.data.local.ReportDraft
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.repository.ReportRepository
+import com.workreport.app.domain.model.ReportStats
+import com.workreport.app.domain.model.ReportStatsCalculator
+import com.workreport.app.domain.model.SearchScope
 import com.workreport.app.export.EncryptedZipReader
 import com.workreport.app.export.XlsxContentReader
 import com.workreport.app.util.ReportContentFormat
@@ -16,7 +19,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,6 +42,12 @@ data class PreviewState(
 
 data class HistoryUiState(
     val keyword: String = "",
+    /** 搜索范围：仅文件名 / 连正文一起搜（v2.0.0 起） */
+    val searchScope: SearchScope = SearchScope.FILE_NAME,
+    /** 是否处于多选模式（v2.0.0 起） */
+    val selectionMode: Boolean = false,
+    /** 已选中的报告 id */
+    val selectedIds: Set<Long> = emptySet(),
     val reports: List<ReportEntity> = emptyList(),
     val totalCount: Int = 0,
     val busy: Boolean = false,
@@ -77,12 +88,39 @@ class HistoryViewModel(
 
     private val keyword = MutableStateFlow("")
 
+    /** 搜索范围（v2.0.0 起）：用户可以切成「连正文一起搜」 */
+    private val searchScope = MutableStateFlow(SearchScope.FILE_NAME)
+
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
-    val reports: StateFlow<List<ReportEntity>> = keyword
-        .flatMapLatest { repository.search(it) }
+    val reports: StateFlow<List<ReportEntity>> = combine(keyword, searchScope) { kw, scope -> kw to scope }
+        .flatMapLatest { (kw, scope) -> repository.search(kw, scope) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * 全部历史报告（**不受搜索关键词影响**）。
+     *
+     * 统计页要看的是「一共有多少」，不是「当前筛出来的多少」——
+     * 搜索框里打了字也不该让统计数字跟着变。
+     */
+    val allReports: StateFlow<List<ReportEntity>> = repository.observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** 周报统计（v2.0.0 起），由全部历史报告算出 */
+    val stats: StateFlow<ReportStats> = allReports
+        .map { list ->
+            ReportStatsCalculator.calculate(
+                list.map {
+                    ReportStatsCalculator.StatsEntry(
+                        year = it.year,
+                        month = it.month,
+                        doneWorks = it.doneWorks,
+                    )
+                },
+            )
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReportStats.EMPTY)
 
     val preferredMailPackage: StateFlow<String> = settings.preferredMailPackage
 
@@ -313,6 +351,113 @@ class HistoryViewModel(
     fun onKeywordChange(value: String) {
         keyword.value = value
         _uiState.value = _uiState.value.copy(keyword = value)
+    }
+
+    // ---------------- 多选（v2.0.0 起）----------------
+
+    /**
+     * 进入多选模式（长按卡片触发）。
+     *
+     * 进入时把该报告直接选中 —— 用户长按的那一张就是「想操作的那一张」，
+     * 不用再点一次。
+     */
+    fun enterSelection(id: Long) {
+        if (_uiState.value.selectionMode) return
+        _uiState.value = _uiState.value.copy(
+            selectionMode = true,
+            selectedIds = setOf(id),
+        )
+        ServiceLocator.setSelectionMode(true)
+    }
+
+    /** 切换某一份报告的选中状态 */
+    fun toggleSelection(id: Long) {
+        val cur = _uiState.value
+        if (!cur.selectionMode) return
+        val next = if (cur.selectedIds.contains(id)) {
+            cur.selectedIds - id
+        } else {
+            cur.selectedIds + id
+        }
+        _uiState.value = cur.copy(selectedIds = next)
+    }
+
+    /** 全选 / 取消全选（当前列表里的全部） */
+    fun toggleSelectAll(allIds: List<Long>) {
+        val cur = _uiState.value
+        if (!cur.selectionMode) return
+        val next = if (cur.selectedIds.size == allIds.size && allIds.isNotEmpty()) {
+            emptySet()
+        } else {
+            allIds.toSet()
+        }
+        _uiState.value = cur.copy(selectedIds = next)
+    }
+
+    /** 退出多选模式 */
+    fun exitSelection() {
+        _uiState.value = _uiState.value.copy(
+            selectionMode = false,
+            selectedIds = emptySet(),
+        )
+        ServiceLocator.setSelectionMode(false)
+    }
+
+    /**
+     * 批量删除：删数据库记录 + 删本机的压缩包文件。
+     *
+     * 只删数据库记录是不够的 —— 压缩包还在硬盘上，
+     * 用户在存放目录里还能看到「删了但文件还在」，会以为没删成功。
+     */
+    fun deleteSelected(
+        entities: List<ReportEntity>,
+        onDone: (Int) -> Unit,
+    ) {
+        viewModelScope.launch {
+            var deleted = 0
+            for (e in entities) {
+                runCatching { repository.delete(e) }
+                    .onSuccess {
+                        deleted++
+                        // 文件删不掉不算失败（可能已经被用户删了）
+                        runCatching { File(e.filePath).delete() }
+                    }
+            }
+            exitSelection()
+            onDone(deleted)
+        }
+    }
+
+    /**
+     * 批量再下载：把选中的报告重新存一份到存放目录。
+     *
+     * 只做「再下载」而不做「批量发邮件」——
+     * 多附件的 ACTION_SEND Intent 可能超出大小限制，也可能被某些邮箱 App 拒收，
+     * 而批量下载只是复制文件，稳。
+     */
+    fun downloadSelected(
+        entities: List<ReportEntity>,
+        onDone: (Int) -> Unit,
+    ) {
+        viewModelScope.launch {
+            var ok = 0
+            for (e in entities) {
+                if (repository.copyToDownloads(e)) ok++
+            }
+            exitSelection()
+            onDone(ok)
+        }
+    }
+
+    /**
+     * 切换搜索范围（v2.0.0 起）。
+     *
+     * 「仅文件名」是原有行为；「全部内容」会把本周完成、下周计划也纳入匹配。
+     */
+    fun onSearchScopeChange(scope: SearchScope) {
+        if (searchScope.value == scope) return
+        searchScope.value = scope
+        _uiState.value = _uiState.value.copy(searchScope = scope)
     }
 
     /**

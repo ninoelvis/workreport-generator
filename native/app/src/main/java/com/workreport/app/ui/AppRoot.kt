@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -106,6 +107,11 @@ fun AppRoot() {
 
     /** 只有主 Tab 页面显示底部导航栏；引导页和配置子页面都是整屏的 */
     val showBottomBar = currentRoute in TopLevelDestination.entries.map { it.route }
+
+    // v2.0.0：历史报告页进入多选模式时，底部让位给批量操作条，
+    // 玻璃胶囊淡出下沉（复用 AnimatedBottomBar 已有的 visible 机制）。
+    val selectionMode by ServiceLocator.selectionMode.collectAsStateWithLifecycle()
+    val bottomBarVisible = showBottomBar && (!selectionMode)
 
     /**
      * 玻璃背景层：整屏内容录制成一层，底栏从这层里采样。
@@ -300,7 +306,7 @@ fun AppRoot() {
             backdrop = backdrop,
             destinations = TopLevelDestination.entries,
             selectedRoute = currentRoute,
-            visible = showBottomBar,
+            visible = bottomBarVisible,
             onSelect = { destination ->
                 navController.navigate(destination.route) {
                     popUpTo(navController.graph.findStartDestination().id) {

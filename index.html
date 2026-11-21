@@ -629,20 +629,20 @@ footer a{color:var(--t2)}
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "1.8.0",
-    "versionCode": 34,
+    "version": "2.0.0",
+    "versionCode": 35,
     "releasedAt": "2026-11-22",
-    "sizeBytes": 12318250,
-    "sizeText": "11.7 MB",
-    "sha256": "1cfe887e14e999eaaf62a5e2fcc4613d41d8cac405730d4a756709723e3d7d7a",
+    "sizeBytes": 12351150,
+    "sizeText": "11.8 MB",
+    "sha256": "495c620997bf29bb0eead38db257cb8b87e61ed4a595ac49bd5794cc4df7a599",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.8.0/workreport-native-v1.8.0.apk",
-    "apkMirrorUrl": "https://2hkut4lfp121t.space.mcode.cn/workreport-native-v1.8.0.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.8.0/workreport-native-source-v1.8.0.zip",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.0/workreport-native-v2.0.0.apk",
+    "apkMirrorUrl": "https://2hkut4lfp121t.space.mcode.cn/workreport-native-v2.0.0.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.0/workreport-native-source-v2.0.0.zip",
     "minAndroid": "Android 12 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://2hkut4lfp121t.space.mcode.cn/workreport-native-source-v1.8.0.zip"
+    "sourceMirrorUrl": "https://2hkut4lfp121t.space.mcode.cn/workreport-native-source-v2.0.0.zip"
   },
   "web": {
     "version": "v1.3",
@@ -660,6 +660,20 @@ footer a{color:var(--t2)}
   },
   "changelog": [
     {
+      "version": "v2.0.0",
+      "date": "2026-11-22",
+      "title": "搜索能搜正文了 · 新增周报统计 · 历史报告支持批量操作 · 敏感数据加密",
+      "items": [
+        "**搜索现在能搜到正文**：搜索框下多了一个「文件名 / 全部内容」切换；搜的是你**自己写的原文**而不是脱敏后的文本（否则写「张三」却搜不到），输入里的 `%` `_` 也做了正确转义",
+        "**新增「周报统计」**：历史报告页顶部多了「列表 / 统计」tab，含总览（报告份数、工作条目、覆盖月份）、每月工作条目柱状图与每月明细表；统计**只含本 App 生成的报告**，页面上已写明",
+        "**历史报告支持批量操作**：长按任意一份进入多选，多选时卡片精简为「标题 + 勾选框」，底部浮出操作条（**全选 / 再次下载 / 删除**）；删除会连本机压缩包一起删掉",
+        "**时间范围可以一键选**：新增「本周」「上周」快捷按钮，走的是与默认值完全相同的格式化逻辑，写进 Excel 的那一格格式不变",
+        "**隐私加固**：系统云备份已**彻底关闭**（含设备迁移），历史报告正文与敏感词库不会再被系统悄悄打包带走；敏感词库改用 **Android Keystore 的 AES-256-GCM 密钥**加密存储，密钥不进备份、不可导出，老版本升级后**自动迁移**",
+        "导出内容、Excel 样式、加密 ZIP 文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**：8 个红线文件与 v1.8.0 逐字节相同，导出路径的 3 个方法体也逐字节相同；单元测试 259/259 通过（新增 34 项）"
+      ],
+      "current": true
+    },
+    {
       "version": "v1.8.0",
       "date": "2026-11-22",
       "title": "修深色模式底部白杠，底部导航缩成一半并靠右，玻璃更透",
@@ -672,7 +686,7 @@ footer a{color:var(--t2)}
         "玻璃**更毛也更透**：模糊半径从 16dp 加大到 26dp，玻璃自身遮盖大幅调低（深色 10% → 5.5%、浅色 55% → 38%），滚动时能透过胶囊隐约看到下面卡片和文字在动",
         "导出内容、Excel 样式、加密 ZIP 文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**，相关文件与 v1.7.0 逐字节相同；单元测试 225/225 通过，并新增 5 项深色模式与底栏形态防回归检查"
       ],
-      "current": true
+      "current": false
     },
     {
       "version": "v1.7.0",
