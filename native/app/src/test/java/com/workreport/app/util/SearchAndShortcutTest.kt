@@ -187,10 +187,10 @@ class SearchAndShortcutTest {
         val resRoot = File("src/main/res").absolutePath
         // 只禁 **values-night*（主题/颜色/字符串这类跟随系统深浅色的资源）**。
         //
-        // ⚠️ `drawable-night` / `mipmap-night-*` 是**允许**的 ——
-        //   那是 v1.6.0 刻意做的「夜间版桌面图标」多色位图。
-        //   桌面图标跟随**系统**深浅色是合理的（桌面本身就跟随系统），
-        //   和 App 内部那套手动主题是两回事。
+        // v2.0.3 起连夜间桌面图标也去掉了（用户要求桌面图标固定一份），
+        // 所以 `drawable-night` / `mipmap-night-*` 现在也不该存在了 ——
+        // 但这一条只查 values-night，夜间图标的检查放在 IconSystemTest 里
+        // （那里还要查「必须有 monochrome / splash 两份」）。
         val nightValueDirs = File(resRoot).listFiles()
             ?.filter { it.isDirectory && it.name.startsWith("values-night") }
             ?: emptyList()
