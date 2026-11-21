@@ -164,7 +164,20 @@ fun StatsContent(
                     selected = dimension,
                     onSelect = { dimension = it },
                 )
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(6.dp))
+                // ⚠️ 「按周」是按**月内第几周**归并的（跟压缩包文件名里的周数一致），
+                //    所以第 1 周会把不同月份、不同年份的第 1 周合到一根柱子里，
+                //    跟「按月」不是一回事 —— 这里要说清楚，免得误读。
+                Text(
+                    if (dimension == 0) {
+                        "按月份统计产出。"
+                    } else {
+                        "按「月内第几周」统计（第 1 周会合并不同月份的同周次）。"
+                    },
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(6.dp))
                 // v2.0.4：按月 / 按周 切换时图表淡入淡出（之前是瞬间替换）
                 AnimatedContent(
                     targetState = dimension,
@@ -198,7 +211,14 @@ fun StatsContent(
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "柱子越高，那段时间写的工作条目越多；柱子下面的小字是那段时间生成了几份周报。",
+                    // ⚠️ 柱子太多时份数标签会被省略（否则会叠在一起），
+                    //    说明文字要跟着改，不能还说"柱子下面有小字"。
+                    if (stats.months.size <= 6 && stats.weeks.size <= 6) {
+                        "柱子越高，那段时间写的工作条目越多；柱子下面的小字是那段时间生成了几份周报。"
+                    } else {
+                        "柱子越高，那段时间写的工作条目越多。月份/周数太多时省略了刻度与份数，" +
+                            "下方「每月明细」有完整数字。"
+                    },
                     fontSize = 11.sp,
                     lineHeight = 16.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -331,6 +351,33 @@ private fun ProductionBarChart(bars: List<ProductionBar>) {
     val axisColor = MaterialTheme.colorScheme.onSurfaceVariant
     val baselineColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
 
+    // ⚠️ 文本测量必须在**组合阶段**做完，不能放进 DrawScope。
+    //
+    // 坑：DrawScope 里每根柱子每帧要测 3 次文本，24 根柱子就是 72 次/帧；
+    // `rememberTextMeasurer` 的默认缓存只有 8 条，会被打穿 → 每帧全部重测，
+    // 切「按月 / 按周」时两张图同时存在，帧率明显掉。
+    // 现在预先测好并 remember 住，Canvas 里只画不测。
+    val countStyle = TextStyle(
+        fontSize = 11.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = barColor,
+    )
+    val axisStyle = TextStyle(fontSize = 10.sp, color = axisColor)
+    val reportStyle = TextStyle(
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Medium,
+        color = axisColor,
+    )
+    val countLayouts = remember(bars, countStyle) {
+        bars.map { measurer.measure(it.itemCount.toString(), countStyle) }
+    }
+    val labelLayouts = remember(bars, axisStyle) {
+        bars.map { measurer.measure(it.label, axisStyle) }
+    }
+    val reportLayouts = remember(bars, reportStyle) {
+        bars.map { measurer.measure("${it.reportCount} 份", reportStyle) }
+    }
+
     // 布局常量
     val topSpace = 18.dp      // 柱顶数字
     val bottomSpace = 34.dp   // 轴标签 + 份数
@@ -356,6 +403,11 @@ private fun ProductionBarChart(bars: List<ProductionBar>) {
         val barWidth = minOf(maxBarWidth.toPx(), slot * 0.56f)
         val totalWidth = slot * n
         val startX = (size.width - totalWidth) / 2f
+
+        // 柱子太窄就不标数字（否则会叠在一起）
+        val showCountOnBar = barWidth >= 13.dp.toPx()
+        // 轴标签也同理：太窄就只标首尾，中间留空
+        val showAllLabels = slot >= 22.dp.toPx()
 
         // 基线
         drawLine(
@@ -384,54 +436,50 @@ private fun ProductionBarChart(bars: List<ProductionBar>) {
             }
 
             // 柱顶数字：工作条目数
-            val countLayout = measurer.measure(
-                text = bar.itemCount.toString(),
-                style = TextStyle(
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = barColor,
-                ),
-            )
-            drawText(
-                textLayoutResult = countLayout,
-                topLeft = Offset(
-                    x = centerX - countLayout.size.width / 2f,
-                    y = (top - countLayout.size.height - 2.dp.toPx()).coerceAtLeast(0f),
-                ),
-            )
+            //
+            // ⚠️ 柱子多的时候（比如 20 多个月的记录），每根柱子只有几个 dp 宽，
+            //    数字比柱子还宽就会互相叠在一起糊成一团。
+            //    所以**只有柱子够宽时才标数字**，不够就靠柱子高度自己说话。
+            val countLayout = countLayouts[index]
+            if (showCountOnBar && countLayout.size.width <= barWidth + 2.dp.toPx()) {
+                drawText(
+                    textLayoutResult = countLayout,
+                    topLeft = Offset(
+                        x = centerX - countLayout.size.width / 2f,
+                        y = (top - countLayout.size.height - 2.dp.toPx()).coerceAtLeast(0f),
+                    ),
+                )
+            }
 
-            // 轴标签
-            val labelLayout = measurer.measure(
-                text = bar.label,
-                style = TextStyle(
-                    fontSize = 10.sp,
-                    color = axisColor,
-                ),
-            )
-            drawText(
-                textLayoutResult = labelLayout,
-                topLeft = Offset(
-                    x = centerX - labelLayout.size.width / 2f,
-                    y = baseline + 4.dp.toPx(),
-                ),
-            )
+            // 轴标签（窄的时候只标首尾，避免挤成一团）
+            val labelLayout = labelLayouts[index]
+            // 窄的时候只标首尾，中间留空
+            val labelVisible = showAllLabels || index == 0 || index == n - 1
+            if (labelVisible) {
+                // ⚠️ 柱子多的时候，首尾那根的标签按中心对齐会画到 Canvas 外面
+                //    （Compose 默认不裁剪绘制），所以要把 x 夹进画布内。
+                drawText(
+                    textLayoutResult = labelLayout,
+                    topLeft = Offset(
+                        x = (centerX - labelLayout.size.width / 2f)
+                            .coerceIn(0f, (size.width - labelLayout.size.width).coerceAtLeast(0f)),
+                        y = baseline + 4.dp.toPx(),
+                    ),
+                )
+            }
 
             // 柱子下面：报告份数
-            val reportLayout = measurer.measure(
-                text = "${bar.reportCount} 份",
-                style = TextStyle(
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = axisColor,
-                ),
-            )
-            drawText(
-                textLayoutResult = reportLayout,
-                topLeft = Offset(
-                    x = centerX - reportLayout.size.width / 2f,
-                    y = baseline + 18.dp.toPx(),
-                ),
-            )
+            val reportLayout = reportLayouts[index]
+            if (labelVisible) {
+                drawText(
+                    textLayoutResult = reportLayout,
+                    topLeft = Offset(
+                        x = (centerX - reportLayout.size.width / 2f)
+                            .coerceIn(0f, (size.width - reportLayout.size.width).coerceAtLeast(0f)),
+                        y = baseline + 18.dp.toPx(),
+                    ),
+                )
+            }
         }
     }
 }

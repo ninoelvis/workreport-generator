@@ -129,17 +129,36 @@ class StatsAndMotionTest {
         )
     }
 
-    /** 样本数据必须落在应用私有目录，不能污染用户的「下载」目录 */
+    /**
+     * 样本数据必须落在应用私有目录，不能污染用户的「下载」目录。
+     *
+     * ⚠️ 关键坑：`ReportExporter.export` 的最后一步 `saveOutside(...)`，
+     *    在 `storage == null` 时**恰恰是写进系统「下载」目录**（不是"不外发"！），
+     *    每点一次「造样本」就会往用户下载目录里丢一批文件。
+     *
+     *    所以样本工厂必须**绕开 export**，
+     *    自己调用同一批红线组件写文件（产物等价性由 SampleDataParityTest 守着）。
+     */
     @Test
     fun `样本报告不写进用户的下载目录`() {
         val tools = read("ui/debug/DebugTools.kt")
         assertTrue(
-            "样本导出不能传 storage（否则会写进用户的下载目录）",
-            tools.contains("storage = null"),
+            "样本不能走 ReportExporter.export（它最后一步会写进用户的下载目录）",
+            !tools.contains("exporter.export("),
+        )
+        assertTrue(
+            "样本不能靠 storage = null 来表达'不外发'（null 恰恰是写下载目录）",
+            !tools.contains("storage = null"),
         )
         assertTrue(
             "样本要落在应用私有目录",
             tools.contains("ReportExporter.reportsDir"),
+        )
+        assertTrue(
+            "样本要用同一批红线组件自己写，保证与正式导出等价",
+            tools.contains("ReportNaming.plan(") &&
+                tools.contains("XlsxWriter.toBytes(") &&
+                tools.contains("EncryptedZipWriter.write("),
         )
     }
 
@@ -166,11 +185,26 @@ class StatsAndMotionTest {
         )
     }
 
-    /** 列表 / 统计 视图切换也要有动效 */
+    /**
+     * 列表 / 统计 视图切换要**交叉淡入**。
+     *
+     * v2.1.1 修：以前是「整体透明度淡入」—— 切换瞬间旧视图直接消失、
+     * 新视图从全透明开始，看着像"闪一下"；而且列表离开组合后，
+     * 切回来时滚动位置回到顶部，用户被甩上去。
+     *
+     * 现在用 Crossfade：新旧视图同时在场交叉淡入，
+     * 并且列表的滚动位置由 listState 保持。
+     */
     @Test
-    fun `历史报告视图切换有淡入动效`() {
+    fun `历史报告视图切换用交叉淡入并保留滚动位置`() {
         val history = read("ui/history/HistoryScreen.kt")
-        assertTrue("视图切换应有淡入动效", history.contains("viewAlpha"))
+        assertTrue("视图切换应用 Crossfade 交叉淡入", history.contains("Crossfade("))
+        assertTrue("列表要用 rememberLazyListState 保住滚动位置", history.contains("rememberLazyListState()"))
+        assertTrue("LazyColumn 要绑定 listState", history.contains("state = listState"))
+        assertTrue(
+            "不能再用整体透明度淡入（会有全透明空帧）",
+            !history.contains("viewAlpha"),
+        )
     }
 
     /** 搜索框出现/消失也要有动效 */

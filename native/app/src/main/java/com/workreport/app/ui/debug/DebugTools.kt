@@ -3,8 +3,11 @@ package com.workreport.app.ui.debug
 import android.content.Context
 import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.ReportEntity
-import com.workreport.app.domain.model.SensitiveWord
+import com.workreport.app.util.SensitiveWordEngine
+import com.workreport.app.export.EncryptedZipWriter
 import com.workreport.app.export.ReportExporter
+import com.workreport.app.export.ReportNaming
+import com.workreport.app.export.XlsxWriter
 import com.workreport.app.util.DateUtils
 import java.io.File
 import java.util.Calendar
@@ -35,8 +38,16 @@ import kotlinx.coroutines.withContext
  */
 object DebugTools {
 
-    /** 样本报告的名字前缀，清理时按它识别 */
+    /** 样本报告的名字前缀 */
     const val SAMPLE_PREFIX = "样本"
+
+    /**
+     * 样本报告的标题标记。
+     *
+     * 清理样本时要**名字前缀 + 标题标记同时满足**才删，
+     * 免得用户真名撞上前缀，把真实报告误删。
+     */
+    const val SAMPLE_TITLE_MARK = "周样本工作报告"
 
     // ---------------- 样本数据工厂 ----------------
 
@@ -54,18 +65,26 @@ object DebugTools {
         context: Context,
         count: Int = 12,
     ): String = withContext(Dispatchers.IO) {
-        val exporter = ReportExporter(context.applicationContext)
         val dao = ServiceLocator.database.reportDao()
         val outputDir = ReportExporter.reportsDir(context.applicationContext)
-        val now = Calendar.getInstance()
+        // 本次运行的批次号：同一周重复点「造样本」也不会互相覆盖
+        // （正式导出用生成时间戳做子目录名，这里同理）。
+        val batchId = System.currentTimeMillis()
+        // 基准日：每次循环都从它**重新算**，不能在上一次的结果上继续加 ——
+        // 累加的话 12 份会横跨 12×11 = 132 周（约 3 年），完全不是「跨 12 周」。
+        val base = Calendar.getInstance()
         val sb = StringBuilder()
         var ok = 0
 
         for (i in 0 until count) {
             // 往前推 count 周，每周造一份
-            now.add(Calendar.WEEK_OF_YEAR, -(count - 1 - i))
-            val sunday = timeOf(now, Calendar.SUNDAY)
-            val saturday = timeOf(now, Calendar.SATURDAY)
+            val c = (base.clone() as Calendar).apply {
+                add(Calendar.WEEK_OF_YEAR, -(count - 1 - i))
+            }
+            // ⚠️ 必须用 DateUtils.getWeekRange，不能自己 set(DAY_OF_WEEK)：
+            //    今天是周日时，set(DAY_OF_WEEK, SATURDAY) 会退到**上周六**，
+            //    区间就变成「上周日 ~ 上周六」了。
+            val (sunday, saturday) = DateUtils.getWeekRange(c.time)
             val rangeText = DateUtils.fmtDate(sunday) + "-" + DateUtils.fmtDate(saturday)
 
             val doneWorks = buildString {
@@ -76,19 +95,17 @@ object DebugTools {
             }
             val planWorks = "样本计划：继续推进第 ${i + 1} 周的演示工作"
 
+            val title = "第 ${i + 1} ${SAMPLE_TITLE_MARK}"
             val result = runCatching {
-                exporter.export(
+                buildSampleZip(
+                    outputDir = outputDir,
+                    batch = batchId,
                     userName = SAMPLE_PREFIX,
-                    title = "第 ${i + 1} 周样本工作报告",
+                    title = title,
                     timeRangeText = rangeText,
                     doneWorks = doneWorks,
                     planWorks = planWorks,
-                    sensitiveWords = emptyList<SensitiveWord>(),
-                    outputDir = outputDir,
-                    now = sunday,
-                    // ⚠️ 不传 storage：样本只落在应用私有目录，
-                    //    不会污染用户自己的「下载」目录。
-                    storage = null,
+                    createdAt = sunday.time,
                 )
             }.getOrNull() ?: continue
 
@@ -104,7 +121,7 @@ object DebugTools {
                     month = result.month,
                     weekNum = result.weekNum,
                     contentPreview = result.doneWorksExported.take(120),
-                    reportTitle = "第 ${i + 1} 周样本工作报告",
+                    reportTitle = title,
                     timeRange = rangeText,
                     doneWorks = doneWorks,
                     planWorks = planWorks,
@@ -122,28 +139,114 @@ object DebugTools {
         sb.toString()
     }
 
-    /** 删掉所有样本报告（连文件一起删） */
+    /**
+     * 造一份**样本**压缩包。
+     *
+     * ⚠️ 为什么不直接调 `ReportExporter.export`：
+     *   它的最后一步 `saveOutside(target, zipFileName, storage)` 在 `storage == null` 时
+     *   **恰恰是写进系统「下载」目录**（不是"不外发"！）——
+     *   每点一次就会往用户的下载目录里丢一批文件。
+     *
+     *   所以这里**绕开那一步**，直接调用同一批红线组件
+     *   （ReportNaming / SensitiveWordEngine / XlsxWriter / EncryptedZipWriter），
+     *   产出与正式导出**完全一致**的文件名、密码、加密参数、ZIP 结构和 Excel 内容，
+     *   但**只落在应用私有目录**，一个字都不进用户的下载目录。
+     *
+     *   红线文件一个都没改 —— 只是换个调用顺序。
+     */
+    private fun buildSampleZip(
+        outputDir: File,
+        batch: Long,
+        userName: String,
+        title: String,
+        timeRangeText: String,
+        doneWorks: String,
+        planWorks: String,
+        createdAt: Long,
+    ): SampleZip {
+        // 命名与密码规则（红线组件，参数与正式导出完全一致）
+        val plan = ReportNaming.plan(userName, timeRangeText)
+
+        // 脱敏 + 格式化（样本不含敏感词，所以内容不会被改）
+        val engine = SensitiveWordEngine(emptyList())
+        val doneFormatted = SensitiveWordEngine.formatDoneWorks(doneWorks, engine, emptySet())
+        val planFormatted = SensitiveWordEngine.formatPlanWorks(planWorks, engine, emptySet())
+
+        // Excel（红线组件）
+        val xlsxBytes = XlsxWriter.toBytes(
+            title = title,
+            timeRange = timeRangeText.trim(),
+            doneWorks = doneFormatted,
+            planWorks = planFormatted,
+        )
+
+        // 只写私有目录：子目录用批次号，同一周重复生成也不会互相覆盖
+        val dir = File(outputDir, "sample-$batch").apply { mkdirs() }
+        val target = File(dir, plan.zipFileName)
+
+        // 加密 ZIP（红线组件：AE-1 = AES-256 + HMAC-SHA1）
+        EncryptedZipWriter.write(
+            target = target,
+            password = plan.password,
+            entries = listOf(plan.xlsxFileName to xlsxBytes),
+        )
+
+        return SampleZip(
+            fileName = plan.zipFileName,
+            baseName = plan.baseName,
+            password = plan.password,
+            file = target,
+            year = plan.year,
+            month = plan.month,
+            weekNum = plan.weekNum,
+            createdAt = createdAt,
+            doneWorksExported = doneFormatted,
+            planWorksExported = planFormatted,
+        )
+    }
+
+    /** 样本压缩包的产出 */
+    private data class SampleZip(
+        val fileName: String,
+        val baseName: String,
+        val password: String,
+        val file: File,
+        val year: Int,
+        val month: Int,
+        val weekNum: Int,
+        val createdAt: Long,
+        val doneWorksExported: String,
+        val planWorksExported: String,
+    )
+
+    /**
+     * 删掉所有样本报告（连文件一起删）。
+     *
+     * ⚠️ 判定条件要**两个都满足**，不能只看名字前缀 ——
+     *    用户真名如果以「样本」开头（比如本人姓「样本」），真实报告会被一起删掉，
+     *    而且删了就找不回来了。
+     *
+     *    样本的标题是「第 N 周样本工作报告」，用户真报告的标题是用户自己填的，
+     *    两个条件同时成立才认定为样本。
+     */
     suspend fun clearSampleReports(): String = withContext(Dispatchers.IO) {
         val dao = ServiceLocator.database.reportDao()
-        val samples = dao.all().filter { it.displayName.startsWith(SAMPLE_PREFIX) }
+        val samples = dao.all().filter {
+            it.displayName.startsWith(SAMPLE_PREFIX) &&
+                it.reportTitle.contains(SAMPLE_TITLE_MARK)
+        }
         var n = 0
+        val dirs = HashSet<File>()
         for (s in samples) {
-            runCatching { File(s.filePath).delete() }
+            val f = File(s.filePath)
+            runCatching { f.delete() }
+            f.parentFile?.let { dirs.add(it) }
             dao.delete(s)
             n++
         }
+        // 顺带清掉空的批次目录
+        dirs.forEach { d -> runCatching { if (d.isDirectory && d.listFiles()?.isEmpty() == true) d.delete() } }
         "已删除 $n 份样本报告。"
-    }
-
-    /** 取某一天所在的那一周里的某一天（周日 / 周六） */
-    private fun timeOf(cal: Calendar, dayOfWeek: Int): Date {
-        val c = cal.clone() as Calendar
-        c.set(Calendar.DAY_OF_WEEK, dayOfWeek)
-        c.set(Calendar.HOUR_OF_DAY, 0)
-        c.set(Calendar.MINUTE, 0)
-        c.set(Calendar.SECOND, 0)
-        c.set(Calendar.MILLISECOND, 0)
-        return c.time
     }
 
     // ---------------- 搜索自检 ----------------

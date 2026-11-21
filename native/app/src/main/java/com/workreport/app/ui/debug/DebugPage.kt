@@ -6,9 +6,17 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Process
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,11 +28,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,24 +40,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.workreport.app.BuildConfig
 import com.workreport.app.ServiceLocator
 import com.workreport.app.data.local.ThemeMode
-import com.workreport.app.ui.common.Motion
 import com.workreport.app.export.EncryptedZipReader
 import com.workreport.app.export.EncryptedZipWriter
 import com.workreport.app.export.ReportNaming
 import com.workreport.app.export.XlsxWriter
+import com.workreport.app.ui.common.Motion
 import com.workreport.app.ui.profile.ProfileSubPage
 import com.workreport.app.ui.reminder.ReminderReceiver
 import com.workreport.app.ui.reminder.ReminderScheduler
@@ -57,12 +66,12 @@ import com.workreport.app.util.AppLog
 import com.workreport.app.util.DateUtils
 import com.workreport.app.util.SensitiveWordEngine
 import com.workreport.app.util.ShareHelper
+import java.io.File
+import java.util.Calendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.util.Calendar
 
 /**
  * 调试工具页。
@@ -103,10 +112,19 @@ fun DebugPage(onBack: () -> Unit) {
     var excelText by remember { mutableStateOf("") }
     var redLineText by remember { mutableStateOf("") }
     var storageText by remember { mutableStateOf("") }
-    var historyText by remember { mutableStateOf("正在读取…") }
+    var historyEntries by remember { mutableStateOf<List<HistoryEntry>>(emptyList()) }
+    /**
+     * 体检数据是否已经加载完。
+     *
+     * v2.1.1 修：以前只用 `historyEntries.isEmpty()` 判断"还没加载"，
+     * 但**数据库里 0 条记录**时加载完也是空列表 → 永远显示「正在读取…」，
+     * 而且「还没有历史报告」那句永远进不去。
+     */
+    var historyLoaded by remember { mutableStateOf(false) }
+    /** 正常明细是否展开（默认收起，异常永远摊开） */
+    var showHealthyDetails by remember { mutableStateOf(false) }
     var logcatText by remember { mutableStateOf("") }
     var selfCheck by remember { mutableStateOf("正在读取…") }
-    var historyCount by remember { mutableStateOf(-1) }
 
     // v2.0.4：最近新增功能的调试状态
     var sampleText by remember { mutableStateOf("") }
@@ -122,25 +140,39 @@ fun DebugPage(onBack: () -> Unit) {
     val userName by settings.userName.collectAsStateWithLifecycle()
     val themeMode by settings.themeMode.collectAsStateWithLifecycle()
 
+    /**
+     * 体检数据**订阅**数据库，而不是取一次快照。
+     *
+     * v2.1.1 修：以前是 `observeAll().first()` 取一次 —— 在同一个页面里点完
+     * 「造 12 份样本」或「清掉样本」后，卡片上的统计还是旧值，
+     * 必须离开页面再进来才更新。而这个卡片存在的意义正是给样本工厂做体检。
+     */
     LaunchedEffect(Unit) {
-        val reports = withContext(Dispatchers.IO) { ServiceLocator.reportRepository.observeAll().first() }
-        historyCount = reports.size
-        historyText = buildString {
-            append("共 ").append(reports.size).append(" 份\n\n")
-            reports.take(20).forEachIndexed { index, r ->
+        ServiceLocator.reportRepository.observeAll().collect { reports ->
+            // v2.1.1：不再平铺文字，改成结构化数据。
+            //
+            // 坑：以前是「共 N 份」+ 每份 5 行文字、最多 20 份 —— 报告一多，
+            // 这个卡片能把整个调试页撑到几千 px，滚很久都看不全。
+            // 现在：顶部一行汇总，异常默认摊开，正常明细收进折叠区。
+            historyEntries = reports.mapIndexed { index, r ->
                 val file = File(r.filePath)
                 val exists = file.exists()
-                append(index + 1).append(". ").append(r.displayName).append('\n')
-                append("   时间：").append(formatTime(r.createdAt)).append('\n')
-                append("   文件：").append(if (exists) "在（${file.length()} B）" else "不见了").append('\n')
-                append("   密码：").append(r.password).append('\n')
-                append("   预览来源：")
-                    .append(if (r.hasExportedContent) "数据库（与 Excel 逐字一致）" else "解压缩包读 Excel")
-                    .append('\n')
-                append("   可载入编辑：").append(if (r.hasFullContent) "是" else "需解压缩包").append('\n')
+                HistoryEntry(
+                    index = index + 1,
+                    displayName = r.displayName,
+                    time = formatTime(r.createdAt),
+                    sizeText = if (exists) formatDebugSize(file.length()) else "—",
+                    fileMissing = !exists,
+                    previewFromDb = r.hasExportedContent,
+                    loadable = r.hasFullContent,
+                )
             }
-            if (reports.size > 20) append("\n（只列了前 20 份）")
+            historyLoaded = true
         }
+    }
+
+    /** 自检信息：跟数据库无关，单独一份副作用（读一次就行） */
+    LaunchedEffect(Unit) {
         selfCheck = buildString {
             append("版本：").append(BuildConfig.VERSION_NAME)
             append("（versionCode ").append(BuildConfig.VERSION_CODE).append("）\n")
@@ -157,7 +189,6 @@ fun DebugPage(onBack: () -> Unit) {
             append("通知权限：")
                 .append(if (ReminderReceiver.hasNotificationPermission(context)) "已授权" else "未授权（Android 13+ 需要授权）")
                 .append('\n')
-            append("历史报告：").append(if (historyCount >= 0) "$historyCount 份" else "读取中").append('\n')
         }
     }
 
@@ -356,7 +387,96 @@ fun DebugPage(onBack: () -> Unit) {
             // ---------------- 历史报告体检 ----------------
             item {
                 DebugCard("历史报告体检") {
-                    Text(historyText, style = DebugMonoStyle)
+                    if (!historyLoaded) {
+                        Text("正在读取…", style = DebugMonoStyle)
+                    } else if (historyEntries.isEmpty()) {
+                        // v2.1.1 修：数据库里 0 条记录时以前会一直卡在「正在读取…」
+                        Text("还没有历史报告。", style = DebugMonoStyle)
+                    } else {
+                        val all = historyEntries
+                        // 一次遍历分出两组（以前用 `it !in broken` 做两两比较，是 O(n²)）
+                        val (broken, healthy) = all.partition {
+                            it.fileMissing || !it.previewFromDb || !it.loadable
+                        }
+
+                        // ── 汇总：一行看清整体健不健康 ──
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            // ⚠️ 加 weight：否则报告多了 / 字体放大时最后一个 chip 会出界
+                            DebugChip("共 ${all.size} 份", MaterialTheme.colorScheme.onSurfaceVariant, Modifier.weight(1f, fill = false))
+                            DebugChip(
+                                "文件齐全 ${all.count { !it.fileMissing }}",
+                                if (all.count { !it.fileMissing } == all.size) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.error
+                                },
+                                Modifier.weight(1f, fill = false),
+                            )
+                            if (broken.isNotEmpty()) {
+                                DebugChip("需处理 ${broken.size}", MaterialTheme.colorScheme.error, Modifier.weight(1f, fill = false))
+                            }
+                        }
+
+                        // ── 异常：体检的重点，永远摊开 ──
+                        if (broken.isNotEmpty()) {
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                "需要处理（${broken.size} 份）",
+                                style = DebugLabelStyle,
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            broken.take(BROKEN_DETAIL_LIMIT).forEach { entry ->
+                                HistoryEntryRow(entry, highlight = true)
+                            }
+                            if (broken.size > BROKEN_DETAIL_LIMIT) {
+                                Text(
+                                    "（只列了前 $BROKEN_DETAIL_LIMIT 份，其余 ${broken.size - BROKEN_DETAIL_LIMIT} 份同样异常）",
+                                    style = DebugTextStyle,
+                                )
+                            }
+                        }
+
+                        // ── 正常明细：收进折叠区，默认不展开 ──
+                        if (healthy.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            TextButton(
+                                onClick = { showHealthyDetails = !showHealthyDetails },
+                                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
+                            ) {
+                                Text(
+                                    if (showHealthyDetails) {
+                                        "收起正常报告（${healthy.size} 份）"
+                                    } else {
+                                        "展开正常报告（${healthy.size} 份）"
+                                    },
+                                    fontSize = 12.sp,
+                                )
+                            }
+                            AnimatedVisibility(
+                                visible = showHealthyDetails,
+                                enter = fadeIn(tween(Motion.duration(Motion.NORMAL))) +
+                                    expandVertically(tween(Motion.duration(Motion.MEDIUM))),
+                                exit = fadeOut(tween(Motion.duration(Motion.FAST))) +
+                                    shrinkVertically(tween(Motion.duration(Motion.MEDIUM))),
+                            ) {
+                                Column {
+                                    healthy.take(HEALTHY_DETAIL_LIMIT).forEach { entry ->
+                                        HistoryEntryRow(entry, highlight = false)
+                                    }
+                                    if (healthy.size > HEALTHY_DETAIL_LIMIT) {
+                                        Text(
+                                            "（只列了前 $HEALTHY_DETAIL_LIMIT 份，其余 ${healthy.size - HEALTHY_DETAIL_LIMIT} 份同样正常）",
+                                            style = DebugTextStyle,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                    }
                 }
             }
 
@@ -906,7 +1026,121 @@ private fun readOwnLogcat(): String = runCatching {
     "读取 logcat 失败：${e.message}"
 }
 
-// ---------------- 小组件样式 ----------------
+// ==================== 历史报告体检（v2.1.1 重做展示） ====================
+
+/**
+ * 一条历史报告的体检结果。
+ *
+ * v2.1.1 之前是直接拼一大段文字（每份 5 行），报告一多就把页面撑得极长。
+ * 现在改成结构化数据：界面自己决定怎么摆。
+ */
+private data class HistoryEntry(
+    /** 序号 */
+    val index: Int,
+    /** 展示名 */
+    val displayName: String,
+    /** 生成时间 */
+    val time: String,
+    /** 文件大小（文件没了就是「—」） */
+    val sizeText: String,
+    /** 文件是否已经不在了 */
+    val fileMissing: Boolean,
+    /** 预览是否直接来自数据库（true = 与 Excel 逐字一致） */
+    val previewFromDb: Boolean,
+    /** 是否能直接载入首页继续编辑 */
+    val loadable: Boolean,
+)
+
+/** 正常明细最多列多少份（再多就只给个计数） */
+private const val HEALTHY_DETAIL_LIMIT = 50
+
+/** 异常明细最多列多少份（再多就只给个计数） */
+private const val BROKEN_DETAIL_LIMIT = 50
+
+/** 一个小圆角标签 */
+@Composable
+private fun DebugChip(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(color.copy(alpha = 0.12f))
+            .padding(horizontal = 7.dp, vertical = 3.dp),
+    ) {
+        Text(
+            text,
+            fontSize = 11.sp,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * 体检结果里的一行。
+ *
+ * 异常时把具体问题写出来；正常时只留关键信息，压成一行。
+ */
+@Composable
+private fun HistoryEntryRow(entry: HistoryEntry, highlight: Boolean) {
+    val issues = buildList {
+        if (entry.fileMissing) add("文件不见了")
+        if (!entry.previewFromDb) add("预览需解压缩包")
+        if (!entry.loadable) add("不能载入编辑")
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Text(
+            "${entry.index}",
+            style = DebugMonoStyle,
+            modifier = Modifier.width(26.dp),
+        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                entry.displayName,
+                fontSize = 12.sp,
+                color = if (highlight) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                if (issues.isEmpty()) {
+                    "${entry.time} · ${entry.sizeText} · 正常"
+                } else {
+                    "${entry.time} · ${entry.sizeText} · ${issues.joinToString("、")}"
+                },
+                fontSize = 10.5.sp,
+                lineHeight = 15.sp,
+                color = if (highlight) {
+                    MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
+    }
+}
+
+/** 字节数转可读大小 */
+private fun formatDebugSize(bytes: Long): String = when {
+    bytes < 1024 -> "$bytes B"
+    bytes < 1024 * 1024 -> String.format("%.1f KB", bytes / 1024.0)
+    else -> String.format("%.1f MB", bytes / 1024.0 / 1024.0)
+}
+
+// ==================== 小组件样式 ====================
 
 @Composable
 private fun DebugCard(title: String, content: @Composable () -> Unit) {

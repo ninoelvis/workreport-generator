@@ -1,6 +1,7 @@
 package com.workreport.app.ui.history
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -38,6 +39,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -171,16 +173,18 @@ fun HistoryScreen(
     // 顶部两个视图的切换：0 = 列表，1 = 统计（v2.0.0 起）
     var tab by remember { mutableStateOf(0) }
 
-    // v2.0.4：切换视图时**淡入**。
+    // v2.1.1：列表 / 统计 两个视图改成 **Crossfade 交叉淡入**。
     //
-    // 之前是 `if (tab == 1) { 统计 } else { 列表 }` 直接替换，
-    // 切换是"瞬间"的 —— 与 App 里其它地方（卡片展开、下划线指示条、页面过渡）不一致。
-    // 现在两个视图都走这一层淡入，动效语言统一。
-    val viewAlpha = remember { Animatable(1f) }
-    LaunchedEffect(tab) {
-        viewAlpha.snapTo(0f)
-        viewAlpha.animateTo(1f, tween(Motion.duration(Motion.NORMAL)))
-    }
+    // 之前（v2.0.4）用的是「整体透明度淡入」：
+    //   ① 切 Tab 的瞬间旧视图直接消失、新视图从**全透明**开始 → 看着像"闪一下"；
+    //   ② 列表离开组合 → 再回来时滚动位置回到顶部（用户被甩上去）。
+    //
+    // Crossfade 让新旧视图**同时在场**做交叉淡入淡出：
+    //   · 不会出现全透明的空帧；
+    //   · 列表的滚动位置由 [listState] 保持，切走再切回来还在原处。
+    //
+    // 首次进入页面时 Crossfade 不播过渡动画（目标态就是初始态），所以也没有闪白。
+    val listState = rememberLazyListState()
 
     // v2.0.1：多选模式下按返回手势（边缘滑动返回）**只退出多选**，不离开这个页面。
     //
@@ -275,21 +279,25 @@ fun HistoryScreen(
         }
 
         // 统计视图（v2.0.0 起）
-        if (tab == 1) {
+        // 两个视图用 Crossfade 交叉淡入（v2.1.1）
+        Crossfade(
+            targetState = tab,
+            animationSpec = tween(Motion.duration(Motion.NORMAL)),
+            label = "historyTab",
+        ) { currentTab ->
+        if (currentTab == 1) {
             StatsContent(
                 stats = stats,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 8.dp)
-                    .graphicsLayer { alpha = viewAlpha.value },
+                    .padding(top = 8.dp),
             )
-            return@Column
-        }
+        } else {
 
         // ⚠️ 列表**总是**渲染：数据库里一条记录都没有时，
         // 用户自己拷进存放目录的压缩包也要能列出来。
         LazyColumn(
-            modifier = Modifier.graphicsLayer { alpha = viewAlpha.value },
+            state = listState,
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 // 底部留出悬浮玻璃胶囊的高度；
                 // 多选模式下胶囊淡出，改留批量操作条的位置。
@@ -438,6 +446,8 @@ fun HistoryScreen(
                     }
                 }
             }
+        }
+        }
         }
 
     // 全屏放大预览
