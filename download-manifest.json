@@ -8,15 +8,15 @@
     "releasedAt": "2026-11-22",
     "sizeBytes": 12426266,
     "sizeText": "11.9 MB",
-    "sha256": "a94bd5b881608a4a20f2d21ba267e0cdf159936d11523439300a77658ca8ca27",
+    "sha256": "2ad23cb5085919f32c8033d7e281a7617dea7ac9746c3d6d4303f378a9de002b",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
     "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.0/workreport-native-v2.1.0.apk",
-    "apkMirrorUrl": "https://j4ntowee5th6u.space.mcode.cn/workreport-native-v2.1.0.apk",
+    "apkMirrorUrl": "https://g87kihrqxd9nt.space.mcode.cn/workreport-native-v2.1.0.apk",
     "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.0/workreport-native-source-v2.1.0.zip",
     "minAndroid": "Android 12 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://j4ntowee5th6u.space.mcode.cn/workreport-native-source-v2.1.0.zip"
+    "sourceMirrorUrl": "https://g87kihrqxd9nt.space.mcode.cn/workreport-native-source-v2.1.0.zip"
   },
   "web": {
     "version": "v1.3",
