@@ -269,7 +269,7 @@ App 内**所有带图标的位置**（功能区、底部导航、操作按钮、
 | 层次感 | 设计稿的「深→浅」三档色阶改用**透明度**实现（`strokeAlpha` 1.0 / 0.66 / 0.40），既保住层次，又能整体换色 |
 | 资源命名 | 只能用小写字母、数字、下划线（Android 限制），如 `ic_arrow_back_ios` |
 | 状态栏图标 | `ic_notification.xml` 单独手写，必须是**白色实心剪影**（系统会做模板着色） |
-| 桌面图标 | `mipmap-anydpi-v26/ic_launcher.xml`（自适应）+ 各密度传统 PNG + `mipmap-night-*` 深色版；因启动图标会被裁成圆形，采用**竖版堆叠**（标志在上、WorkReport 字样在下） |
+| 桌面图标 | `mipmap-anydpi-v26/ic_launcher.xml`（自适应）+ 各密度传统 PNG；**只有一份，不跟随系统深浅色**；采用**纯文字横排字标**（白底 + 「Work」灰蓝 / 「Report」深藏蓝，无任何图形），字形直接从设计稿原图抠出 |
 
 图标源文件与生成脚本：
 
@@ -277,7 +277,9 @@ App 内**所有带图标的位置**（功能区、底部导航、操作按钮、
 |---|---|
 | `scripts/icons.py` | 全部图标的 SVG 定义（导航 / 功能区 / 操作 / 品牌） |
 | `scripts/gen_vector_icons.py` | SVG → Android VectorDrawable（含色阶→透明度转换） |
-| `scripts/gen_launcher_icons.py` | 桌面图标（自适应前景 + 各密度 PNG + 深色版） |
+| `scripts/gen_launcher_icons.py` | 桌面图标（自适应前景 + 各密度 PNG + 单色主题图标 + 启动图图标） |
+| `scripts/gen_launcher_icons_wordmark.py` | **v2.0.3 方案 A 桌面图标**：从设计稿原图抠出「WorkReport」纯文字字标，生成自适应前景 / 各密度 PNG / 单色版 / 启动图版（当前版本用的是这个） |
+| `scripts/gen_app_wordmark.py` | **App 内顶栏字标**：把字标拆成「Work」「Report」两段单色 PNG，运行时用 `ColorFilter.tint` 按主题染色 |
 | `scripts/render_icon_set.py` | 渲染整套图标的实际观感（浅色/深色两套） |
 | `scripts/check_drawable_refs.py` | 校验源码里的 `R.drawable.ic_*` 引用与资源文件一致 |
 

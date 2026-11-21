@@ -458,21 +458,10 @@ fun AppTopBar(
             .padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(11.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_brand),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(30.dp),
-            )
-        }
+        // v2.0.3：原来是「42dp 圆角方框 + 1dp 边框 + 底色」里放一个图形标志。
+        // 现在换成**纯文字的 WorkReport 字标**，
+        // **不画框、不垫底色** —— 字样直接和页面背景融为一体。
+        Wordmark(width = 96.dp)
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text(

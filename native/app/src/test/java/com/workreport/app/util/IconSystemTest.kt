@@ -21,6 +21,9 @@ class IconSystemTest {
     private val srcRoot: File = File("src/main/java/com/workreport/app")
     private val resRoot: File = File("src/main/res")
 
+    /** 读源码文件 */
+    private fun read(relPath: String): String = File(srcRoot, relPath).readText()
+
     /** 去掉注释，只留下真正会被编译执行的代码/字符串 */
     private fun stripComments(src: String): String {
         val out = StringBuilder()
@@ -96,9 +99,13 @@ class IconSystemTest {
 
     @Test
     fun `所有 ic_ 矢量引用都有对应资源文件`() {
-        val drawable = File(resRoot, "drawable")
-        val existing = drawable.listFiles { f -> f.isFile && f.name.endsWith(".xml") }
-            ?.map { it.name.removeSuffix(".xml") }?.toSet() ?: emptySet()
+        // 矢量（drawable/*.xml）和位图（drawable-<density>/*.png）都算资源
+        val existing = resRoot.listFiles { f ->
+            f.isDirectory && (f.name == "drawable" || f.name.startsWith("drawable-"))
+        }?.flatMap { d ->
+            d.listFiles { f -> f.isFile && (f.name.endsWith(".xml") || f.name.endsWith(".png")) }
+                ?.map { it.name.substringBeforeLast(".") } ?: emptyList()
+        }?.toSet() ?: emptySet()
         val referenced = mutableSetOf<String>()
         for (f in kotlinFiles()) {
             Regex("R\\.drawable\\.(ic_\\w+)").findAll(f.readText())
@@ -220,9 +227,13 @@ class IconSystemTest {
      */
     @Test
     fun `图标配色沿用双色设计稿`() {
+        // v2.0.3 方案 A：纯文字图标，底就是**纯白**（与设计稿一致）
         val bg = File(resRoot, "drawable/ic_launcher_background.xml").readText()
-        assertTrue("图标底色应是白到极浅冷灰蓝的渐变", bg.contains("#FFFFFFFF"))
-        assertTrue("图标底色应是白到极浅冷灰蓝的渐变", bg.contains("#FFF2F5FA"))
+        assertTrue("图标底色应是纯白", bg.contains("#FFFFFFFF"))
+        assertTrue(
+            "纯文字图标不该再用渐变底（会干扰字样）",
+            !bg.contains("gradient"),
+        )
 
         val anydpi = File(resRoot, "mipmap-anydpi-v26/ic_launcher.xml").readText()
         assertTrue(
@@ -230,11 +241,111 @@ class IconSystemTest {
             anydpi.contains("ic_launcher_monochrome"),
         )
 
-        // 启动图要用纯标志那份（系统会放大，带小字会糊）
+        // 启动图要用单独那份
         val themes = File(resRoot, "values/themes.xml").readText()
         assertTrue(
-            "启动图应使用纯标志图标",
+            "启动图应使用单独的启动图图标",
             themes.contains("@mipmap/ic_launcher_splash"),
+        )
+    }
+
+    /**
+     * v2.0.3 方案 A：**桌面图标是纯文字**，没有任何图形。
+     *
+     * 用户明确要求「只有文字没有任何图形，不要在设计上自由发挥」。
+     * 所以桌面图标的前景资源里不能有品牌图形，只能是 WorkReport 字标。
+     *
+     * 怎么验？前景 PNG 是抠出来的字标，
+     * 它与品牌图形 `ic_brand` 的形状完全不同 ——
+     * 用**像素特征**判断：字标是「上宽下窄的一行字」，
+     * 品牌图形是「一个带勾的文档」。
+     */
+    @Test
+    fun `桌面图标是纯文字不含图形`() {
+        val fg = File(resRoot, "mipmap-xxxhdpi/ic_launcher_foreground.png")
+        assertTrue("缺少自适应图标前景资源", fg.exists())
+        val (w, h) = pngSize(fg)
+
+        // 自适应图标前景必须是 **108dp 画布**（Android 硬约束）
+        // xxxhdpi = 4x → 432px
+        assertEquals("前景画布应为 432x432（108dp @xxxhdpi）", 432, w)
+        assertEquals("前景画布应为 432x432（108dp @xxxhdpi）", 432, h)
+
+        // 自适应图标的前景必须指向这份字标，不能指向品牌图形
+        val anydpi = File(resRoot, "mipmap-anydpi-v26/ic_launcher.xml").readText()
+        assertTrue(
+            "自适应图标前景应是字标资源",
+            anydpi.contains("@mipmap/ic_launcher_foreground"),
+        )
+        assertTrue(
+            "桌面图标不能引用品牌图形标志（用户要求纯文字、无任何图形）",
+            !anydpi.contains("ic_brand"),
+        )
+
+        // 品牌图形仍可以留在 App 内用（不是桌面图标）
+        assertTrue(
+            "App 内品牌图形应保留",
+            File(resRoot, "drawable/ic_brand.xml").exists(),
+        )
+    }
+
+    /** 纯 java.io 读 PNG 头的宽高（单元测试里没有 javax.imageio） */
+    private fun pngSize(f: File): Pair<Int, Int> {
+        f.inputStream().use { ins ->
+            val head = ByteArray(24)
+            val n = ins.read(head)
+            assertTrue("PNG 文件太短：$f", n >= 24)
+            fun be(o: Int): Int =
+                ((head[o].toInt() and 0xFF) shl 24) or
+                    ((head[o + 1].toInt() and 0xFF) shl 16) or
+                    ((head[o + 2].toInt() and 0xFF) shl 8) or
+                    (head[o + 3].toInt() and 0xFF)
+            return be(16) to be(20)
+        }
+    }
+
+    /**
+     * v2.0.3：App 内顶栏的图标位**不能有边框、也不能垫底色**，
+     * WorkReport 字样要「与背景融为一体」。
+     */
+    @Test
+    fun `App内顶栏字标没有边框也没有底色方块`() {
+        val components = read("ui/common/Components.kt")
+        val topBar = components.substringAfter("fun AppTopBar(")
+        assertTrue(
+            "顶栏应使用 Wordmark 组件",
+            topBar.contains("Wordmark("),
+        )
+        assertTrue(
+            "顶栏字标不能有边框",
+            !topBar.contains(".border("),
+        )
+        assertTrue(
+            "顶栏字标不能垫底色方块",
+            !topBar.contains("RoundedCornerShape(11.dp)"),
+        )
+    }
+
+    @Test
+    fun `App内字标资源齐全且随主题染色`() {
+        for (d in listOf("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")) {
+            assertTrue(
+                "缺少 drawable-$d/ic_wordmark_work.png",
+                File(resRoot, "drawable-$d/ic_wordmark_work.png").exists(),
+            )
+            assertTrue(
+                "缺少 drawable-$d/ic_wordmark_report.png",
+                File(resRoot, "drawable-$d/ic_wordmark_report.png").exists(),
+            )
+        }
+        val wm = read("ui/common/Wordmark.kt")
+        assertTrue(
+            "字标要用 ColorFilter.tint 跟随主题（这样深浅色自动适配）",
+            wm.contains("ColorFilter.tint"),
+        )
+        assertTrue(
+            "字标要分 Work / Report 两段（各自染色）",
+            wm.contains("ic_wordmark_work") && wm.contains("ic_wordmark_report"),
         )
     }
 

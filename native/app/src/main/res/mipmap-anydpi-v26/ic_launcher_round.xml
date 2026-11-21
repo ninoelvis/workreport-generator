@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 自适应图标：背景 = 浅色渐变底，前景 = 品牌标志。
+<!-- 自适应图标：背景 = 纯白，前景 = WorkReport 字标（方案 A 纯文字）。
      v2.0.3 起**只有一份**，桌面图标不再跟随系统深浅色切换；
      App 内的深浅色主题切换是 Compose 管的，与此无关。 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">

@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 自适应图标背景层（v2.0.3：只有浅色一份，桌面图标不跟随系统深浅色） -->
+<!-- 自适应图标背景层（v2.0.3 · 方案 A 纯文字）——纯白底，
+     与设计稿一致；桌面图标只有一份，不跟随系统深浅色。 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient
-        android:type="linear"
-        android:angle="315"
-        android:startColor="#FFFFFFFF"
-        android:endColor="#FFF2F5FA" />
+    <solid android:color="#FFFFFFFF" />
 </shape>
