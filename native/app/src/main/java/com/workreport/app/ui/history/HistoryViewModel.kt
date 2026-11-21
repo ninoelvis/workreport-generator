@@ -44,8 +44,6 @@ data class HistoryUiState(
     val keyword: String = "",
     /** 搜索范围：仅文件名 / 连正文一起搜（v2.0.0 起） */
     val searchScope: SearchScope = SearchScope.FILE_NAME,
-    /** 是否处于多选模式（v2.0.0 起） */
-    val selectionMode: Boolean = false,
     /** 已选中的报告 id */
     val selectedIds: Set<Long> = emptySet(),
     val reports: List<ReportEntity> = emptyList(),
@@ -97,6 +95,20 @@ class HistoryViewModel(
     val reports: StateFlow<List<ReportEntity>> = combine(keyword, searchScope) { kw, scope -> kw to scope }
         .flatMapLatest { (kw, scope) -> repository.search(kw, scope) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * 是否处于多选模式（v2.0.0 起）。
+     *
+     * ⚠️ 真相源**只有这一个**（[ServiceLocator.selectionMode]），不放在 `_uiState` 里。
+     *
+     * 坑（v2.0.1 修）：之前 `_uiState.selectionMode` 和 `ServiceLocator.selectionMode`
+     * 是**两份**，清了一处另一处还留着 ——
+     * 系统返回手势没走 `exitSelection()`，全局标志卡在 true，
+     * 底栏就永久消失了（切 Tab 离开历史页也一样）。
+     *
+     * 现在只有一份：底栏（AppRoot 读它）和卡片（这里读它）永远一致。
+     */
+    val selectionMode: StateFlow<Boolean> = ServiceLocator.selectionMode
 
     /**
      * 全部历史报告（**不受搜索关键词影响**）。
@@ -362,18 +374,15 @@ class HistoryViewModel(
      * 不用再点一次。
      */
     fun enterSelection(id: Long) {
-        if (_uiState.value.selectionMode) return
-        _uiState.value = _uiState.value.copy(
-            selectionMode = true,
-            selectedIds = setOf(id),
-        )
+        if (selectionMode.value) return
+        _uiState.value = _uiState.value.copy(selectedIds = setOf(id))
         ServiceLocator.setSelectionMode(true)
     }
 
     /** 切换某一份报告的选中状态 */
     fun toggleSelection(id: Long) {
         val cur = _uiState.value
-        if (!cur.selectionMode) return
+        if (!selectionMode.value) return
         val next = if (cur.selectedIds.contains(id)) {
             cur.selectedIds - id
         } else {
@@ -385,7 +394,7 @@ class HistoryViewModel(
     /** 全选 / 取消全选（当前列表里的全部） */
     fun toggleSelectAll(allIds: List<Long>) {
         val cur = _uiState.value
-        if (!cur.selectionMode) return
+        if (!selectionMode.value) return
         val next = if (cur.selectedIds.size == allIds.size && allIds.isNotEmpty()) {
             emptySet()
         } else {
@@ -396,10 +405,7 @@ class HistoryViewModel(
 
     /** 退出多选模式 */
     fun exitSelection() {
-        _uiState.value = _uiState.value.copy(
-            selectionMode = false,
-            selectedIds = emptySet(),
-        )
+        _uiState.value = _uiState.value.copy(selectedIds = emptySet())
         ServiceLocator.setSelectionMode(false)
     }
 

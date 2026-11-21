@@ -113,6 +113,22 @@ fun AppRoot() {
     val selectionMode by ServiceLocator.selectionMode.collectAsStateWithLifecycle()
     val bottomBarVisible = showBottomBar && (!selectionMode)
 
+    // v2.0.1：**离开历史报告页时自动清掉多选状态**（兜底）。
+    //
+    // 坑（v2.0.0 修）：多选标志是全局的，之前只有「取消」按钮和批量操作完成会清它。
+    // 系统返回手势、切换 Tab 都不走那条路 → 标志卡在 true →
+    // **底部导航栏永久消失**（切到别的 Tab 也一样，因为底栏是全局的）。
+    //
+    // 现在双保险：
+    //   ① 历史页自己用 BackHandler 拦返回手势 → 只退出多选（见 HistoryScreen）；
+    //   ② 这里兜底 —— 只要不在历史报告页，多选状态一律清掉。
+    // 两条路都通，不管从哪进、怎么退，底栏都会回来。
+    LaunchedEffect(currentRoute) {
+        if (currentRoute != TopLevelDestination.HISTORY.route) {
+            ServiceLocator.setSelectionMode(false)
+        }
+    }
+
     /**
      * 玻璃背景层：整屏内容录制成一层，底栏从这层里采样。
      *

@@ -57,7 +57,10 @@ class BulkSelectionTest {
     @Test
     fun `多选状态要能被界面读到`() {
         val vm = read("ui/history/HistoryViewModel.kt")
-        assertTrue("UiState 应该有 selectionMode", vm.contains("val selectionMode: Boolean"))
+        assertTrue(
+            "多选状态应直接暴露全局的那一份（真相源唯一）",
+            vm.contains("val selectionMode: StateFlow<Boolean> = ServiceLocator.selectionMode"),
+        )
         assertTrue("UiState 应该有 selectedIds", vm.contains("val selectedIds: Set<Long>"))
         assertTrue("应该有进入多选的方法", vm.contains("fun enterSelection"))
         assertTrue("应该有切换选中的方法", vm.contains("fun toggleSelection"))
@@ -88,8 +91,12 @@ class BulkSelectionTest {
     fun `多选时卡片要精简`() {
         val screen = read("ui/history/HistoryScreen.kt")
         assertTrue(
-            "多选时要隐藏卡片的操作按钮区",
-            screen.contains("if (!selectionMode)"),
+            "多选时要收起卡片的内容区（AnimatedVisibility + visible = !selectionMode）",
+            screen.contains("visible = !selectionMode"),
+        )
+        assertTrue(
+            "收起/展开必须带动画（不能是瞬间塌缩）",
+            screen.contains("expandVertically") && screen.contains("shrinkVertically"),
         )
         assertTrue(
             "多选时要显示勾选框",

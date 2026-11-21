@@ -1,10 +1,27 @@
 package com.workreport.app.ui.history
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +32,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,6 +77,8 @@ import androidx.compose.ui.Modifier
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -71,6 +93,7 @@ import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.domain.model.SearchScope
 import com.workreport.app.ui.CAPSULE_SPACE
 import com.workreport.app.ui.BULK_BAR_SPACE
+import com.workreport.app.ui.TAB_INDICATOR_WIDTH
 import com.workreport.app.ui.common.EmptyState
 import androidx.compose.ui.platform.LocalContext
 import com.workreport.app.ui.common.FullscreenPreview
@@ -116,6 +139,8 @@ fun HistoryScreen(
     var fullscreenContent by remember { mutableStateOf<PreviewContent?>(null) }
     val externalPreviews by viewModel.externalPreviews.collectAsStateWithLifecycle()
     val stats by viewModel.stats.collectAsStateWithLifecycle()
+    // 多选模式：真相源在 ServiceLocator（与 AppRoot 底栏读的是同一份）
+    val selectionMode by viewModel.selectionMode.collectAsStateWithLifecycle()
     // 用户有没有选过自定义存放目录（选了才能识别外部文件）
     val storageCustomized by remember {
         ServiceLocator.storageLocation.customized
@@ -144,6 +169,16 @@ fun HistoryScreen(
 
     // 顶部两个视图的切换：0 = 列表，1 = 统计（v2.0.0 起）
     var tab by remember { mutableStateOf(0) }
+
+    // v2.0.1：多选模式下按返回手势（边缘滑动返回）**只退出多选**，不离开这个页面。
+    //
+    // 坑（v2.0.0 修）：之前多选状态只有「取消」按钮和批量操作完成会清，
+    // 系统返回手势完全不走这条路 → 全局标志卡在 true → **底部导航栏永久消失**。
+    //
+    // 符合 Android 惯例：多选是页面内的临时状态，返回 = 取消选择。
+    BackHandler(enabled = selectionMode) {
+        viewModel.exitSelection()
+    }
 
     // 当前选中的报告实体（按 id 取，顺序跟列表一致）
     val selectedEntities = remember(state.reports, state.selectedIds) {
@@ -268,7 +303,7 @@ fun HistoryScreen(
                 // 底部留出悬浮玻璃胶囊的高度；
                 // 多选模式下胶囊淡出，改留批量操作条的位置。
                 start = 14.dp, end = 14.dp,
-                bottom = 20.dp + if (state.selectionMode) BULK_BAR_SPACE else CAPSULE_SPACE,
+                bottom = 20.dp + if (selectionMode) BULK_BAR_SPACE else CAPSULE_SPACE,
             ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -293,7 +328,7 @@ fun HistoryScreen(
                 items(state.reports, key = { it.id }) { report ->
                     ReportCard(
                         report = report,
-                        selectionMode = state.selectionMode,
+                        selectionMode = selectionMode,
                         selected = state.selectedIds.contains(report.id),
                         onLongClick = { viewModel.enterSelection(report.id) },
                         onToggleSelect = { viewModel.toggleSelection(report.id) },
@@ -575,7 +610,17 @@ fun HistoryScreen(
 
         // 批量操作条（v2.0.0 起）
         // 多选时底部让位给它，玻璃胶囊同时淡出（AppRoot 监听 selectionMode）。
-        if (state.selectionMode) {
+        //
+        // 动效：从下方滑入 + 淡入，与底栏胶囊的淡出下沉**反向呼应** ——
+        // 一个退场一个进场，视觉上是「交接」而不是「打架」。
+        AnimatedVisibility(
+            visible = selectionMode,
+            enter = fadeIn(tween(durationMillis = 200)) +
+                slideInVertically(tween(durationMillis = 260)) { it / 2 },
+            exit = fadeOut(tween(durationMillis = 140)) +
+                slideOutVertically(tween(durationMillis = 180)) { it / 2 },
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) {
             BulkActionBar(
                 selectedCount = state.selectedIds.size,
                 totalCount = state.reports.size,
@@ -583,7 +628,6 @@ fun HistoryScreen(
                 onToggleSelectAll = { viewModel.toggleSelectAll(state.reports.map { it.id }) },
                 onDelete = { viewModel.deleteSelected(selectedEntities) { n -> toast = "已删除 $n 份" } },
                 onDownload = { viewModel.downloadSelected(selectedEntities) { n -> toast = "已重新保存 $n 份" } },
-                modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
     }
@@ -618,24 +662,45 @@ private fun ReportCard(
     /** 点「放大查看」→ 全屏预览这份 Excel */
     onFullscreen: (PreviewContent) -> Unit,
 ) {
+    // v2.0.0：多选的动效跟 v1.8.0 底栏用**同一套体系** ——
+    //   按压回弹（pressScale）、颜色过渡（animateColorAsState）、
+    //   出现/消失（淡入淡出 + 缩放）。
+    // 之前这里是「瞬间切换」，进多选像被电了一下。
+    val cardInteraction = remember { MutableInteractionSource() }
+    val cardPressed by cardInteraction.collectIsPressedAsState()
+    val cardPressScale by animateFloatAsState(
+        targetValue = if (cardPressed) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "cardPressScale",
+    )
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        animationSpec = tween(durationMillis = 180),
+        label = "cardContainerColor",
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = cardPressScale
+                scaleY = cardPressScale
+            }
             // 长按进入多选；多选模式下点一下就是切换勾选
             .combinedClickable(
+                interactionSource = cardInteraction,
+                indication = null,
                 onClick = {
                     if (selectionMode) onToggleSelect() else onTogglePreview()
                 },
                 onLongClick = onLongClick,
             ),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) {
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-            } else {
-                MaterialTheme.colorScheme.surface
-            },
-        ),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(Modifier.padding(14.dp)) {
@@ -650,25 +715,55 @@ private fun ReportCard(
                     modifier = Modifier.weight(1f),
                 )
                 // 多选模式：右上角一个勾选框
-                if (selectionMode) {
+                //
+                // 动效与 v1.8.0 底栏同一套：缩放出现（spring）+ 勾颜色过渡 + 按压回弹。
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = selectionMode,
+                    enter = fadeIn(tween(160)) + scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
+                    exit = fadeOut(tween(120)) + scaleOut(tween(120)),
+                ) {
                     Spacer(Modifier.width(10.dp))
+                    val checkInteraction = remember { MutableInteractionSource() }
+                    val checkPressed by checkInteraction.collectIsPressedAsState()
+                    val checkScale by animateFloatAsState(
+                        targetValue = if (checkPressed) 0.85f else 1f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "checkPressScale",
+                    )
+                    val checkFill by animateColorAsState(
+                        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        animationSpec = tween(durationMillis = 160),
+                        label = "checkFill",
+                    )
+                    val checkBorder by animateColorAsState(
+                        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                        animationSpec = tween(durationMillis = 160),
+                        label = "checkBorder",
+                    )
                     Box(
                         modifier = Modifier
                             .size(22.dp)
+                            .graphicsLayer {
+                                scaleX = checkScale
+                                scaleY = checkScale
+                            }
                             .clip(RoundedCornerShape(11.dp))
-                            .background(
-                                if (selected) MaterialTheme.colorScheme.primary
-                                else Color.Transparent,
-                            )
+                            .background(checkFill)
                             .border(
                                 width = 1.5.dp,
-                                color = if (selected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.outline,
+                                color = checkBorder,
                                 shape = RoundedCornerShape(11.dp),
                             ),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (selected) {
+                        // 对勾：勾上时弹一下（scale）
+                        // ⚠️ 用全限定名：RowScope 里也有一个 AnimatedVisibility，
+                        //    直接写名字会解析成 RowScope 那个而编译不过。
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = selected,
+                            enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
+                            exit = scaleOut(tween(100)),
+                        ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_check),
                                 contentDescription = "已选中",
@@ -682,7 +777,13 @@ private fun ReportCard(
             // 多选模式：卡片**精简** —— 只留标题与勾选框，
             // 其余（时间/密码/大小/摘要/预览/操作按钮）全部收起，
             // 一眼就能看清有哪些、选中了哪些。
-            if (!selectionMode) {
+            //
+            // v2.0.0：收起/展开是**带动画**的（之前是瞬间塌缩，看着像卡了一下）。
+            AnimatedVisibility(
+                visible = !selectionMode,
+                enter = fadeIn(tween(180)) + expandVertically(tween(220)),
+                exit = fadeOut(tween(120)) + shrinkVertically(tween(200)),
+            ) {
             Spacer(Modifier.height(8.dp))
             Row {
                 MetaChip(R.drawable.ic_calendar, formatTime(report.createdAt))
@@ -717,10 +818,8 @@ private fun ReportCard(
                 }
                 Spacer(Modifier.height(10.dp))
             }
-            }
 
             // 操作按钮区：多选模式下整块收起（多选的操作统一走底部操作条）
-            if (!selectionMode) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmallAction(
                     icon = if (previewExpanded) R.drawable.ic_visibility_off else R.drawable.ic_eye,
@@ -766,7 +865,6 @@ private fun ReportCard(
                 }
             }
 
-            }
 
             // 展开：直接看到压缩包里那份 Excel 的样子
             if (previewExpanded) {
@@ -793,7 +891,7 @@ private fun ReportCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                    }
+            }
 
                     previewState.content != null -> {
                         val content = previewState.content
@@ -895,6 +993,7 @@ private fun ReportCard(
                         }
                     }
                 }
+            }
             }
         }
     }
@@ -1188,40 +1287,63 @@ private fun HistoryTabBar(
     onSelect: (Int) -> Unit,
 ) {
     val labels = listOf("列表", "统计")
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                MaterialTheme.colorScheme.surfaceVariant,
-                RoundedCornerShape(10.dp),
-            )
-            .padding(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        labels.forEachIndexed { index, label ->
-            val isSelected = selected == index
+
+    // 指示条平移：和 v1.8.0 底部玻璃胶囊的指示条**同一套动画规格**（spring），
+    // 顶部和底部就串成了一种视觉语言。
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val tabWidth = maxWidth / labels.size
+        val indicatorX by animateDpAsState(
+            targetValue = tabWidth * selected + (tabWidth - TAB_INDICATOR_WIDTH) / 2,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow,
+            ),
+            label = "tabIndicatorX",
+        )
+
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                labels.forEachIndexed { index, label ->
+                    val isSelected = selected == index
+                    val textColor by animateColorAsState(
+                        targetValue = if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        animationSpec = tween(durationMillis = 180),
+                        label = "tabTextColor",
+                    )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onSelect(index) }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            label,
+                            fontSize = 14.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = textColor,
+                        )
+                    }
+                }
+            }
+
+            // 指示条：短横线，在两个标签之间平滑平移
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(8.dp))
+                    .offset(x = indicatorX)
+                    .width(TAB_INDICATOR_WIDTH)
+                    .height(3.dp)
                     .background(
-                        if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                    )
-                    .clickable { onSelect(index) }
-                    .padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    label,
-                    fontSize = 13.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (isSelected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
+                        MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(2.dp),
+                    ),
+            )
         }
     }
 }
@@ -1282,10 +1404,10 @@ private fun BulkActionBar(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 4.dp),
                 )
-                FilledTonalIconButton(
+                // 两个按钮都带**按压回弹**，和 v1.8.0 底栏图标的手感一致
+                PressSquishIconButton(
                     onClick = onDownload,
                     enabled = selectedCount > 0,
-                    modifier = Modifier.size(38.dp),
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_download),
@@ -1293,10 +1415,9 @@ private fun BulkActionBar(
                         modifier = Modifier.size(18.dp),
                     )
                 }
-                FilledTonalIconButton(
+                PressSquishIconButton(
                     onClick = onDelete,
                     enabled = selectedCount > 0,
-                    modifier = Modifier.size(38.dp),
                     colors = IconButtonDefaults.filledTonalIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
@@ -1311,4 +1432,41 @@ private fun BulkActionBar(
             }
         }
     }
+}
+
+
+/**
+ * 带**按压回弹**的图标按钮（v2.0.0 起）。
+ *
+ * 和 v1.8.0 底栏的图标是同一套手感：按下缩到 0.82，松手用弹簧弹回。
+ * Material3 自带的 `IconButton` 没有这个反馈。
+ */
+@Composable
+private fun PressSquishIconButton(
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    colors: androidx.compose.material3.IconButtonColors =
+        IconButtonDefaults.filledTonalIconButtonColors(),
+    content: @Composable () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.82f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "pressSquish",
+    )
+    FilledTonalIconButton(
+        onClick = onClick,
+        enabled = enabled,
+        interactionSource = interactionSource,
+        colors = colors,
+        modifier = Modifier
+            .size(38.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
+        content = content,
+    )
 }
