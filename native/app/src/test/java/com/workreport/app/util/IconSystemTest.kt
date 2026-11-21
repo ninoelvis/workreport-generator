@@ -172,8 +172,8 @@ class IconSystemTest {
             File(resRoot, "mipmap-anydpi-v26/ic_launcher_round.xml").exists()
         )
         assertTrue(
-            "缺少深色自适应背景 drawable-night/ic_launcher_background.xml",
-            File(resRoot, "drawable-night/ic_launcher_background.xml").exists()
+            "缺少自适应背景 drawable/ic_launcher_background.xml",
+            File(resRoot, "drawable/ic_launcher_background.xml").exists()
         )
         val densities = listOf("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")
         for (d in densities) {
@@ -184,10 +184,58 @@ class IconSystemTest {
                 File(resRoot, "mipmap-$d/ic_launcher_foreground.png").exists()
             )
             assertTrue(
-                "缺少深色版 mipmap-night-$d/ic_launcher.png",
-                File(resRoot, "mipmap-night-$d/ic_launcher.png").exists()
+                "缺少主题图标（单色）mipmap-$d/ic_launcher_monochrome.png",
+                File(resRoot, "mipmap-$d/ic_launcher_monochrome.png").exists()
+            )
+            assertTrue(
+                "缺少启动图图标 mipmap-$d/ic_launcher_splash.png",
+                File(resRoot, "mipmap-$d/ic_launcher_splash.png").exists()
             )
         }
+    }
+
+    /**
+     * v2.0.3 起：**桌面图标不再跟随系统深浅色**。
+     *
+     * 用户要求：桌面上就一个图标，不要在浅色/深色之间跳来跳去。
+     * App 内的深浅色切换是 Compose 主题管的（手动切换），跟桌面图标无关。
+     */
+    @Test
+    fun `桌面图标不跟随系统深浅色`() {
+        for (d in listOf("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")) {
+            assertTrue(
+                "不应再有夜间图标目录 mipmap-night-$d（桌面图标不跟随系统深浅色）",
+                !File(resRoot, "mipmap-night-$d").exists()
+            )
+        }
+        assertTrue(
+            "不应再有 drawable-night/ic_launcher_background.xml",
+            !File(resRoot, "drawable-night/ic_launcher_background.xml").exists()
+        )
+    }
+
+    /**
+     * v2.0.3：新图标沿用「WorkReport」双色设计稿的配色 ——
+     * 「Work」灰蓝渐变，「Report」深藏蓝。
+     */
+    @Test
+    fun `图标配色沿用双色设计稿`() {
+        val bg = File(resRoot, "drawable/ic_launcher_background.xml").readText()
+        assertTrue("图标底色应是白到极浅冷灰蓝的渐变", bg.contains("#FFFFFFFF"))
+        assertTrue("图标底色应是白到极浅冷灰蓝的渐变", bg.contains("#FFF2F5FA"))
+
+        val anydpi = File(resRoot, "mipmap-anydpi-v26/ic_launcher.xml").readText()
+        assertTrue(
+            "自适应图标要引用单色主题图标（Android 13+ 主题图标）",
+            anydpi.contains("ic_launcher_monochrome"),
+        )
+
+        // 启动图要用纯标志那份（系统会放大，带小字会糊）
+        val themes = File(resRoot, "values/themes.xml").readText()
+        assertTrue(
+            "启动图应使用纯标志图标",
+            themes.contains("@mipmap/ic_launcher_splash"),
+        )
     }
 
     @Test
