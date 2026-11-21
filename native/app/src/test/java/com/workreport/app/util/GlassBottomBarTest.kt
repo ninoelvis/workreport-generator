@@ -128,11 +128,132 @@ class GlassBottomBarTest {
     }
 
     @Test
-    fun `底栏必须保留 v1_6_0 的三项动效`() {
+    fun `底栏必须保留指示条平移与图标缩放动画`() {
         val code = read("ui/AnimatedBottomBar.kt")
         assertTrue("底栏应有指示条平移动画", code.contains("animateDpAsState"))
         assertTrue("底栏应有图标缩放动画", code.contains("animateFloatAsState"))
-        assertTrue("底栏应有文字淡入淡出", code.contains("labelAlpha"))
+    }
+
+    @Test
+    fun `底栏去掉文字后必须保留无障碍标签`() {
+        val code = read("ui/AnimatedBottomBar.kt")
+        assertTrue(
+            "底栏不再显示文字，但图标必须保留 contentDescription 供读屏朗读",
+            code.contains("contentDescription = destination.label"),
+        )
+    }
+
+    @Test
+    fun `底栏点击必须有按下回弹动效`() {
+        val code = read("ui/AnimatedBottomBar.kt")
+        assertTrue(
+            "底栏应监听按压状态（collectIsPressedAsState）",
+            code.contains("collectIsPressedAsState"),
+        )
+        assertTrue(
+            "底栏应有按下缩放动画（pressScale）",
+            code.contains("pressScale"),
+        )
+        assertTrue(
+            "底栏应提供 interactionSource 以接收按压反馈",
+            code.contains("interactionSource"),
+        )
+    }
+
+    @Test
+    fun `底栏应该是窄胶囊并整体靠右对齐`() {
+        val code = read("ui/AnimatedBottomBar.kt")
+        assertTrue(
+            "底栏宽度应由图标项宽累加得到（而不是通栏 fillMaxWidth）",
+            code.contains("BAR_ITEM_WIDTH * destinations.size"),
+        )
+        assertTrue(
+            "底栏应保留右侧边距常量",
+            code.contains("BAR_END_MARGIN"),
+        )
+
+        val appRoot = read("ui/AppRoot.kt")
+        assertTrue(
+            "底栏在 AppRoot 里应靠右对齐（Alignment.BottomEnd）",
+            appRoot.contains("Alignment.BottomEnd"),
+        )
+    }
+
+    @Test
+    fun `深色模式下底部不应露出浅色窗口底`() {
+        // 坑（v1.8.0）：深色模式是 App 内手动切换的，themes.xml 里的 windowBackground
+        // 写死浅色，NavHost 又因底部避让把内容顶起来，
+        // 系统导航条那条没人绘制的区域就露出浅色 → 底部一条白杠。
+        val appRoot = read("ui/AppRoot.kt")
+        assertTrue(
+            "AppRoot 根容器应铺满主题背景色，填掉底部没人绘制的区域",
+            appRoot.contains("MaterialTheme.colorScheme.background"),
+        )
+
+        val theme = read("ui/theme/Theme.kt")
+        assertTrue(
+            "窗口底色应跟随 App 主题（不能写死浅色）",
+            theme.contains("setBackgroundDrawable"),
+        )
+        assertTrue(
+            "应关闭系统导航条的对比度遮罩",
+            theme.contains("isNavigationBarContrastEnforced"),
+        )
+
+        val activity = read("MainActivity.kt")
+        assertTrue(
+            "enableEdgeToEdge 必须显式指定透明的系统栏样式（默认参数按系统深浅色套浅色 scrim）",
+            activity.contains("SystemBarStyle.auto"),
+        )
+    }
+
+    @Test
+    fun `深色模式启动不应闪白`() {
+        // 坑（v1.8.0 修）：App 的深色模式是「App 内手动切换」的，
+        // 系统的 values-night 跟随的是**系统**深浅色，跟不到 App 里的选择。
+        // 所以必须有一份运行时可切换的深色主题，启动时按 ThemeMode 选。
+        val themes = File("src/main/res/values/themes.xml").readText()
+        assertTrue(
+            "应提供深色版窗口主题（窗口底色跟随深色，避免启动闪白）",
+            themes.contains("Theme.WorkReport.Dark"),
+        )
+        assertTrue(
+            "深色版窗口底色应指向深色底色资源",
+            themes.contains("@color/page_bg_dark"),
+        )
+        assertTrue(
+            "应提供深色版启动图主题",
+            themes.contains("Theme.WorkReport.Splash.Dark"),
+        )
+
+        val activity = read("MainActivity.kt")
+        assertTrue(
+            "启动时应按当前主题模式切换启动图主题",
+            activity.contains("Theme_WorkReport_Splash_Dark"),
+        )
+    }
+
+    @Test
+    fun `玻璃要够透才能看见下方内容`() {        val code = read("ui/AnimatedBottomBar.kt")
+        assertTrue(
+            "玻璃模糊半径应显著加大（>= 24dp）",
+            code.contains("blurRadius = 26.dp"),
+        )
+        // 遮盖越少，下方内容越透。
+        // 深色分支写在前面，所以第一个 tint 是深色值。
+        val tints = Regex("tint = Color\\.White\\.copy\\(alpha = ([0-9.]+)f\\)")
+            .findAll(code)
+            .map { it.groupValues[1].toFloat() }
+            .toList()
+        assertTrue("应能解析出两套玻璃的 tint 值，实际：$tints", tints.size >= 2)
+        assertTrue(
+            "深色模式玻璃的遮盖不透明度应低于 0.1（否则是块灰板，看不见下方内容），实际：${tints[0]}",
+            tints[0] < 0.1f,
+        )
+        assertTrue(
+            "浅色模式玻璃的遮盖不透明度应低于 0.5（保留通透感），实际：${tints[1]}",
+            tints[1] < 0.5f,
+        )
     }
 
     @Test

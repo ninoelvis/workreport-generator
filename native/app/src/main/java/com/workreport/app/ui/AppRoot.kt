@@ -7,12 +7,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -131,7 +133,17 @@ fun AppRoot() {
         BottomAvoidance.compute(navBarPx, imePx).toDp()
     }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            // 整屏铺一层主题背景色。
+            //
+            // v1.8.0 修「深色模式底部有白条」：NavHost 因为底部避让把内容顶起来了，
+            // 系统导航条那条区域**没有任何 Compose 内容绘制**，
+            // 露出来的是窗口底色（themes.xml 里写死的浅色 #F5F6F7）—— 就是那条白杠。
+            // 这里先把整屏铺成当前主题的背景色，那条区域就不会再露白。
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         // 内容层：整屏录制成玻璃背景
         GlassContentHost(backdrop) {
             NavHost(
@@ -298,7 +310,8 @@ fun AppRoot() {
                     restoreState = true
                 }
             },
-            modifier = Modifier.align(Alignment.BottomCenter),
+            // v1.8.0：窄胶囊整体靠右对齐（原来是通栏居中）
+            modifier = Modifier.align(Alignment.BottomEnd),
         )
     }
 }

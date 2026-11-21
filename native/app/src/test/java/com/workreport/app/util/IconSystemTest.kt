@@ -145,7 +145,11 @@ class IconSystemTest {
         val code = bar.readText()
         assertTrue("底栏应有指示条平移动画", code.contains("animateDpAsState"))
         assertTrue("底栏应有图标缩放动画", code.contains("animateFloatAsState"))
-        assertTrue("底栏应有文字淡入淡出", code.contains("labelAlpha"))
+        assertTrue("底栏应有按压回弹动效", code.contains("collectIsPressedAsState"))
+        assertTrue(
+            "底栏去掉文字后必须保留 contentDescription 供读屏朗读",
+            code.contains("contentDescription = destination.label"),
+        )
     }
 
     @Test

@@ -2,7 +2,7 @@
 
 完全重写的 **纯原生 Android** 版本：Kotlin + Jetpack Compose，**不包含任何 WebView、HTML、JS 网页文件**。
 
-> 当前版本 **v1.7.0**（正式版）。
+> 当前版本 **v1.8.0**（正式版）。
 > 包名与签名与旧版一致（`com.workreport.app`），因此**可以直接覆盖安装**，本地数据不会丢。
 
 ---
@@ -151,7 +151,7 @@ export ANDROID_HOME=/path/to/android-sdk
 | 文件 | 作用 |
 |---|---|
 | `ui/common/Glass.kt` | 玻璃核心：背景层录制、采样坐标、模糊层/清晰层拆分 |
-| `ui/AnimatedBottomBar.kt` | 悬浮玻璃胶囊（含 v1.6.0 的指示条平移 / 图标缩放 / 文字淡入） |
+| `ui/AnimatedBottomBar.kt` | 悬浮玻璃胶囊（v1.8.0 起为窄胶囊右对齐、图标-only；含指示条平移 / 图标缩放 / 按压回弹） |
 | `ui/AppRoot.kt` | 去掉 `Scaffold`，底栏改为根 `Box` 叠加 |
 
 ### 为什么手写而不用第三方库
@@ -173,6 +173,41 @@ export ANDROID_HOME=/path/to/android-sdk
 不再用 `innerPadding.calculateBottomPadding()` 算底部避让（那个值会突变）。
 
 `GlassBottomBarTest`（12 项）锁住以上全部约束。
+
+---
+
+## 六点六、窄胶囊底栏与深色模式白杠（v1.8.0 起）
+
+### 深色模式底部为什么会有白杠
+根因**不在配色**，而在两处「没人绘制」的地方：
+
+1. `res/values/themes.xml` 里 `android:windowBackground` 写死成浅色 `@color/page_bg`。
+   而本 App 的深色模式是 **App 内手动切换**的（`ThemeMode.LIGHT / DARK / SYSTEM`），
+   不跟随系统的 `values-night`，所以窗口底色永远是浅的。
+2. `AppRoot` 里的 `NavHost` 为避开系统导航条加了 `padding(bottom = bottomAvoidance)`，
+   内容整体上抬 —— 导航条那条区域**没有任何 Compose 内容绘制**，
+   浅色的窗口底就露了出来（实测像素值 `(245,246,248)`，与 `@color/page_bg` 完全吻合）。
+
+### 四道保险
+| 位置 | 做法 |
+|---|---|
+| `ui/theme/Theme.kt` | `window.setBackgroundDrawable(ColorDrawable(colors.background.toArgb()))`，窗口底色跟随 App 主题；API Q+ 关掉 `isNavigationBarContrastEnforced` |
+| `ui/AppRoot.kt` | 根 `Box` 整屏 `.background(MaterialTheme.colorScheme.background)`，填掉底部没人绘制的区域 |
+| `MainActivity.kt` | `enableEdgeToEdge()` **显式**传透明 `SystemBarStyle`，不再用默认参数（默认按**系统**深浅色套一层浅色 scrim） |
+| `res/values/themes.xml` | 新增 `Theme.WorkReport.Dark` / `Theme.WorkReport.Splash.Dark`，启动时按 `ThemeMode` 选主题，深色模式启动不再闪白 |
+
+> 注意：`enableEdgeToEdge()` 的默认参数会用 `detectDarkMode` 读**系统**的深浅色，
+> 与本 App 的手动主题无关 —— 这是本项目里最容易踩的一个坑。
+
+### 底栏形态
+- 宽度：`BAR_ITEM_WIDTH(60.dp) × 3 = 180dp`，约为原通栏（约 370dp）的一半
+- 位置：`AppRoot` 里 `Modifier.align(Alignment.BottomEnd)` + `BAR_END_MARGIN = 16.dp`
+- 内容：**只有图标**（文字在 v1.8.0 移除），选中时浮起小圆点高亮 + 短指示条
+- 动效：指示条平移（`animateDpAsState`）、图标缩放（`animateFloatAsState`）、
+  按下回弹（`collectIsPressedAsState` + `pressScale`）、颜色过渡（`animateColorAsState`）
+- 玻璃：模糊半径 `16.dp → 26.dp`；遮盖 alpha 深色 `0.10 → 0.055`、浅色 `0.55 → 0.38`
+
+`GlassBottomBarTest` 增补 5 项深色模式与底栏形态的防回归检查（合计 225 项单元测试）。
 
 ## 七、图标体系（v1.6.0 起）
 

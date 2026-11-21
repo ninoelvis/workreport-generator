@@ -130,6 +130,25 @@ fun WorkReportTheme(
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = android.graphics.Color.TRANSPARENT
             window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+            // 窗口底色必须跟着主题走。
+            //
+            // 坑（v1.8.0 修）：themes.xml 里 windowBackground 写死了浅色 #F5F6F7，
+            // 而 App 的深色模式是**App 内手动切换**的，系统主题并不跟着变，
+            // 于是深色模式下系统导航条那条（页面内容被底部避让顶起来、没人画的地方）
+            // 会直接露出浅色窗口底色 —— 就是用户看到的「底部一条白杠」。
+            // 这里把窗口底色设成当前主题的背景色，白杠就没了。
+            window.setBackgroundDrawable(
+                android.graphics.drawable.ColorDrawable(colors.background.toArgb()),
+            )
+
+            // 系统导航条那一条不要再叠一层「对比度遮罩」。
+            // 遮罩颜色由系统按主题算，在手动深色下会和页面颜色打架，
+            // 关掉后导航条区域直接透出页面背景色。
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
+
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = !darkTheme
                 isAppearanceLightNavigationBars = !darkTheme

@@ -1,22 +1,22 @@
 {
-  "updatedAt": "2026-11-21",
+  "updatedAt": "2026-11-22",
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "1.7.0",
-    "versionCode": 33,
-    "releasedAt": "2026-11-21",
-    "sizeBytes": 12318042,
+    "version": "1.8.0",
+    "versionCode": 34,
+    "releasedAt": "2026-11-22",
+    "sizeBytes": 12318250,
     "sizeText": "11.7 MB",
-    "sha256": "cb3c513918fd876e623db7081f51e60bcb36f29d524a3b107a2f2a66f4faa115",
+    "sha256": "1cfe887e14e999eaaf62a5e2fcc4613d41d8cac405730d4a756709723e3d7d7a",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.7.0/workreport-native-v1.7.0.apk",
-    "apkMirrorUrl": "https://y7972i5jvlbf6.space.mcode.cn/workreport-native-v1.7.0.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.7.0/workreport-native-source-v1.7.0.zip",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.8.0/workreport-native-v1.8.0.apk",
+    "apkMirrorUrl": "https://y7972i5jvlbf6.space.mcode.cn/workreport-native-v1.8.0.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.8.0/workreport-native-source-v1.8.0.zip",
     "minAndroid": "Android 12 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://y7972i5jvlbf6.space.mcode.cn/workreport-native-source-v1.7.0.zip"
+    "sourceMirrorUrl": "https://y7972i5jvlbf6.space.mcode.cn/workreport-native-source-v1.8.0.zip"
   },
   "web": {
     "version": "v1.3",
@@ -34,6 +34,21 @@
   },
   "changelog": [
     {
+      "version": "v1.8.0",
+      "date": "2026-11-22",
+      "title": "修深色模式底部白杠，底部导航缩成一半并靠右，玻璃更透",
+      "items": [
+        "修复**深色模式底部一条白杠**：根因是主题文件把窗口底色写死成浅色、而内容区又为避开系统导航条整体上抬，导航条那条没人绘制的区域就露出了浅色窗口底；现在窗口底色跟随 App 主题、根容器整屏铺满主题底色、系统状态栏与导航条一律全透明，并关掉系统导航条的对比度强制遮罩",
+        "顺带修掉**深色模式启动闪白**：启动图与窗口底色现在同样跟随深色主题，不再先闪一下白再进主界面",
+        "底部导航从**横贯整屏**缩成**窄胶囊**，宽度约为原来的一半（3 个图标 × 60dp = 180dp），**整体靠右对齐**，不再霸占整个屏幕底部",
+        "图标下方**去掉文字只留图标**；被选中时图标下浮起小圆点高亮 + 一条短指示条，当前在哪一眼就清楚",
+        "点击切换加了**按压回弹动效**：按下时图标轻微缩小，松手弹回并带动选中圆点与指示条平滑平移，图标大小与颜色也跟着过渡",
+        "玻璃**更毛也更透**：模糊半径从 16dp 加大到 26dp，玻璃自身遮盖大幅调低（深色 10% → 5.5%、浅色 55% → 38%），滚动时能透过胶囊隐约看到下面卡片和文字在动",
+        "导出内容、Excel 样式、加密 ZIP 文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**，相关文件与 v1.7.0 逐字节相同；单元测试 225/225 通过，并新增 5 项深色模式与底栏形态防回归检查"
+      ],
+      "current": true
+    },
+    {
       "version": "v1.7.0",
       "date": "2026-11-21",
       "title": "底部导航换成液态玻璃，进入二级页面不再「卡一下」",
@@ -45,7 +60,7 @@
         "因为玻璃背景模糊依赖 Android 12 起的系统渲染接口，**最低支持版本从 Android 8 提升到 Android 12**；同时把安装包里的代码重新压缩，下载体积仍是 12 MB 上下（不然会涨到 44 MB）",
         "导出内容、Excel 样式、压缩包文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**，相关文件与 v1.6.0 逐字节相同；单元测试 219/219 通过，并新增 12 项玻璃与底栏防回归检查"
       ],
-      "current": true
+      "current": false
     },
     {
       "version": "v1.6.0",

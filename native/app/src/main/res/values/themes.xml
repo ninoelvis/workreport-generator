@@ -7,9 +7,23 @@
         <item name="android:windowLightStatusBar">true</item>
     </style>
 
+    <!-- 深色版：窗口底色跟随深色，避免启动瞬间与切页时闪白。
+         App 的深色模式是「App 内手动切换」的，系统的 values-night 跟不到，
+         所以只能在这里提供一份运行时可切换的深色主题。 -->
+    <style name="Theme.WorkReport.Dark" parent="Theme.WorkReport">
+        <item name="android:windowBackground">@color/page_bg_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
     <style name="Theme.WorkReport.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/page_bg</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/Theme.WorkReport</item>
+    </style>
+
+    <!-- 深色版启动图：启动瞬间也不闪白 -->
+    <style name="Theme.WorkReport.Splash.Dark" parent="Theme.WorkReport.Splash">
+        <item name="windowSplashScreenBackground">@color/page_bg_dark</item>
+        <item name="postSplashScreenTheme">@style/Theme.WorkReport.Dark</item>
     </style>
 </resources>
