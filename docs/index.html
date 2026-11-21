@@ -1041,10 +1041,28 @@ footer a{color:var(--t2)}
   }
   function accept(j, src) {
     if (!j || !j.app) return;
-    /* 版本不低于基准才覆盖：旧快照（如滞后的 jsDelivr）盖不掉新数据 */
-    if (cmpVer(j.app.version, best.app.version) >= 0) {
+    var c = cmpVer(j.app.version, best.app.version);
+    if (c > 0) {
+      /* 版本更高：直接覆盖 */
       best = j;
       render(j, src);
+      return;
+    }
+    if (c === 0) {
+      /* 同一个版本：**比 updatedAt**，只有更新的才允许覆盖。
+         ⚠️ 这里以前写的是 `>= 0`，等于「同版本也覆盖」——
+            jsDelivr / GitHub raw 对 @main 有同步延迟，
+            可能返回**上一个 commit** 的清单（版本号一样、但里面的链接是旧的），
+            于是把刚部署好的正确数据覆盖掉。
+            v2.0.0 发布时就踩到了：内嵌副本是新镜像域名，
+            运行时却被 jsDelivr 的旧快照改回了上一个域名。
+            现在同版本比 updatedAt：滞后的快照盖不掉新的。 */
+      var a = String(j.updatedAt || '');
+      var b = String(best.updatedAt || '');
+      if (a && (!b || a > b)) {
+        best = j;
+        render(j, src);
+      }
     }
   }
   function load(i) {
