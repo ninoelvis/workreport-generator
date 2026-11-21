@@ -31,7 +31,9 @@
 
     <style name="Theme.WorkReport.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/page_bg</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <!-- 启动图用**纯标志**那份：系统会把启动图标放大到画布 2/3，
+     带小字会糊成一团。 -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_splash</item>
         <item name="postSplashScreenTheme">@style/Theme.WorkReport</item>
     </style>
 

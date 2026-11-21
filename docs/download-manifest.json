@@ -3,20 +3,20 @@
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "2.0.2",
-    "versionCode": 37,
+    "version": "2.0.3",
+    "versionCode": 38,
     "releasedAt": "2026-11-22",
-    "sizeBytes": 12367538,
-    "sizeText": "11.8 MB",
-    "sha256": "8a96086ba1113f7b92d5d27f612014625f5fce20de2f122516a1da70e2eb28a5",
+    "sizeBytes": 12300402,
+    "sizeText": "11.7 MB",
+    "sha256": "abb9e4c600da3701a1c4c1fee0bce7ce3f3dd8e3afab2956afaea7a3d35986bb",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.2/workreport-native-v2.0.2.apk",
-    "apkMirrorUrl": "https://zd7aihe57fbly.space.mcode.cn/workreport-native-v2.0.2.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.2/workreport-native-source-v2.0.2.zip",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.3/workreport-native-v2.0.3.apk",
+    "apkMirrorUrl": "https://PLACEHOLDERMIRROR.space.mcode.cn/workreport-native-v2.0.3.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.3/workreport-native-source-v2.0.3.zip",
     "minAndroid": "Android 12 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://zd7aihe57fbly.space.mcode.cn/workreport-native-source-v2.0.2.zip"
+    "sourceMirrorUrl": "https://PLACEHOLDERMIRROR.space.mcode.cn/workreport-native-source-v2.0.3.zip"
   },
   "web": {
     "version": "v1.3",
@@ -34,6 +34,18 @@
   },
   "changelog": [
     {
+      "version": "v2.0.3",
+      "date": "2026-11-22",
+      "title": "换新桌面图标 · 桌面图标不再跟随系统深浅色",
+      "items": [
+        "**换新桌面图标**：沿用新的「WorkReport」双色设计稿配色 ——「Work」灰蓝渐变、「Report」深藏蓝，白底，品牌标志也改成深藏蓝系，整体比之前干净。另加了两份新资源：单色主题图标（Android 13+ 的主题图标单独出一版，不再拿彩色前景充数）、启动图专用纯标志（系统放大启动图时带小字会糊）",
+        "**桌面图标不再跟随系统深浅色**：之前桌上有两套图标，系统切深色时图标跟着变；现在**只剩一份**，浅色桌面和深色桌面上是同一个图标，不会跳来跳去。已删除 5 个夜间图标目录和夜间背景资源",
+        "**App 内的深浅色主题切换照旧**：那套是 App 自己手动管的（Compose 主题），跟桌面图标是两回事，三个页面的深浅色切换一点没动",
+        "导出内容、Excel 样式、加密 ZIP 文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**：8 个红线文件与 v2.0.2 逐字节相同，导出路径的 3 个方法体也逐字节相同；单元测试 288/288 通过（新增 3 项）"
+      ],
+      "current": true
+    },
+    {
       "version": "v2.0.2",
       "date": "2026-11-22",
       "title": "修好卡片显示错乱 · 搜索整合成一个框 · 统计新增三个维度",
@@ -43,7 +55,7 @@
         "**统计新增三个维度**：① **按月 / 按周**切换（统计区顶部加了下划线 Tab，看得出一个月里第几周产出最高）；② **每份报告的产出**（列出写得最细的三份，各写了几条）；③ 总览补上「平均每份」「最忙的月份」「最忙的一周」",
         "导出内容、Excel 样式、加密 ZIP 文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**：8 个红线文件与 v2.0.1 逐字节相同，导出路径的 3 个方法体也逐字节相同；单元测试 285/285 通过（新增 9 项）"
       ],
-      "current": true
+      "current": false
     },
     {
       "version": "v2.0.2",

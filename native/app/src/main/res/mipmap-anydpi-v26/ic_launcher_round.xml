@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 自适应图标：前景 = 品牌标志 + WorkReport，背景 = 浅蓝渐变。
-     深色模式由 drawable-night / mipmap-night 的同名资源自动接管。 -->
+<!-- 自适应图标：背景 = 浅色渐变底，前景 = 品牌标志。
+     v2.0.3 起**只有一份**，桌面图标不再跟随系统深浅色切换；
+     App 内的深浅色主题切换是 Compose 管的，与此无关。 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/ic_launcher_background" />
     <foreground android:drawable="@mipmap/ic_launcher_foreground" />
-    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
 </adaptive-icon>

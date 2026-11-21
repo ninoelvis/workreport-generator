@@ -1,16 +1,16 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v2.0.2-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v2.0.3-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
-**原生版 Android App（v2.0.2，推荐）**:
-[workreport-native-v2.0.2.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.2/workreport-native-v2.0.2.apk)
+**原生版 Android App（v2.0.3，推荐）**:
+[workreport-native-v2.0.3.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.3/workreport-native-v2.0.3.apk)
 （11.7 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版 · **需 Android 12 及以上**）
 
 源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
-[工程源码包 v2.0.2](https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.2/workreport-native-source-v2.0.2.zip)
+[工程源码包 v2.0.3](https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.3/workreport-native-source-v2.0.3.zip)
 
 **旧版 WebView App**：
 [workreport-generator-v1.2.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.2.1/workreport-generator-v1.2.1.apk)
@@ -43,6 +43,7 @@
 
 *原生版 App*
 
+- `v2.0.3` **换新桌面图标**（「Work」灰蓝渐变 + 「Report」深藏蓝的双色设计稿配色，白底，新增单色主题图标与启动图专用纯标志）；**桌面图标不再跟随系统深浅色**（删掉 5 个夜间图标目录，浅色/深色桌面上是同一个图标）；App 内深浅色切换照旧；导出格式与公司红线一字未改，单元测试 288/288
 - `v2.0.2` **修好历史报告页卡片显示错乱**（v2.0.1 引入的回归：卡片正文摘要压在操作按钮上，根因是 Compose 的 `AnimatedVisibility` 要求 content 只能是单个子节点，现已包 `Column` 并加防回归测试）；**搜索整合成一个输入框**（同时搜文件名与周报正文，删掉「文件名/全部内容」切换）；**统计新增三个维度**（按月/按周切换、每份报告产出、平均每份/最忙的月份/最忙的一周）；导出格式与公司红线一字未改，单元测试 285/285
 - `v2.0.1` **多选补上动效**（卡片内容缓缓收起/展开、勾选框弹出、底部批量操作条滑入、按下回弹，与 v1.8.0 底栏同一套语言）；**修「多选后按返回手势底栏永久消失」**（多选状态改成单一真相源，返回手势只退多选、离开历史页自动清状态）；**顶部「列表 / 统计」换成下划线 Tab + 指示条平移**（不再是 App 里唯一的异类样式）；导出格式与公司红线一字未改，单元测试 266/266
 - `v2.0.0` **搜索能搜正文了**（新增「文件名 / 全部内容」范围切换，搜的是原文不是脱敏文本，`%` `_` 做了正确转义）；**新增「周报统计」**（历史页顶部 tab，含每月工作条目柱状图与明细表，统计只含本 App 生成的报告并已写明）；**历史报告支持批量操作**（长按进入多选，卡片精简为「标题 + 勾选框」，底部浮出全选 / 再次下载 / 删除，删除会连压缩包一起删）；**时间范围可一键选**（本周 / 上周，走与默认值相同的格式化逻辑）；**隐私加固**：系统云备份彻底关闭（含设备迁移），敏感词库改用 Android Keystore 的 AES-256-GCM 加密存储（密钥不进备份、不可导出，老版本自动迁移）；导出格式与公司红线一字未改（8 个红线文件 + 3 个导出方法体与 v1.8.0 逐字节相同），单元测试 259/259
