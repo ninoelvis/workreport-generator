@@ -11,12 +11,12 @@
     "sha256": "1cfe887e14e999eaaf62a5e2fcc4613d41d8cac405730d4a756709723e3d7d7a",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
     "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.8.0/workreport-native-v1.8.0.apk",
-    "apkMirrorUrl": "https://y7972i5jvlbf6.space.mcode.cn/workreport-native-v1.8.0.apk",
+    "apkMirrorUrl": "https://2hkut4lfp121t.space.mcode.cn/workreport-native-v1.8.0.apk",
     "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v1.8.0/workreport-native-source-v1.8.0.zip",
     "minAndroid": "Android 12 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://y7972i5jvlbf6.space.mcode.cn/workreport-native-source-v1.8.0.zip"
+    "sourceMirrorUrl": "https://2hkut4lfp121t.space.mcode.cn/workreport-native-source-v1.8.0.zip"
   },
   "web": {
     "version": "v1.3",
