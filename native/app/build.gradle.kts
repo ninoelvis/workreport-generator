@@ -16,8 +16,8 @@ android {
         //       低于 Android 12 没有这个 API，做不出真玻璃，只能半透明降级。
         minSdk = 31
         targetSdk = 34
-        versionCode = 36
-        versionName = "2.0.1"
+        versionCode = 37
+        versionName = "2.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

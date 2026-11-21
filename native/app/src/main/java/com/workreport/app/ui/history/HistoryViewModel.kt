@@ -10,7 +10,6 @@ import com.workreport.app.data.local.SettingsStore
 import com.workreport.app.data.repository.ReportRepository
 import com.workreport.app.domain.model.ReportStats
 import com.workreport.app.domain.model.ReportStatsCalculator
-import com.workreport.app.domain.model.SearchScope
 import com.workreport.app.export.EncryptedZipReader
 import com.workreport.app.export.XlsxContentReader
 import com.workreport.app.util.ReportContentFormat
@@ -43,7 +42,6 @@ data class PreviewState(
 data class HistoryUiState(
     val keyword: String = "",
     /** 搜索范围：仅文件名 / 连正文一起搜（v2.0.0 起） */
-    val searchScope: SearchScope = SearchScope.FILE_NAME,
     /** 已选中的报告 id */
     val selectedIds: Set<Long> = emptySet(),
     val reports: List<ReportEntity> = emptyList(),
@@ -87,13 +85,12 @@ class HistoryViewModel(
     private val keyword = MutableStateFlow("")
 
     /** 搜索范围（v2.0.0 起）：用户可以切成「连正文一起搜」 */
-    private val searchScope = MutableStateFlow(SearchScope.FILE_NAME)
 
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
-    val reports: StateFlow<List<ReportEntity>> = combine(keyword, searchScope) { kw, scope -> kw to scope }
-        .flatMapLatest { (kw, scope) -> repository.search(kw, scope) }
+    val reports: StateFlow<List<ReportEntity>> = keyword
+        .flatMapLatest { kw -> repository.search(kw) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
@@ -128,6 +125,8 @@ class HistoryViewModel(
                         year = it.year,
                         month = it.month,
                         doneWorks = it.doneWorks,
+                        weekNum = it.weekNum,
+                        displayName = it.displayName,
                     )
                 },
             )
@@ -460,11 +459,7 @@ class HistoryViewModel(
      *
      * 「仅文件名」是原有行为；「全部内容」会把本周完成、下周计划也纳入匹配。
      */
-    fun onSearchScopeChange(scope: SearchScope) {
-        if (searchScope.value == scope) return
-        searchScope.value = scope
-        _uiState.value = _uiState.value.copy(searchScope = scope)
-    }
+
 
     /**
      * 把一份历史报告的「下周工作计划」取回首页。

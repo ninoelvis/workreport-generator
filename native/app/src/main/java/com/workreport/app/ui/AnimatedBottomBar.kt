@@ -284,11 +284,3 @@ fun AnimatedBottomBar(
  * 列表要给它让出位置。
  */
 val BULK_BAR_SPACE = 68.dp
-
-/**
- * 顶部「列表 / 统计」Tab 的指示条宽度（v2.0.1 起）。
- *
- * 与底栏的指示条（`INDICATOR_WIDTH = 16.dp`）保持一致，
- * 两个区域用同一种视觉语言。
- */
-val TAB_INDICATOR_WIDTH = 16.dp

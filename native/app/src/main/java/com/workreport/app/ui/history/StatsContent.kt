@@ -13,20 +13,30 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.workreport.app.R
 import com.workreport.app.domain.model.MonthStat
+import com.workreport.app.domain.model.ReportItemStat
+import com.workreport.app.domain.model.WeekStat
+import com.workreport.app.ui.common.UnderlineTabBar
 import com.workreport.app.domain.model.ReportStats
 import com.workreport.app.ui.common.EmptyState
 import com.workreport.app.ui.common.SectionCard
@@ -57,6 +67,10 @@ fun StatsContent(
         return
     }
 
+    // 维度切换：按月 / 按周（v2.0.1 起）
+    // 0 = 按月，1 = 按周
+    var dimension by remember { mutableIntStateOf(0) }
+
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
@@ -82,6 +96,27 @@ fun StatsContent(
                         Modifier.weight(1f),
                     )
                 }
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    StatTile(
+                        "平均每份",
+                        String.format("%.1f", stats.avgItemsPerReport),
+                        Modifier.weight(1f),
+                    )
+                    StatTile(
+                        "最忙的月份",
+                        stats.busiestMonth?.let { "${it.month}月" } ?: "—",
+                        Modifier.weight(1f),
+                    )
+                    StatTile(
+                        "最忙的一周",
+                        stats.weeks.maxByOrNull { it.itemCount }?.label ?: "—",
+                        Modifier.weight(1f),
+                    )
+                }
                 stats.busiestMonth?.let { busiest ->
                     Spacer(Modifier.height(12.dp))
                     Text(
@@ -91,16 +126,56 @@ fun StatsContent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                stats.topReport?.let { top ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "写得最细的是「${top.displayName}」，一共 ${top.itemCount} 条",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
 
         item {
             SectionCard(
-                title = "每月工作条目",
+                title = "工作条目分布",
                 icon = R.drawable.ic_calendar,
                 hint = "深色柱 = 报告份数",
             ) {
-                MonthBarChart(stats.months)
+                // 维度切换：按月 / 按周
+                UnderlineTabBar(
+                    labels = listOf("按月", "按周"),
+                    selected = dimension,
+                    onSelect = { dimension = it },
+                )
+                Spacer(Modifier.height(10.dp))
+                if (dimension == 0) {
+                    MonthBarChart(stats.months)
+                } else {
+                    WeekBarChart(stats.weeks)
+                }
+            }
+        }
+
+        item {
+            SectionCard(
+                title = "每份报告的产出",
+                icon = R.drawable.ic_clipboard,
+                hint = "平均 ${String.format("%.1f", stats.avgItemsPerReport)} 条",
+            ) {
+                if (stats.topReports.isEmpty()) {
+                    Text(
+                        "还没有可统计的条目。",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    stats.topReports.forEachIndexed { index, r ->
+                        if (index > 0) Spacer(Modifier.height(8.dp))
+                        TopReportRow(r, index + 1)
+                    }
+                }
             }
         }
 
@@ -230,6 +305,87 @@ private fun MonthBarChart(months: List<MonthStat>) {
                 }
             }
         }
+    }
+}
+
+/**
+ * 按周的柱状图（v2.0.1 起）。
+ *
+ * 与 [MonthBarChart] **完全同一套手绘逻辑**，只是数据源换成「第 N 周」。
+ */
+@Composable
+private fun WeekBarChart(weeks: List<WeekStat>) {
+    if (weeks.isEmpty()) {
+        Text(
+            "还没有带周数的报告。",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        return
+    }
+    // 复用月份的图表：把「第 N 周」映射成与「N 月」一样的刻度文案
+    MonthBarChart(
+        weeks.map {
+            com.workreport.app.domain.model.MonthStat(
+                year = 0,
+                month = it.weekNum,
+                reportCount = it.reportCount,
+                itemCount = it.itemCount,
+            )
+        },
+    )
+}
+
+/**
+ * 单份报告产出的一行（v2.0.1 起）。
+ *
+ * 左边一个名次，右边报告名 + 条数。
+ */
+@Composable
+private fun TopReportRow(r: ReportItemStat, rank: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(22.dp)
+                .clip(RoundedCornerShape(11.dp))
+                .background(
+                    if (rank == 1) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                rank.toString(),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (rank == 1) MaterialTheme.colorScheme.onPrimary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                r.displayName,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                r.period,
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            "${r.itemCount} 条",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 

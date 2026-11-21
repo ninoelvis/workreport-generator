@@ -100,31 +100,29 @@ class SelectionAndTabStyleTest {
 
     @Test
     fun `顶部Tab必须是下划线加指示条平移`() {
-        val screen = read("ui/history/HistoryScreen.kt")
+        val tab = read("ui/common/UnderlineTabBar.kt")
         assertTrue(
             "Tab 要有指示条",
-            screen.contains("TAB_INDICATOR_WIDTH"),
+            tab.contains("TAB_INDICATOR_WIDTH"),
         )
         assertTrue(
             "指示条位置要用动画平移（和底栏同一套）",
-            screen.contains("animateDpAsState") && screen.contains("indicatorX"),
+            tab.contains("animateDpAsState") && tab.contains("indicatorX"),
         )
         assertTrue(
             "平移要用弹簧动画",
-            screen.contains("Spring.DampingRatioMediumBouncy"),
+            tab.contains("Spring.DampingRatioMediumBouncy"),
         )
         assertTrue(
             "文字颜色要过渡",
-            screen.contains("animateColorAsState"),
+            tab.contains("animateColorAsState"),
         )
     }
 
     @Test
     fun `顶部Tab不能是App里唯一的异类样式`() {
-        val screen = read("ui/history/HistoryScreen.kt")
+        val tab = read("ui/common/UnderlineTabBar.kt")
         // 旧的「灰底槽 + 白块」分段控件要去掉
-        val tab = screen.substringAfter("private fun HistoryTabBar")
-            .substringBefore("\n}\n")
         assertTrue(
             "不应再用 surfaceVariant 底槽那种分段控件",
             !tab.contains("surfaceVariant"),
@@ -137,10 +135,15 @@ class SelectionAndTabStyleTest {
 
     @Test
     fun `指示条宽度要和底栏一致`() {
+        val tab = read("ui/common/UnderlineTabBar.kt")
         val bar = read("ui/AnimatedBottomBar.kt")
         assertTrue(
-            "顶部指示条宽度常量要与底栏的指示条宽度一致",
-            bar.contains("val TAB_INDICATOR_WIDTH = 16.dp"),
+            "顶部指示条宽度常量应为 16.dp",
+            tab.contains("val TAB_INDICATOR_WIDTH = 16.dp"),
+        )
+        assertTrue(
+            "底栏指示条宽度也是 16.dp（两者用同一套视觉语言）",
+            bar.contains("INDICATOR_WIDTH = 16.dp"),
         )
     }
 }

@@ -90,10 +90,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workreport.app.R
 import com.workreport.app.data.local.ReportEntity
-import com.workreport.app.domain.model.SearchScope
 import com.workreport.app.ui.CAPSULE_SPACE
 import com.workreport.app.ui.BULK_BAR_SPACE
-import com.workreport.app.ui.TAB_INDICATOR_WIDTH
+import com.workreport.app.ui.common.UnderlineTabBar
 import com.workreport.app.ui.common.EmptyState
 import androidx.compose.ui.platform.LocalContext
 import com.workreport.app.ui.common.FullscreenPreview
@@ -209,17 +208,15 @@ fun HistoryScreen(
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
-                "共 ${state.totalCount} 份 · " + when (state.searchScope) {
-                    SearchScope.FILE_NAME -> "按文件名搜索"
-                    SearchScope.ALL_CONTENT -> "按文件名与正文搜索"
-                },
+                "共 ${state.totalCount} 份 · 按文件名与内容搜索",
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(10.dp))
 
             // 列表 / 统计 两个视图的切换（v2.0.0 起）
-            HistoryTabBar(
+            UnderlineTabBar(
+                labels = listOf("列表", "统计"),
                 selected = tab,
                 onSelect = { tab = it },
             )
@@ -232,8 +229,7 @@ fun HistoryScreen(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        if (state.searchScope == SearchScope.FILE_NAME) "搜索文件名…"
-                        else "搜索文件名或正文内容…",
+                        "搜索文件名或内容…",
                         fontSize = 13.sp,
                     )
                 },
@@ -255,34 +251,6 @@ fun HistoryScreen(
             )
             }
 
-            // 搜索范围切换（v2.0.0 起）
-            //
-            // 「仅文件名」是原有行为；「全部内容」把本周完成、下周计划也纳入匹配 ——
-            // 用户真正想找的往往是内容，而不是「张三-2026年10月第3周工作报告」这种文件名。
-            if (tab == 0) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 8.dp),
-            ) {
-                SearchScope.entries.forEach { scope ->
-                    FilterChip(
-                        selected = state.searchScope == scope,
-                        onClick = { viewModel.onSearchScopeChange(scope) },
-                        label = { Text(scope.label, fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = state.searchScope == scope,
-                            borderColor = MaterialTheme.colorScheme.outline,
-                            selectedBorderColor = MaterialTheme.colorScheme.primary,
-                        ),
-                    )
-                }
-            }
-            }
         }
 
         // 统计视图（v2.0.0 起）
@@ -315,11 +283,7 @@ fun HistoryScreen(
                         description = if (state.keyword.isBlank()) {
                             "在「首页」填写并生成后，这里会列出全部历史报告，可再次下载或发送邮件。"
                         } else {
-                            if (state.searchScope == SearchScope.FILE_NAME) {
-                                "换个关键词试试，搜索是按文件名匹配的。"
-                            } else {
-                                "换个关键词试试，搜索会匹配文件名与周报正文。"
-                            }
+                            "换个关键词试试，搜索会匹配文件名与周报正文。"
                         },
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -722,57 +686,60 @@ private fun ReportCard(
                     enter = fadeIn(tween(160)) + scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
                     exit = fadeOut(tween(120)) + scaleOut(tween(120)),
                 ) {
-                    Spacer(Modifier.width(10.dp))
-                    val checkInteraction = remember { MutableInteractionSource() }
-                    val checkPressed by checkInteraction.collectIsPressedAsState()
-                    val checkScale by animateFloatAsState(
-                        targetValue = if (checkPressed) 0.85f else 1f,
-                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                        label = "checkPressScale",
-                    )
-                    val checkFill by animateColorAsState(
-                        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                        animationSpec = tween(durationMillis = 160),
-                        label = "checkFill",
-                    )
-                    val checkBorder by animateColorAsState(
-                        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                        animationSpec = tween(durationMillis = 160),
-                        label = "checkBorder",
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(22.dp)
-                            .graphicsLayer {
-                                scaleX = checkScale
-                                scaleY = checkScale
-                            }
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(checkFill)
-                            .border(
-                                width = 1.5.dp,
-                                color = checkBorder,
-                                shape = RoundedCornerShape(11.dp),
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        // 对勾：勾上时弹一下（scale）
-                        // ⚠️ 用全限定名：RowScope 里也有一个 AnimatedVisibility，
-                        //    直接写名字会解析成 RowScope 那个而编译不过。
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = selected,
-                            enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
-                            exit = scaleOut(tween(100)),
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_check),
-                                contentDescription = "已选中",
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(14.dp),
-                            )
-                        }
-                    }
-                }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                            Spacer(Modifier.width(10.dp))
+                                            val checkInteraction = remember { MutableInteractionSource() }
+                                            val checkPressed by checkInteraction.collectIsPressedAsState()
+                                            val checkScale by animateFloatAsState(
+                                                targetValue = if (checkPressed) 0.85f else 1f,
+                                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                                label = "checkPressScale",
+                                            )
+                                            val checkFill by animateColorAsState(
+                                                targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                                animationSpec = tween(durationMillis = 160),
+                                                label = "checkFill",
+                                            )
+                                            val checkBorder by animateColorAsState(
+                                                targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                                animationSpec = tween(durationMillis = 160),
+                                                label = "checkBorder",
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(22.dp)
+                                                    .graphicsLayer {
+                                                        scaleX = checkScale
+                                                        scaleY = checkScale
+                                                    }
+                                                    .clip(RoundedCornerShape(11.dp))
+                                                    .background(checkFill)
+                                                    .border(
+                                                        width = 1.5.dp,
+                                                        color = checkBorder,
+                                                        shape = RoundedCornerShape(11.dp),
+                                                    ),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                // 对勾：勾上时弹一下（scale）
+                                                // ⚠️ 用全限定名：RowScope 里也有一个 AnimatedVisibility，
+                                                //    直接写名字会解析成 RowScope 那个而编译不过。
+                                                androidx.compose.animation.AnimatedVisibility(
+                                                    visible = selected,
+                                                    enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
+                                                    exit = scaleOut(tween(100)),
+                                                ) {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_check),
+                                                        contentDescription = "已选中",
+                                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                                        modifier = Modifier.size(14.dp),
+                                                    )
+                                                }
+                                            }
+                
+                    }}
             }
             // 多选模式：卡片**精简** —— 只留标题与勾选框，
             // 其余（时间/密码/大小/摘要/预览/操作按钮）全部收起，
@@ -784,217 +751,220 @@ private fun ReportCard(
                 enter = fadeIn(tween(180)) + expandVertically(tween(220)),
                 exit = fadeOut(tween(120)) + shrinkVertically(tween(200)),
             ) {
-            Spacer(Modifier.height(8.dp))
-            Row {
-                MetaChip(R.drawable.ic_calendar, formatTime(report.createdAt))
-                Spacer(Modifier.width(8.dp))
-                MetaChip(R.drawable.ic_lock, report.password)
-                Spacer(Modifier.width(8.dp))
-                MetaChip(R.drawable.ic_folder, formatSize(report.sizeBytes))
-            }
-            Spacer(Modifier.height(10.dp))
+                Column {
 
-            // 内容摘要：直接在卡片上就能瞄一眼，不用点进去
-            val summary = report.doneWorks.ifBlank { report.contentPreview }
-            if (summary.isNotBlank()) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Text(
-                        "本周完成",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 2.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        summary.replace("\n", " · "),
-                        fontSize = 11.5.sp,
-                        lineHeight = 17.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                Spacer(Modifier.height(10.dp))
-            }
+                                Spacer(Modifier.height(8.dp))
+                                Row {
+                                    MetaChip(R.drawable.ic_calendar, formatTime(report.createdAt))
+                                    Spacer(Modifier.width(8.dp))
+                                    MetaChip(R.drawable.ic_lock, report.password)
+                                    Spacer(Modifier.width(8.dp))
+                                    MetaChip(R.drawable.ic_folder, formatSize(report.sizeBytes))
+                                }
+                                Spacer(Modifier.height(10.dp))
 
-            // 操作按钮区：多选模式下整块收起（多选的操作统一走底部操作条）
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SmallAction(
-                    icon = if (previewExpanded) R.drawable.ic_visibility_off else R.drawable.ic_eye,
-                    label = if (previewExpanded) "收起内容" else "查看内容",
-                    modifier = Modifier.weight(1f),
-                    onClick = onTogglePreview,
-                )
-                SmallAction(R.drawable.ic_download, "再次下载", Modifier.weight(1f), onDownload)
-                SmallAction(R.drawable.ic_mail, "发送邮件", Modifier.weight(1f), onMail)
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)),
-                ) {
-                    Icon(painterResource(R.drawable.ic_delete),
-                        contentDescription = "删除",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-            }
+                                // 内容摘要：直接在卡片上就能瞄一眼，不用点进去
+                                val summary = report.doneWorks.ifBlank { report.contentPreview }
+                                if (summary.isNotBlank()) {
+                                    Row(verticalAlignment = Alignment.Top) {
+                                        Text(
+                                            "本周完成",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(top = 2.dp),
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            summary.replace("\n", " · "),
+                                            fontSize = 11.5.sp,
+                                            lineHeight = 17.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                    Spacer(Modifier.height(10.dp))
+                                }
 
-            // 第二行：把这份报告的「下周计划」取回当新一周的起点；系统分享
-            if (report.planWorks.isNotBlank() || !report.filePath.isBlank()) {
-                Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (report.planWorks.isNotBlank()) {
-                        SmallAction(
-                            icon = R.drawable.ic_playlist_add,
-                            label = "取回下周计划",
-                            modifier = Modifier.weight(1f),
-                            onClick = onTakePlan,
-                        )
-                    }
-                    SmallAction(
-                        icon = R.drawable.ic_share,
-                        label = "分享",
-                        modifier = Modifier.weight(1f),
-                        onClick = onShare,
-                    )
-                }
-            }
-
-
-            // 展开：直接看到压缩包里那份 Excel 的样子
-            if (previewExpanded) {
-                Spacer(Modifier.height(12.dp))
-                when {
-                    previewState.loading -> {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                            Spacer(Modifier.width(10.dp))
-                            Text(
-                                "正在解压压缩包、读取里面的 Excel…",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-            }
-
-                    previewState.content != null -> {
-                        val content = previewState.content
-                        PreviewTable(
-                            title = content.title.ifBlank { report.displayName },
-                            timeRange = content.timeRange,
-                            doneWorks = content.doneWorks,
-                            planWorks = content.planWorks,
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End,
-                        ) {
-                            TextButton(
-                                onClick = {
-                                    onFullscreen(
-                                        PreviewContent(
-                                            title = content.title.ifBlank { report.displayName },
-                                            timeRange = content.timeRange,
-                                            doneWorks = content.doneWorks,
-                                            planWorks = content.planWorks,
-                                        ),
+                                // 操作按钮区：多选模式下整块收起（多选的操作统一走底部操作条）
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    SmallAction(
+                                        icon = if (previewExpanded) R.drawable.ic_visibility_off else R.drawable.ic_eye,
+                                        label = if (previewExpanded) "收起内容" else "查看内容",
+                                        modifier = Modifier.weight(1f),
+                                        onClick = onTogglePreview,
                                     )
-                                },
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                            ) {
-                                Icon(painterResource(R.drawable.ic_fullscreen),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(15.dp),
-                                )
-                                Spacer(Modifier.width(3.dp))
-                                Text("放大查看", fontSize = 12.sp)
-                            }
-                        }
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            "解压密码：${report.password}（压缩包里的 Excel 就是上面这份）",
-                            fontSize = 10.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        OutlinedButton(
-                            onClick = onLoadIntoHome,
-                            modifier = Modifier.fillMaxWidth().height(40.dp),
-                            enabled = canLoadIntoHome && !loadingIntoHome,
-                            shape = RoundedCornerShape(8.dp),
-                        ) {
-                            if (loadingIntoHome) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(14.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Text("正在载入…", fontSize = 12.5.sp)
-                            } else {
-                                Icon(painterResource(R.drawable.ic_edit),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(15.dp),
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text("载入首页继续编辑", fontSize = 12.5.sp)
-                            }
-                        }
-                    }
+                                    SmallAction(R.drawable.ic_download, "再次下载", Modifier.weight(1f), onDownload)
+                                    SmallAction(R.drawable.ic_mail, "发送邮件", Modifier.weight(1f), onMail)
+                                    IconButton(
+                                        onClick = onDelete,
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)),
+                                    ) {
+                                        Icon(painterResource(R.drawable.ic_delete),
+                                            contentDescription = "删除",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                    }
+                                }
 
-                    else -> {
-                        // 解不开时的兜底：至少把摘要显示出来
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .padding(12.dp),
-                        ) {
-                            Text(
-                                previewState.error ?: "这份报告没法预览完整内容。",
-                                fontSize = 11.5.sp,
-                                lineHeight = 17.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            val fallback = report.contentPreview.ifBlank { report.doneWorks }
-                            if (fallback.isNotBlank()) {
-                                Spacer(Modifier.height(6.dp))
-                                Text(
-                                    "以下为当时保存的内容摘要：",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(Modifier.height(3.dp))
-                                Text(
-                                    fallback,
-                                    fontSize = 11.5.sp,
-                                    lineHeight = 17.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            }
+                                // 第二行：把这份报告的「下周计划」取回当新一周的起点；系统分享
+                                if (report.planWorks.isNotBlank() || !report.filePath.isBlank()) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        if (report.planWorks.isNotBlank()) {
+                                            SmallAction(
+                                                icon = R.drawable.ic_playlist_add,
+                                                label = "取回下周计划",
+                                                modifier = Modifier.weight(1f),
+                                                onClick = onTakePlan,
+                                            )
+                                        }
+                                        SmallAction(
+                                            icon = R.drawable.ic_share,
+                                            label = "分享",
+                                            modifier = Modifier.weight(1f),
+                                            onClick = onShare,
+                                        )
+                                    }
+                                }
+
+
+                                // 展开：直接看到压缩包里那份 Excel 的样子
+                                if (previewExpanded) {
+                                    Spacer(Modifier.height(12.dp))
+                                    when {
+                                        previewState.loading -> {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                                    .padding(14.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(16.dp),
+                                                    strokeWidth = 2.dp,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                )
+                                                Spacer(Modifier.width(10.dp))
+                                                Text(
+                                                    "正在解压压缩包、读取里面的 Excel…",
+                                                    fontSize = 12.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                            }
+                                }
+
+                                        previewState.content != null -> {
+                                            val content = previewState.content
+                                            PreviewTable(
+                                                title = content.title.ifBlank { report.displayName },
+                                                timeRange = content.timeRange,
+                                                doneWorks = content.doneWorks,
+                                                planWorks = content.planWorks,
+                                            )
+                                            Spacer(Modifier.height(6.dp))
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.End,
+                                            ) {
+                                                TextButton(
+                                                    onClick = {
+                                                        onFullscreen(
+                                                            PreviewContent(
+                                                                title = content.title.ifBlank { report.displayName },
+                                                                timeRange = content.timeRange,
+                                                                doneWorks = content.doneWorks,
+                                                                planWorks = content.planWorks,
+                                                            ),
+                                                        )
+                                                    },
+                                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                                ) {
+                                                    Icon(painterResource(R.drawable.ic_fullscreen),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(15.dp),
+                                                    )
+                                                    Spacer(Modifier.width(3.dp))
+                                                    Text("放大查看", fontSize = 12.sp)
+                                                }
+                                            }
+                                            Spacer(Modifier.height(6.dp))
+                                            Text(
+                                                "解压密码：${report.password}（压缩包里的 Excel 就是上面这份）",
+                                                fontSize = 10.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                            Spacer(Modifier.height(10.dp))
+                                            OutlinedButton(
+                                                onClick = onLoadIntoHome,
+                                                modifier = Modifier.fillMaxWidth().height(40.dp),
+                                                enabled = canLoadIntoHome && !loadingIntoHome,
+                                                shape = RoundedCornerShape(8.dp),
+                                            ) {
+                                                if (loadingIntoHome) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(14.dp),
+                                                        strokeWidth = 2.dp,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                    )
+                                                    Spacer(Modifier.width(8.dp))
+                                                    Text("正在载入…", fontSize = 12.5.sp)
+                                                } else {
+                                                    Icon(painterResource(R.drawable.ic_edit),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(15.dp),
+                                                    )
+                                                    Spacer(Modifier.width(6.dp))
+                                                    Text("载入首页继续编辑", fontSize = 12.5.sp)
+                                                }
+                                            }
+                                        }
+
+                                        else -> {
+                                            // 解不开时的兜底：至少把摘要显示出来
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                                    .padding(12.dp),
+                                            ) {
+                                                Text(
+                                                    previewState.error ?: "这份报告没法预览完整内容。",
+                                                    fontSize = 11.5.sp,
+                                                    lineHeight = 17.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                                val fallback = report.contentPreview.ifBlank { report.doneWorks }
+                                                if (fallback.isNotBlank()) {
+                                                    Spacer(Modifier.height(6.dp))
+                                                    Text(
+                                                        "以下为当时保存的内容摘要：",
+                                                        fontSize = 11.sp,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    )
+                                                    Spacer(Modifier.height(3.dp))
+                                                    Text(
+                                                        fallback,
+                                                        fontSize = 11.5.sp,
+                                                        lineHeight = 17.sp,
+                                                        color = MaterialTheme.colorScheme.onSurface,
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+            
+                }}
         }
     }
 }
@@ -1275,78 +1245,6 @@ private fun ExternalReportCard(
 
 
 
-/**
- * 历史报告页顶部的「列表 / 统计」切换（v2.0.0 起）。
- *
- * 自己画而不用 Material3 的 TabRow —— 少一层 API 变动风险，
- * 也能完全跟着本 App 的配色走。
- */
-@Composable
-private fun HistoryTabBar(
-    selected: Int,
-    onSelect: (Int) -> Unit,
-) {
-    val labels = listOf("列表", "统计")
-
-    // 指示条平移：和 v1.8.0 底部玻璃胶囊的指示条**同一套动画规格**（spring），
-    // 顶部和底部就串成了一种视觉语言。
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val tabWidth = maxWidth / labels.size
-        val indicatorX by animateDpAsState(
-            targetValue = tabWidth * selected + (tabWidth - TAB_INDICATOR_WIDTH) / 2,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow,
-            ),
-            label = "tabIndicatorX",
-        )
-
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                labels.forEachIndexed { index, label ->
-                    val isSelected = selected == index
-                    val textColor by animateColorAsState(
-                        targetValue = if (isSelected) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                        animationSpec = tween(durationMillis = 180),
-                        label = "tabTextColor",
-                    )
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { onSelect(index) }
-                            .padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            label,
-                            fontSize = 14.sp,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = textColor,
-                        )
-                    }
-                }
-            }
-
-            // 指示条：短横线，在两个标签之间平滑平移
-            Box(
-                modifier = Modifier
-                    .offset(x = indicatorX)
-                    .width(TAB_INDICATOR_WIDTH)
-                    .height(3.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primary,
-                        RoundedCornerShape(2.dp),
-                    ),
-            )
-        }
-    }
-}
 
 /**
  * 批量操作条（v2.0.0 起）。

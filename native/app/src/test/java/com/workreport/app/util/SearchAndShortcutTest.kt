@@ -1,6 +1,5 @@
 package com.workreport.app.util
 
-import com.workreport.app.domain.model.SearchScope
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -29,16 +28,15 @@ class SearchAndShortcutTest {
     // ---------------- 1. 搜索覆盖正文 ----------------
 
     @Test
-    fun `搜索范围必须同时提供文件名与全部内容两种`() {
+    fun `搜索必须同时提供文件名与全部内容两种`() {
         val dao = read("data/local/ReportDao.kt")
-        assertTrue("DAO 应提供仅按文件名搜索的查询", dao.contains("fun searchByName"))
-        assertTrue("DAO 应提供连正文一起搜的查询", dao.contains("fun searchAll"))
+        assertTrue("DAO 应提供统一搜索查询", dao.contains("fun search(keyword: String)"))
         assertTrue(
-            "全部内容搜索应覆盖本周完成（原始条目）",
+            "统一搜索应覆盖本周完成（原始条目）",
             dao.contains("done_works LIKE"),
         )
         assertTrue(
-            "全部内容搜索应覆盖下周计划",
+            "统一搜索应覆盖下周计划",
             dao.contains("plan_works LIKE"),
         )
     }
@@ -86,35 +84,44 @@ class SearchAndShortcutTest {
     }
 
     @Test
-    fun `搜索范围切换要接到界面上`() {
+    fun `搜索要接到界面上`() {
         val vm = read("ui/history/HistoryViewModel.kt")
         assertTrue(
-            "ViewModel 应维护搜索范围状态",
-            vm.contains("searchScope"),
+            "ViewModel 应维护关键词状态",
+            vm.contains("keyword"),
         )
         assertTrue(
-            "搜索应同时依赖关键词与范围",
-            vm.contains("combine(keyword, searchScope)"),
+            "搜索应依赖关键词",
+            vm.contains("repository.search(kw)"),
         )
 
         val screen = read("ui/history/HistoryScreen.kt")
         assertTrue(
-            "界面上应有范围切换控件",
-            screen.contains("onSearchScopeChange"),
+            "界面上不应再有范围切换控件（v2.0.1 起一个搜索框全搜）",
+            !screen.contains("onSearchScopeChange"),
         )
         assertTrue(
-            "界面上应展示两种范围",
-            screen.contains("SearchScope.entries"),
+            "界面上不应再有范围枚举",
+            !screen.contains("SearchScope.entries"),
         )
     }
 
     @Test
-    fun `搜索范围枚举有两个取值且默认按文件名`() {
-        assertEquals(2, SearchScope.entries.size)
-        assertEquals(SearchScope.FILE_NAME, SearchScope.entries.first())
-        assertEquals(SearchScope.FILE_NAME, SearchScope.from(null))
-        assertEquals(SearchScope.FILE_NAME, SearchScope.from("file_name"))
-        assertEquals(SearchScope.ALL_CONTENT, SearchScope.from("all_content"))
+    fun `搜索整合成一个查询同时覆盖文件名与正文`() {
+        val dao = read("data/local/ReportDao.kt")
+        assertTrue(
+            "DAO 应当只有一个统一的 search",
+            dao.contains("fun search(keyword: String)"),
+        )
+        assertTrue(
+            "不应再有分成两半的查询",
+            !dao.contains("fun searchByName(") && !dao.contains("fun searchAll("),
+        )
+        val repo = read("data/repository/ReportRepository.kt")
+        assertTrue(
+            "Repository 应当直接调用统一查询",
+            repo.contains("dao.search(LikeEscape.escape(trimmed))"),
+        )
     }
 
     // ---------------- 2. 时间范围快捷 ----------------

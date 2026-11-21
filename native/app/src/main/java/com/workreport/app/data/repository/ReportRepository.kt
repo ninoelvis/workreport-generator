@@ -7,7 +7,6 @@ import com.workreport.app.export.ExportResult
 import com.workreport.app.ServiceLocator
 import com.workreport.app.export.ReportExporter
 import com.workreport.app.domain.model.SensitiveWord
-import com.workreport.app.domain.model.SearchScope
 import com.workreport.app.util.LikeEscape
 import com.workreport.app.util.MaskAnchor
 import kotlinx.coroutines.Dispatchers
@@ -36,14 +35,16 @@ class ReportRepository(
      * ⚠️ 关键词在这里做 LIKE 转义（[LikeEscape]），
      * 用户输入的 `%` `_` 不会被当成通配符。
      */
-    fun search(keyword: String, scope: SearchScope = SearchScope.FILE_NAME): Flow<List<ReportEntity>> {
+    /**
+     * 搜索历史报告（v2.0.1 起：文件名与正文**一次全搜**）。
+     *
+     * 之前分成「仅文件名 / 全部内容」两个模式（v2.0.0），
+     * 要用户先想清楚搜哪一类，反而麻烦；现在一个关键词同时匹配两者。
+     */
+    fun search(keyword: String): Flow<List<ReportEntity>> {
         val trimmed = keyword.trim()
         if (trimmed.isBlank()) return dao.observeAll()
-        val pattern = LikeEscape.escape(trimmed)
-        return when (scope) {
-            SearchScope.FILE_NAME -> dao.searchByName(pattern)
-            SearchScope.ALL_CONTENT -> dao.searchAll(pattern)
-        }
+        return dao.search(LikeEscape.escape(trimmed))
     }
 
     suspend fun count(): Int = dao.count()
