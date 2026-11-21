@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.workreport.app.ui.common.Motion
 import com.workreport.app.ui.common.GlassBackdrop
 import com.workreport.app.ui.common.GlassPalette
 import com.workreport.app.ui.common.GlassSurface
@@ -140,12 +141,12 @@ fun AnimatedBottomBar(
     // 二级页面：整条胶囊淡出并下沉；返回时浮起
     val barAlpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(durationMillis = 220),
+        animationSpec = tween(durationMillis = Motion.duration(Motion.MEDIUM)),
         label = "barAlpha",
     )
     val barOffset by animateDpAsState(
         targetValue = if (visible) 0.dp else BAR_CAPSULE_HEIGHT + BAR_BOTTOM_GAP,
-        animationSpec = tween(durationMillis = 260),
+        animationSpec = tween(durationMillis = Motion.duration(Motion.SLOW)),
         label = "barOffsetY",
     )
 
@@ -241,7 +242,7 @@ fun AnimatedBottomBar(
                                 } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant
                                 },
-                                animationSpec = tween(durationMillis = 220),
+                                animationSpec = tween(durationMillis = Motion.duration(Motion.MEDIUM)),
                                 label = "iconTint",
                             )
 

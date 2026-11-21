@@ -61,7 +61,7 @@ class CardOverlapRegressionTest {
         )
         // 2) 多选勾选框：Spacer + Box 两个节点 → 必须包 Row
         assertAvContent(
-            "enter = fadeIn(tween(160)) + scaleIn(",
+            "enter = fadeIn(tween(Motion.duration(Motion.FAST))) + scaleIn(",
             "Row(verticalAlignment = Alignment.CenterVertically)",
             "多选勾选框",
         )
@@ -102,7 +102,7 @@ class CardOverlapRegressionTest {
     @Test
     fun `勾选框必须包一层Row`() {
         val screen = read("ui/history/HistoryScreen.kt")
-        val i = screen.indexOf("enter = fadeIn(tween(160)) + scaleIn(")
+        val i = screen.indexOf("enter = fadeIn(tween(Motion.duration(Motion.FAST))) + scaleIn(")
         assertTrue("应有勾选框的 AnimatedVisibility", i > 0)
         val seg = screen.substring(i, minOf(screen.length, i + 300))
         assertTrue(
@@ -193,7 +193,7 @@ class CardOverlapRegressionTest {
         )
         assertTrue(
             "要画出按周的柱状图",
-            content.contains("WeekBarChart"),
+            content.contains("ProductionBarChart") && content.contains("stats.weeks"),
         )
     }
 

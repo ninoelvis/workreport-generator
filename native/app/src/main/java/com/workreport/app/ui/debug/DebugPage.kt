@@ -20,6 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -31,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.workreport.app.BuildConfig
 import com.workreport.app.ServiceLocator
+import com.workreport.app.data.local.ThemeMode
+import com.workreport.app.ui.common.Motion
 import com.workreport.app.export.EncryptedZipReader
 import com.workreport.app.export.EncryptedZipWriter
 import com.workreport.app.export.ReportNaming
@@ -103,11 +108,19 @@ fun DebugPage(onBack: () -> Unit) {
     var selfCheck by remember { mutableStateOf("正在读取…") }
     var historyCount by remember { mutableStateOf(-1) }
 
+    // v2.0.4：最近新增功能的调试状态
+    var sampleText by remember { mutableStateOf("") }
+    var searchProbeInput by remember { mutableStateOf("") }
+    var searchProbeText by remember { mutableStateOf("") }
+    var iconProbeText by remember { mutableStateOf("") }
+    var weekProbeText by remember { mutableStateOf("") }
+
     val settings = ServiceLocator.settings
     val reminderEnabled by settings.reminderEnabled.collectAsStateWithLifecycle()
     val reminderWeekdays by settings.reminderWeekdays.collectAsStateWithLifecycle()
     val sensitiveWords by settings.sensitiveWords.collectAsStateWithLifecycle()
     val userName by settings.userName.collectAsStateWithLifecycle()
+    val themeMode by settings.themeMode.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         val reports = withContext(Dispatchers.IO) { ServiceLocator.reportRepository.observeAll().first() }
@@ -358,6 +371,200 @@ fun DebugPage(onBack: () -> Unit) {
                     if (storageText.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
                         Text(storageText, style = DebugMonoStyle)
+                    }
+                }
+            }
+
+            // ---------------- v2.0.4：最近新增功能的可调试入口 ----------------
+            item {
+                DebugCard("统计样本数据工厂（v2.0.0 统计 / v2.0.2 图表）") {
+                    Text(
+                        "造一批**真的**加密 ZIP 报告（预览、再次下载、再次发邮件都能试），" +
+                            "只是时间挪到了过去几个月 —— 这样统计页的「按月 / 按周」图表立刻有东西看。" +
+                            "样本只落在应用私有目录，不会写进你的「下载」目录。",
+                        style = DebugTextStyle,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    DebugButton("造 12 份样本报告（跨 12 周）") {
+                        scope.launch {
+                            sampleText = withContext(Dispatchers.IO) {
+                                DebugTools.createSampleReports(context, 12)
+                            }
+                            toast = "样本已生成"
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    DebugButton("造 24 份样本报告（跨 24 周）") {
+                        scope.launch {
+                            sampleText = withContext(Dispatchers.IO) {
+                                DebugTools.createSampleReports(context, 24)
+                            }
+                            toast = "样本已生成"
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    DebugButton("清掉全部样本报告") {
+                        scope.launch {
+                            sampleText = withContext(Dispatchers.IO) {
+                                DebugTools.clearSampleReports()
+                            }
+                            toast = "样本已清理"
+                        }
+                    }
+                    if (sampleText.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(sampleText, style = DebugMonoStyle)
+                    }
+                }
+            }
+
+            item {
+                DebugCard("搜索命中自检（v2.0.0 覆盖正文 / v2.0.2 整合成一个框）") {
+                    Text(
+                        "走真实的搜索逻辑，并把命中拆成两类：命中文件名/标题，" +
+                            "和**只**命中正文 —— 后者正是「记得上周写了什么也能搜到」的关键。",
+                        style = DebugTextStyle,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = searchProbeInput,
+                        onValueChange = { searchProbeInput = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("输入关键词", fontSize = 13.sp) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    DebugButton("跑一次搜索自检") {
+                        scope.launch {
+                            searchProbeText = withContext(Dispatchers.IO) {
+                                DebugTools.probeSearch(searchProbeInput)
+                            }
+                        }
+                    }
+                    if (searchProbeText.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(searchProbeText, style = DebugMonoStyle)
+                    }
+                }
+            }
+
+            item {
+                DebugCard("主题即时切换（v2.0.0 主题护栏）") {
+                    Text(
+                        "App 内的深浅色是**手动**切的，不跟系统走。" +
+                            "这里是快捷入口，改完立刻生效（会写进设置）。",
+                        style = DebugTextStyle,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ThemeMode.entries.forEach { mode ->
+                            val label = when (mode) {
+                                ThemeMode.SYSTEM -> "跟随系统"
+                                ThemeMode.LIGHT -> "浅色"
+                                ThemeMode.DARK -> "深色"
+                            }
+                            val active = themeMode == mode
+                            Button(
+                                onClick = {
+                                    settings.setThemeMode(mode)
+                                    toast = "已切到$label"
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (active) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    },
+                                    contentColor = if (active) {
+                                        MaterialTheme.colorScheme.onPrimary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                ),
+                            ) {
+                                Text(label, fontSize = 12.sp, maxLines = 1)
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                DebugCard("动效开关与速度（v2.0.1 / v2.0.4 统一动效）") {
+                    Text(
+                        "整个 App 的动效时长都收口在一处，这里可以**全局关掉**，" +
+                            "或者调快调慢，方便看清每一步动画的细节。",
+                        style = DebugTextStyle,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("启用动效", style = DebugLabelStyle, modifier = Modifier.weight(1f))
+                        Switch(
+                            checked = Motion.enabled,
+                            onCheckedChange = { Motion.enabled = it },
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "速度：${if (Motion.speed >= 2f) "快一倍" else if (Motion.speed <= 0.6f) "慢一倍" else "正常"}",
+                        style = DebugLabelStyle,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(
+                            "慢一倍" to 0.5f,
+                            "正常" to 1f,
+                            "快一倍" to 2f,
+                        ).forEach { (label, value) ->
+                            val active = Motion.speed == value
+                            Button(
+                                onClick = { Motion.speed = value },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (active) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    },
+                                    contentColor = if (active) {
+                                        MaterialTheme.colorScheme.onPrimary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                ),
+                            ) {
+                                Text(label, fontSize = 12.sp, maxLines = 1)
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                DebugCard("图标与周范围自检（v2.0.3 图标 / v2.0.0 快捷范围）") {
+                    Text("桌面图标与 App 内字标的资源自检：", style = DebugLabelStyle)
+                    Spacer(Modifier.height(6.dp))
+                    DebugButton("跑一次图标资源自检") {
+                        iconProbeText = DebugTools.probeLauncherIcons()
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text("本周 / 上周的时间区间：", style = DebugLabelStyle)
+                    Spacer(Modifier.height(6.dp))
+                    DebugButton("跑一次周范围自检") {
+                        weekProbeText = DebugTools.probeWeekRanges()
+                    }
+                    if (iconProbeText.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(iconProbeText, style = DebugMonoStyle)
+                    }
+                    if (weekProbeText.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(weekProbeText, style = DebugMonoStyle)
                     }
                 }
             }

@@ -1,5 +1,10 @@
 package com.workreport.app.ui.history
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +33,10 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +44,8 @@ import com.workreport.app.R
 import com.workreport.app.domain.model.MonthStat
 import com.workreport.app.domain.model.ReportItemStat
 import com.workreport.app.domain.model.WeekStat
+import com.workreport.app.ui.CAPSULE_SPACE
+import com.workreport.app.ui.common.Motion
 import com.workreport.app.ui.common.UnderlineTabBar
 import com.workreport.app.domain.model.ReportStats
 import com.workreport.app.ui.common.EmptyState
@@ -74,7 +84,12 @@ fun StatsContent(
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
-            start = 14.dp, end = 14.dp, bottom = 20.dp,
+            // ⚠️ 底部必须留出悬浮玻璃胶囊的高度（v2.0.4 修）。
+            //    底栏是浮在内容之上的，不占布局位置 —— 内容不主动让开，
+            //    最后一段说明文字就会被胶囊压在底下看不见（首页/我的/列表页都留了，
+            //    唯独统计页漏了）。
+            start = 14.dp, end = 14.dp,
+            bottom = 20.dp + CAPSULE_SPACE,
         ),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -139,9 +154,9 @@ fun StatsContent(
 
         item {
             SectionCard(
-                title = "工作条目分布",
+                title = "产出节奏",
                 icon = R.drawable.ic_calendar,
-                hint = "深色柱 = 报告份数",
+                hint = "柱高 = 工作条目数",
             ) {
                 // 维度切换：按月 / 按周
                 UnderlineTabBar(
@@ -150,11 +165,44 @@ fun StatsContent(
                     onSelect = { dimension = it },
                 )
                 Spacer(Modifier.height(10.dp))
-                if (dimension == 0) {
-                    MonthBarChart(stats.months)
-                } else {
-                    WeekBarChart(stats.weeks)
+                // v2.0.4：按月 / 按周 切换时图表淡入淡出（之前是瞬间替换）
+                AnimatedContent(
+                    targetState = dimension,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(Motion.duration(Motion.NORMAL))) togetherWith
+                            fadeOut(animationSpec = tween(Motion.duration(Motion.FAST)))
+                    },
+                    label = "statsDimension",
+                ) { dim ->
+                    if (dim == 0) {
+                        ProductionBarChart(
+                            bars = stats.months.map {
+                                ProductionBar(
+                                    label = "${it.month}月",
+                                    itemCount = it.itemCount,
+                                    reportCount = it.reportCount,
+                                )
+                            },
+                        )
+                    } else {
+                        ProductionBarChart(
+                            bars = stats.weeks.map {
+                                ProductionBar(
+                                    label = it.label,
+                                    itemCount = it.itemCount,
+                                    reportCount = it.reportCount,
+                                )
+                            },
+                        )
+                    }
                 }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "柱子越高，那段时间写的工作条目越多；柱子下面的小字是那段时间生成了几份周报。",
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 
@@ -227,113 +275,165 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
 }
 
 /**
- * 每月工作条目柱状图（Canvas 手绘）。
+ * 柱状图的一根柱子。
  *
- * 柱子高度 = 该月的工作条目数；柱子里再叠一条深色段表示报告份数（取条目最多的那个月的份数做满格参考）。
+ * v2.0.4 起这个图表**只编码一个指标**（工作条目数 = 柱高）。
+ *
+ * 之前是"柱高 = 条目数 + 柱底叠一段深色 = 报告份数"的双编码，
+ * 结果：
+ *   · 深色模式下 `onPrimary` 是**白色**，所以那段"深色"反而变成亮色，
+ *     与卡片右上角那句提示正好相反；
+ *   · 报告份数占满整根柱子时（该月份数就是最多的那次），
+ *     整根柱子会被盖成同一个颜色，看起来像"空白"；
+ *   · 两根柱子时又被均分到左右两端，中间大片空白，更看不懂。
+ *
+ * 现在报告份数**写在柱子下面**，一眼就能读，不用猜颜色。
  */
-@Composable
-private fun MonthBarChart(months: List<MonthStat>) {
-    if (months.isEmpty()) return
-    val maxItems = max(1, months.maxOf { it.itemCount })
-    val maxReports = max(1, months.maxOf { it.reportCount })
-    val barColor = MaterialTheme.colorScheme.primary
-    val barTrack = MaterialTheme.colorScheme.surfaceVariant
-    val reportColor = MaterialTheme.colorScheme.onPrimary
-
-    Column {
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp),
-        ) {
-            val count = months.size
-            if (count == 0) return@Canvas
-            val slot = size.width / count
-            val barWidth = (slot * 0.5f).coerceAtMost(28.dp.toPx())
-            val gap = (slot - barWidth) / 2f
-            val bottom = size.height
-
-            months.forEachIndexed { index, m ->
-                val h = if (maxItems == 0) 0f
-                else (m.itemCount.toFloat() / maxItems) * (size.height - 4.dp.toPx())
-                val left = index * slot + gap
-                val top = bottom - h
-
-                // 底槽
-                drawRoundRect(
-                    color = barTrack,
-                    topLeft = Offset(left, top),
-                    size = Size(barWidth, h),
-                    cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f),
-                )
-                if (h > 0f) {
-                    drawRoundRect(
-                        color = barColor,
-                        topLeft = Offset(left, top),
-                        size = Size(barWidth, h),
-                        cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f),
-                    )
-                    // 报告份数：叠在柱子底部的一段深色
-                    val rh = if (maxReports == 0) 0f
-                    else (m.reportCount.toFloat() / maxReports) * h
-                    if (rh > 0f) {
-                        drawRoundRect(
-                            color = reportColor,
-                            topLeft = Offset(left, bottom - rh),
-                            size = Size(barWidth, rh),
-                            cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f),
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(6.dp))
-        // 月份刻度（数量多时只标首尾与间隔，避免挤成一团）
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            months.forEachIndexed { index, m ->
-                val show = months.size <= 6 || index == 0 || index == months.size - 1 || index % 3 == 0
-                Box(modifier = Modifier.width(44.dp), contentAlignment = Alignment.Center) {
-                    Text(
-                        if (show) "${m.month}月" else "",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        }
-    }
-}
+private data class ProductionBar(
+    /** 轴上的短标签，如「11月」「第3周」 */
+    val label: String,
+    /** 工作条目数（柱高） */
+    val itemCount: Int,
+    /** 报告份数（写在柱下的数字） */
+    val reportCount: Int,
+)
 
 /**
- * 按周的柱状图（v2.0.1 起）。
+ * 产出节奏柱状图（v2.0.4 重做）。
  *
- * 与 [MonthBarChart] **完全同一套手绘逻辑**，只是数据源换成「第 N 周」。
+ * 布局：
+ * ```
+ *        23                 9          ← 柱顶数字 = 工作条目数
+ *        ███                █
+ *        ███                █
+ *   █    ███                █
+ *  ───────────────────────────         ← 基线
+ *  10月       11月                     ← 轴标签
+ *  1份        3份                      ← 报告份数
+ * ```
+ *
+ * 柱子数量少时**居中紧凑排列**（不再均分整个宽度），
+ * 数量多时自动收窄间距，保证不越界。
  */
 @Composable
-private fun WeekBarChart(weeks: List<WeekStat>) {
-    if (weeks.isEmpty()) {
+private fun ProductionBarChart(bars: List<ProductionBar>) {
+    if (bars.isEmpty()) {
         Text(
-            "还没有带周数的报告。",
+            "还没有可统计的数据。",
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         return
     }
-    // 复用月份的图表：把「第 N 周」映射成与「N 月」一样的刻度文案
-    MonthBarChart(
-        weeks.map {
-            com.workreport.app.domain.model.MonthStat(
-                year = 0,
-                month = it.weekNum,
-                reportCount = it.reportCount,
-                itemCount = it.itemCount,
+
+    val measurer = rememberTextMeasurer()
+    val barColor = MaterialTheme.colorScheme.primary
+    val axisColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val baselineColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+
+    // 布局常量
+    val topSpace = 18.dp      // 柱顶数字
+    val bottomSpace = 34.dp   // 轴标签 + 份数
+    val maxBarWidth = 26.dp
+    val maxGap = 16.dp
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(156.dp),
+    ) {
+        val n = bars.size
+        val maxItems = max(1, bars.maxOf { it.itemCount })
+
+        // 基线以上的可用高度
+        val areaTop = topSpace.toPx()
+        val baseline = size.height - bottomSpace.toPx()
+        val areaHeight = baseline - areaTop
+
+        // 每根柱子占一格；数量多时自动收窄
+        val maxSlot = size.width / n
+        val slot = minOf(maxBarWidth.toPx() + maxGap.toPx(), maxSlot)
+        val barWidth = minOf(maxBarWidth.toPx(), slot * 0.56f)
+        val totalWidth = slot * n
+        val startX = (size.width - totalWidth) / 2f
+
+        // 基线
+        drawLine(
+            color = baselineColor,
+            start = Offset(0f, baseline),
+            end = Offset(size.width, baseline),
+            strokeWidth = 1.dp.toPx(),
+        )
+
+        bars.forEachIndexed { index, bar ->
+            val slotLeft = startX + index * slot
+            val left = slotLeft + (slot - barWidth) / 2f
+            val centerX = left + barWidth / 2f
+
+            // 柱高
+            val h = (bar.itemCount.toFloat() / maxItems) * areaHeight
+            val top = baseline - h
+
+            if (h > 0f) {
+                drawRoundRect(
+                    color = barColor,
+                    topLeft = Offset(left, top),
+                    size = Size(barWidth, h),
+                    cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f),
+                )
+            }
+
+            // 柱顶数字：工作条目数
+            val countLayout = measurer.measure(
+                text = bar.itemCount.toString(),
+                style = TextStyle(
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = barColor,
+                ),
             )
-        },
-    )
+            drawText(
+                textLayoutResult = countLayout,
+                topLeft = Offset(
+                    x = centerX - countLayout.size.width / 2f,
+                    y = (top - countLayout.size.height - 2.dp.toPx()).coerceAtLeast(0f),
+                ),
+            )
+
+            // 轴标签
+            val labelLayout = measurer.measure(
+                text = bar.label,
+                style = TextStyle(
+                    fontSize = 10.sp,
+                    color = axisColor,
+                ),
+            )
+            drawText(
+                textLayoutResult = labelLayout,
+                topLeft = Offset(
+                    x = centerX - labelLayout.size.width / 2f,
+                    y = baseline + 4.dp.toPx(),
+                ),
+            )
+
+            // 柱子下面：报告份数
+            val reportLayout = measurer.measure(
+                text = "${bar.reportCount} 份",
+                style = TextStyle(
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = axisColor,
+                ),
+            )
+            drawText(
+                textLayoutResult = reportLayout,
+                topLeft = Offset(
+                    x = centerX - reportLayout.size.width / 2f,
+                    y = baseline + 18.dp.toPx(),
+                ),
+            )
+        }
+    }
 }
 
 /**

@@ -3,20 +3,20 @@
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "2.0.3",
-    "versionCode": 38,
+    "version": "2.1.0",
+    "versionCode": 39,
     "releasedAt": "2026-11-22",
-    "sizeBytes": 12409882,
-    "sizeText": "11.8 MB",
-    "sha256": "21b98da9b7d8e6ed524ca0c128edf796ea3f137b2fda2688c8f9d614c53f3bd8",
+    "sizeBytes": 12426266,
+    "sizeText": "11.9 MB",
+    "sha256": "a94bd5b881608a4a20f2d21ba267e0cdf159936d11523439300a77658ca8ca27",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.3/workreport-native-v2.0.3.apk",
-    "apkMirrorUrl": "https://j4ntowee5th6u.space.mcode.cn/workreport-native-v2.0.3.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.3/workreport-native-source-v2.0.3.zip",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.0/workreport-native-v2.1.0.apk",
+    "apkMirrorUrl": "https://j4ntowee5th6u.space.mcode.cn/workreport-native-v2.1.0.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.0/workreport-native-source-v2.1.0.zip",
     "minAndroid": "Android 12 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://j4ntowee5th6u.space.mcode.cn/workreport-native-source-v2.0.3.zip"
+    "sourceMirrorUrl": "https://j4ntowee5th6u.space.mcode.cn/workreport-native-source-v2.1.0.zip"
   },
   "web": {
     "version": "v1.3",
@@ -34,6 +34,19 @@
   },
   "changelog": [
     {
+      "version": "v2.1.0",
+      "date": "2026-11-22",
+      "title": "统计页不再被底栏挡住 · 统计图表改清楚 · 开发者调试入口 · 全 App 动效统一",
+      "items": [
+        "**修好：统计页底部被导航栏挡住**。底栏是浮在内容之上的玻璃胶囊（不占布局位置），内容要自己让开 —— 首页、「我的」、历史列表都写了，唯独统计页漏了，滚到底时最后那段「统计只包含本 App 生成的 N 份报告…」被压在底下看不见",
+        "**统计图表改清楚了：一张图只说一件事**。之前同一根柱子上塞了两个指标（柱高 = 工作条目数、柱底叠一段深色 = 报告份数）：深色模式下那段「深色」其实是白色（用的是 onPrimary），跟卡片上的提示正好相反；某个月份数最多时整根柱子被盖成同一个颜色、看着像空白；只有两三根柱子时又被均分到两端。现在柱高只表示工作条目数，柱顶写条数、柱下写那段时间生成了几份周报，柱子少时居中紧凑排列",
+        "**开发者页面补齐了最近新功能的调试入口**（我的 → 关于 → 连点版本号 7 次）：① 统计样本数据工厂，一键造 12/24 份**真的**加密 ZIP 报告（预览、再次下载、再次发邮件都能试），时间挪到过去几个月让统计图表立刻有内容，只落在应用私有目录、不污染「下载」目录，可一键清掉；② 搜索命中自检，告诉你命中了几条、其中几条只命中正文；③ 主题即时切换（浅色/深色/跟随系统）；④ 动效全局开关与速度调节；⑤ 图标资源自检与周范围自检",
+        "**全 App 的动效统一了**：以前各处的动画时长是手写数字散在十几个文件里，久了就变成「半个 App 有动效、半个没有」。现在收口到一处（4 档时长）：点开一条历史报告会缓缓展开 + 淡入（之前是瞬间出现），列表/统计切换、搜索框出现、统计页「按月/按周」换图表都有动画，卡片按压回弹、多选勾选框、批量条滑入、底栏指示条平移全走同一套规格",
+        "导出内容、Excel 样式、加密 ZIP 文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**：8 个红线文件与 v2.0.3 逐字节相同，导出路径的 3 个方法体也逐字节相同；单元测试 **301/301** 通过（新增 11 项：统计页底部避让、图表单一指标契约、开发者调试入口齐全、样本不污染下载目录、展开动效契约、全 App 动效时长统一收口）"
+      ],
+      "current": true
+    },
+    {
       "version": "v2.0.3",
       "date": "2026-11-22",
       "title": "桌面图标改成纯文字字标 · App 内图标位去掉边框",
@@ -45,7 +58,7 @@
         "**App 内的深浅色主题切换照旧**：那套是 App 自己手动管的（Compose 主题），跟桌面图标是两回事，三个页面的深浅色切换一点没动",
         "导出内容、Excel 样式、加密 ZIP 文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**：8 个红线文件与 v2.0.2 逐字节相同，导出路径的 3 个方法体也逐字节相同；单元测试 **290/290** 通过（新增图标契约测试：桌面图标是纯文字、App 内顶栏无边框无底色、App 内字标资源齐全且随主题染色）"
       ],
-      "current": true
+      "current": false
     },
     {
       "version": "v2.0.2",

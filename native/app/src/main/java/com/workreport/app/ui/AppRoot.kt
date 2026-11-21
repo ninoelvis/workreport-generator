@@ -35,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import com.workreport.app.R
 import com.workreport.app.ServiceLocator
 import com.workreport.app.util.BottomAvoidance
+import com.workreport.app.ui.common.Motion
 import com.workreport.app.ui.common.GlassContentHost
 import com.workreport.app.ui.common.rememberGlassBackdrop
 import com.workreport.app.ui.debug.DebugPage
@@ -184,9 +185,9 @@ fun AppRoot() {
                 enterTransition = {
                     val dir = pageDirection()
                     if (dir == 0) {
-                        fadeIn(tween(200))
+                        fadeIn(tween(Motion.duration(Motion.NORMAL)))
                     } else {
-                        fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full ->
+                        fadeIn(tween(Motion.duration(Motion.MEDIUM))) + slideInHorizontally(animationSpec = tween(Motion.duration(Motion.SLOW))) { full ->
                             if (dir > 0) full / 6 else -full / 6
                         }
                     }
@@ -194,10 +195,10 @@ fun AppRoot() {
                 exitTransition = {
                     val dir = pageDirection()
                     if (dir == 0) {
-                        fadeOut(tween(160))
+                        fadeOut(tween(Motion.duration(Motion.FAST)))
                     } else {
                         // 旧页面往反方向退一点，形成轻微视差（位移比新页面小，避免两层内容打架）
-                        fadeOut(tween(180)) + slideOutHorizontally(animationSpec = tween(280)) { full ->
+                        fadeOut(tween(Motion.duration(Motion.NORMAL))) + slideOutHorizontally(animationSpec = tween(Motion.duration(Motion.SLOW))) { full ->
                             if (dir > 0) -full / 10 else full / 10
                         }
                     }
@@ -205,9 +206,9 @@ fun AppRoot() {
                 popEnterTransition = {
                     val dir = pageDirection()
                     if (dir == 0) {
-                        fadeIn(tween(200))
+                        fadeIn(tween(Motion.duration(Motion.NORMAL)))
                     } else {
-                        fadeIn(tween(220)) + slideInHorizontally(animationSpec = tween(280)) { full ->
+                        fadeIn(tween(Motion.duration(Motion.MEDIUM))) + slideInHorizontally(animationSpec = tween(Motion.duration(Motion.SLOW))) { full ->
                             if (dir > 0) full / 6 else -full / 6
                         }
                     }
@@ -215,9 +216,9 @@ fun AppRoot() {
                 popExitTransition = {
                     val dir = pageDirection()
                     if (dir == 0) {
-                        fadeOut(tween(160))
+                        fadeOut(tween(Motion.duration(Motion.FAST)))
                     } else {
-                        fadeOut(tween(180)) + slideOutHorizontally(animationSpec = tween(280)) { full ->
+                        fadeOut(tween(Motion.duration(Motion.NORMAL))) + slideOutHorizontally(animationSpec = tween(Motion.duration(Motion.SLOW))) { full ->
                             if (dir > 0) -full / 10 else full / 10
                         }
                     }

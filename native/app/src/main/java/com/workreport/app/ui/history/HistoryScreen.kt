@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -92,6 +93,7 @@ import com.workreport.app.R
 import com.workreport.app.data.local.ReportEntity
 import com.workreport.app.ui.CAPSULE_SPACE
 import com.workreport.app.ui.BULK_BAR_SPACE
+import com.workreport.app.ui.common.Motion
 import com.workreport.app.ui.common.UnderlineTabBar
 import com.workreport.app.ui.common.EmptyState
 import androidx.compose.ui.platform.LocalContext
@@ -169,6 +171,17 @@ fun HistoryScreen(
     // 顶部两个视图的切换：0 = 列表，1 = 统计（v2.0.0 起）
     var tab by remember { mutableStateOf(0) }
 
+    // v2.0.4：切换视图时**淡入**。
+    //
+    // 之前是 `if (tab == 1) { 统计 } else { 列表 }` 直接替换，
+    // 切换是"瞬间"的 —— 与 App 里其它地方（卡片展开、下划线指示条、页面过渡）不一致。
+    // 现在两个视图都走这一层淡入，动效语言统一。
+    val viewAlpha = remember { Animatable(1f) }
+    LaunchedEffect(tab) {
+        viewAlpha.snapTo(0f)
+        viewAlpha.animateTo(1f, tween(Motion.duration(Motion.NORMAL)))
+    }
+
     // v2.0.1：多选模式下按返回手势（边缘滑动返回）**只退出多选**，不离开这个页面。
     //
     // 坑（v2.0.0 修）：之前多选状态只有「取消」按钮和批量操作完成会清，
@@ -222,7 +235,16 @@ fun HistoryScreen(
             )
 
             // 搜索框只在「列表」视图里出现
-            if (tab == 0) {
+            //
+            // v2.0.4：出现/消失都带动画（淡入 + 展开），
+            // 切 Tab 时不再是"啪"地一下蹦出来 / 消失。
+            AnimatedVisibility(
+                visible = tab == 0,
+                enter = fadeIn(tween(Motion.duration(Motion.NORMAL))) +
+                    expandVertically(tween(Motion.duration(Motion.MEDIUM))),
+                exit = fadeOut(tween(Motion.duration(Motion.FAST))) +
+                    shrinkVertically(tween(Motion.duration(Motion.MEDIUM))),
+            ) {
             OutlinedTextField(
                 value = state.keyword,
                 onValueChange = viewModel::onKeywordChange,
@@ -250,7 +272,6 @@ fun HistoryScreen(
                 ),
             )
             }
-
         }
 
         // 统计视图（v2.0.0 起）
@@ -259,7 +280,8 @@ fun HistoryScreen(
                 stats = stats,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 8.dp),
+                    .padding(top = 8.dp)
+                    .graphicsLayer { alpha = viewAlpha.value },
             )
             return@Column
         }
@@ -267,6 +289,7 @@ fun HistoryScreen(
         // ⚠️ 列表**总是**渲染：数据库里一条记录都没有时，
         // 用户自己拷进存放目录的压缩包也要能列出来。
         LazyColumn(
+            modifier = Modifier.graphicsLayer { alpha = viewAlpha.value },
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 // 底部留出悬浮玻璃胶囊的高度；
                 // 多选模式下胶囊淡出，改留批量操作条的位置。
@@ -579,10 +602,10 @@ fun HistoryScreen(
         // 一个退场一个进场，视觉上是「交接」而不是「打架」。
         AnimatedVisibility(
             visible = selectionMode,
-            enter = fadeIn(tween(durationMillis = 200)) +
-                slideInVertically(tween(durationMillis = 260)) { it / 2 },
-            exit = fadeOut(tween(durationMillis = 140)) +
-                slideOutVertically(tween(durationMillis = 180)) { it / 2 },
+            enter = fadeIn(tween(durationMillis = Motion.duration(Motion.NORMAL))) +
+                slideInVertically(tween(durationMillis = Motion.duration(Motion.SLOW))) { it / 2 },
+            exit = fadeOut(tween(durationMillis = Motion.duration(Motion.FAST))) +
+                slideOutVertically(tween(durationMillis = Motion.duration(Motion.NORMAL))) { it / 2 },
             modifier = Modifier.align(Alignment.BottomCenter),
         ) {
             BulkActionBar(
@@ -643,7 +666,7 @@ private fun ReportCard(
         } else {
             MaterialTheme.colorScheme.surface
         },
-        animationSpec = tween(durationMillis = 180),
+        animationSpec = tween(durationMillis = Motion.duration(Motion.NORMAL)),
         label = "cardContainerColor",
     )
 
@@ -683,8 +706,8 @@ private fun ReportCard(
                 // 动效与 v1.8.0 底栏同一套：缩放出现（spring）+ 勾颜色过渡 + 按压回弹。
                 androidx.compose.animation.AnimatedVisibility(
                     visible = selectionMode,
-                    enter = fadeIn(tween(160)) + scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
-                    exit = fadeOut(tween(120)) + scaleOut(tween(120)),
+                    enter = fadeIn(tween(Motion.duration(Motion.FAST))) + scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
+                    exit = fadeOut(tween(Motion.duration(Motion.FAST))) + scaleOut(tween(Motion.duration(Motion.FAST))),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
 
@@ -698,12 +721,12 @@ private fun ReportCard(
                                             )
                                             val checkFill by animateColorAsState(
                                                 targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                                animationSpec = tween(durationMillis = 160),
+                                                animationSpec = tween(durationMillis = Motion.duration(Motion.FAST)),
                                                 label = "checkFill",
                                             )
                                             val checkBorder by animateColorAsState(
                                                 targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                                                animationSpec = tween(durationMillis = 160),
+                                                animationSpec = tween(durationMillis = Motion.duration(Motion.FAST)),
                                                 label = "checkBorder",
                                             )
                                             Box(
@@ -728,7 +751,7 @@ private fun ReportCard(
                                                 androidx.compose.animation.AnimatedVisibility(
                                                     visible = selected,
                                                     enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
-                                                    exit = scaleOut(tween(100)),
+                                                    exit = scaleOut(tween(Motion.duration(Motion.FAST))),
                                                 ) {
                                                     Icon(
                                                         painter = painterResource(R.drawable.ic_check),
@@ -748,8 +771,8 @@ private fun ReportCard(
             // v2.0.0：收起/展开是**带动画**的（之前是瞬间塌缩，看着像卡了一下）。
             AnimatedVisibility(
                 visible = !selectionMode,
-                enter = fadeIn(tween(180)) + expandVertically(tween(220)),
-                exit = fadeOut(tween(120)) + shrinkVertically(tween(200)),
+                enter = fadeIn(tween(Motion.duration(Motion.NORMAL))) + expandVertically(tween(Motion.duration(Motion.MEDIUM))),
+                exit = fadeOut(tween(Motion.duration(Motion.FAST))) + shrinkVertically(tween(Motion.duration(Motion.NORMAL))),
             ) {
                 Column {
 
@@ -836,7 +859,21 @@ private fun ReportCard(
 
 
                                 // 展开：直接看到压缩包里那份 Excel 的样子
-                                if (previewExpanded) {
+                                //
+                                // v2.0.4：原来是 `if (previewExpanded) { ... }` —— **瞬间出现/消失**，
+                                // 跟 App 里其它地方的动效不一致，看起来像"啪"地一下蹦出来。
+                                // 现在改成 AnimatedVisibility：内容缓缓展开、淡入；收起时反向收拢。
+                                //
+                                // ⚠️ AnimatedVisibility 的 content 必须是**单个子节点**，
+                                //    这里用一个 Column 包住整个 when。
+                                AnimatedVisibility(
+                                    visible = previewExpanded,
+                                    enter = fadeIn(tween(Motion.duration(Motion.NORMAL))) +
+                                        expandVertically(tween(Motion.duration(Motion.MEDIUM))),
+                                    exit = fadeOut(tween(Motion.duration(Motion.FAST))) +
+                                        shrinkVertically(tween(Motion.duration(Motion.MEDIUM))),
+                                ) {
+                                    Column {
                                     Spacer(Modifier.height(12.dp))
                                     when {
                                         previewState.loading -> {
@@ -961,6 +998,7 @@ private fun ReportCard(
                                                 }
                                             }
                                         }
+                                    }
                                     }
                                 }
             

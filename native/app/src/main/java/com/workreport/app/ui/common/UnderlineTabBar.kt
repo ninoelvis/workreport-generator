@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.workreport.app.ui.common.Motion
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,7 +73,7 @@ fun UnderlineTabBar(
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         },
-                        animationSpec = tween(durationMillis = 180),
+                        animationSpec = tween(durationMillis = Motion.duration(Motion.NORMAL)),
                         label = "tabTextColor",
                     )
                     Box(

@@ -1,16 +1,16 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v2.0.3-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v2.1.0-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
-**原生版 Android App（v2.0.3，推荐）**:
-[workreport-native-v2.0.3.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.3/workreport-native-v2.0.3.apk)
+**原生版 Android App（v2.1.0，推荐）**:
+[workreport-native-v2.1.0.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.0/workreport-native-v2.1.0.apk)
 （11.7 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版 · **需 Android 12 及以上**）
 
 源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
-[工程源码包 v2.0.3](https://github.com/ninoelvis/workreport-generator/releases/download/v2.0.3/workreport-native-source-v2.0.3.zip)
+[工程源码包 v2.1.0](https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.0/workreport-native-source-v2.1.0.zip)
 
 **旧版 WebView App**：
 [workreport-generator-v1.2.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.2.1/workreport-generator-v1.2.1.apk)
@@ -43,6 +43,7 @@
 
 *原生版 App*
 
+- `v2.1.0` **修好统计页底部被导航栏挡住**（底栏是悬浮胶囊，统计页漏了让位空间）；**统计图表改成单一指标**（柱高只表示工作条目数，柱顶写条数、柱下写生成了几份周报，不再是深浅双编码）；**开发者页面补齐最近新功能的调试入口**（统计样本数据工厂、搜索命中自检、主题即时切换、动效开关与速度、图标与周范围自检）；**全 App 动效统一**（点开历史报告会缓缓展开淡入，列表/统计切换、搜索框出现、图表换维度都有动画）；导出格式与公司红线一字未改，单元测试 301/301
 - `v2.0.3` **桌面图标改成纯文字「WorkReport」字标**（白底横排，「Work」灰蓝、「Report」深藏蓝，**没有任何图形**，字形直接从设计稿原图抠出；新增单色主题图标与启动图专用图标）；**桌面图标不再跟随系统深浅色**（删掉 5 个夜间图标目录，浅色/深色桌面上是同一个图标）；**App 内图标位也换成同一套字标并去掉边框与底色方块**，字样与背景融为一体；App 内深浅色切换照旧；导出格式与公司红线一字未改，单元测试 290/290
 - `v2.0.2` **修好历史报告页卡片显示错乱**（v2.0.1 引入的回归：卡片正文摘要压在操作按钮上，根因是 Compose 的 `AnimatedVisibility` 要求 content 只能是单个子节点，现已包 `Column` 并加防回归测试）；**搜索整合成一个输入框**（同时搜文件名与周报正文，删掉「文件名/全部内容」切换）；**统计新增三个维度**（按月/按周切换、每份报告产出、平均每份/最忙的月份/最忙的一周）；导出格式与公司红线一字未改，单元测试 285/285
 - `v2.0.1` **多选补上动效**（卡片内容缓缓收起/展开、勾选框弹出、底部批量操作条滑入、按下回弹，与 v1.8.0 底栏同一套语言）；**修「多选后按返回手势底栏永久消失」**（多选状态改成单一真相源，返回手势只退多选、离开历史页自动清状态）；**顶部「列表 / 统计」换成下划线 Tab + 指示条平移**（不再是 App 里唯一的异类样式）；导出格式与公司红线一字未改，单元测试 266/266
