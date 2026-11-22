@@ -2,6 +2,7 @@ package com.workreport.app.util
 
 import com.workreport.app.domain.model.ReportStatsCalculator
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -31,22 +32,69 @@ class ReportStatsDimensionsTest {
     )
 
     @Test
-    fun `按周归并要合并同一个周号的报告`() {
+    fun `按周归并要合并同一个年月同一周号的报告`() {
         val stats = ReportStatsCalculator.calculate(
             listOf(
-                entry(week = 1, done = "a\nb", name = "第1周甲"),
-                entry(week = 1, done = "c", name = "第1周乙"),
-                entry(week = 3, done = "d\ne\nf", name = "第3周丙"),
+                entry(month = 10, week = 1, done = "a\nb", name = "第1周甲"),
+                entry(month = 10, week = 1, done = "c", name = "第1周乙"),
+                entry(month = 10, week = 3, done = "d\ne\nf", name = "第3周丙"),
             ),
         )
         assertEquals(2, stats.weeks.size)
         val w1 = stats.weeks.first { it.weekNum == 1 }
         assertEquals(2, w1.reportCount)
         assertEquals(3, w1.itemCount)
-        assertEquals("第1周", w1.label)
+        // 标签必须带月份，否则不同月份的同周次看起来一样
+        assertEquals("10月第1周", w1.label)
         val w3 = stats.weeks.first { it.weekNum == 3 }
         assertEquals(1, w3.reportCount)
         assertEquals(3, w3.itemCount)
+    }
+
+    /**
+     * v2.1.2 修：**不同月份的同周次不能合并**。
+     *
+     * 坑：以前 byWeek 的 key 就是 weekNum，于是十月的第 4 周和十一月的第 4 周
+     * 被合成一根柱子 —— 看着像"11月第4周还没写怎么就有数据"（那其实是十月的）。
+     */
+    @Test
+    fun `不同月份的同一周号不能合并`() {
+        val stats = ReportStatsCalculator.calculate(
+            listOf(
+                entry(year = 2026, month = 10, week = 4, done = "a", name = "十月第4周"),
+                entry(year = 2026, month = 11, week = 4, done = "b\nc", name = "十一月第4周"),
+            ),
+        )
+        assertEquals("两个不同月份的同周次必须是两根柱子", 2, stats.weeks.size)
+        assertEquals(listOf("10月第4周", "11月第4周"), stats.weeks.map { it.label })
+        assertEquals(1, stats.weeks.first { it.month == 10 }.itemCount)
+        assertEquals(2, stats.weeks.first { it.month == 11 }.itemCount)
+    }
+
+    /** 不同年份的同月同周也不能合并 */
+    @Test
+    fun `不同年份的同月同周不能合并`() {
+        val stats = ReportStatsCalculator.calculate(
+            listOf(
+                entry(year = 2025, month = 6, week = 2, done = "a", name = "去年"),
+                entry(year = 2026, month = 6, week = 2, done = "b", name = "今年"),
+            ),
+        )
+        assertEquals(2, stats.weeks.size)
+        assertEquals(listOf(2025, 2026), stats.weeks.map { it.year })
+    }
+
+    /** 最忙的一周要带月份，不能只报「第N周」 */
+    @Test
+    fun `最忙的一周要带月份`() {
+        val stats = ReportStatsCalculator.calculate(
+            listOf(
+                entry(month = 10, week = 2, done = "a", name = "十月"),
+                entry(month = 11, week = 3, done = "b\nc\nd", name = "十一月"),
+            ),
+        )
+        assertEquals("11月第3周", stats.busiestWeek?.label)
+        assertEquals(3, stats.busiestWeek?.itemCount)
     }
 
     @Test
@@ -62,15 +110,17 @@ class ReportStatsDimensionsTest {
     }
 
     @Test
-    fun `周维度要按周号升序`() {
+    fun `周维度要按时间升序`() {
         val stats = ReportStatsCalculator.calculate(
             listOf(
-                entry(week = 4, done = "a"),
-                entry(week = 1, done = "b"),
-                entry(week = 2, done = "c"),
+                entry(month = 10, week = 4, done = "a"),
+                entry(month = 10, week = 1, done = "b"),
+                entry(month = 11, week = 2, done = "c"),
             ),
         )
-        assertEquals(listOf(1, 2, 4), stats.weeks.map { it.weekNum })
+        // 先按月、再按周号
+        assertEquals(listOf(1, 4, 2), stats.weeks.map { it.weekNum })
+        assertEquals(listOf(10, 10, 11), stats.weeks.map { it.month })
     }
 
     @Test
@@ -135,6 +185,64 @@ class ReportStatsDimensionsTest {
         assertEquals(11, top.month)
         assertEquals(3, top.weekNum)
         assertEquals("2026年11月第3周", top.period)
+    }
+
+    // v2.1.2：并列时统一取「最近」的那一个
+    // （maxByOrNull 会保留第一个最大值，而列表是时间升序 → 会取到最早的）
+    @Test
+    fun `最忙的一周并列时要取最近的那一周`() {
+        val stats = ReportStatsCalculator.calculate(
+            listOf(
+                entry(year = 2026, month = 10, week = 4, done = "a\nb", name = "甲"),
+                entry(year = 2026, month = 11, week = 1, done = "c\nd", name = "乙"),
+            ),
+        )
+        assertEquals(2, stats.busiestWeek?.itemCount)
+        assertEquals("11月第1周", stats.busiestWeek?.label)
+    }
+
+    @Test
+    fun `最忙的月份并列时要取最近的那个月`() {
+        val stats = ReportStatsCalculator.calculate(
+            listOf(
+                entry(year = 2026, month = 10, week = 4, done = "a\nb", name = "甲"),
+                entry(year = 2026, month = 11, week = 1, done = "c\nd", name = "乙"),
+            ),
+        )
+        assertEquals(2, stats.busiestMonth?.itemCount)
+        assertEquals("2026年11月", stats.busiestMonth?.label)
+    }
+
+    // v2.1.2：跨年时轴标签必须能区分年份
+    @Test
+    fun `跨年的数据要能看出有多个年份`() {
+        val same = ReportStatsCalculator.calculate(
+            listOf(
+                entry(year = 2025, month = 11, week = 3, done = "a", name = "甲"),
+                entry(year = 2026, month = 11, week = 3, done = "b", name = "乙"),
+            ),
+        )
+        assertTrue("跨年时 hasMultipleYears 必须为 true", same.hasMultipleYears)
+        // 跨年的同月同周也必须分开算
+        assertEquals(2, same.weeks.size)
+        assertEquals(listOf(2025, 2026), same.weeks.map { it.year })
+
+        val single = ReportStatsCalculator.calculate(
+            listOf(entry(year = 2026, month = 11, week = 3, done = "a", name = "甲")),
+        )
+        assertFalse("同一年时不该标记为跨年", single.hasMultipleYears)
+    }
+
+    // v2.1.2：轴标签第二行用短形式「第3周」太宽，12 组时放不下会被整行跳过
+    @Test
+    fun `周的短标签要用不带第字的形式`() {
+        val stats = ReportStatsCalculator.calculate(
+            listOf(entry(year = 2026, month = 11, week = 3, done = "a", name = "甲")),
+        )
+        val week = stats.weeks.first()
+        assertEquals("3周", week.shortLabel)
+        assertEquals("11月第3周", week.label)
+        assertEquals("2026年11月第3周", week.fullLabel)
     }
 
     @Test

@@ -1,22 +1,22 @@
 {
-  "updatedAt": "2026-11-22",
+  "updatedAt": "2026-11-23",
   "dataSource": "本清单为下载页的唯一数据源。维护方式：发布新版本时（1）在 Release 上传名为 workreport-native.apk 的固定文件名资产，使 releases/latest/download/workreport-native.apk 始终指向最新安装包、下载链接永不变；文件名带版本号的 workreport-native-vX.Y.Z.apk 与工程源码包一并上传；（2）修改本文件中的版本号、元信息与更新记录；（3）推送至 main 分支。下载页会自动读取本文件，无需改动页面代码，也不会重新部署。",
   "app": {
     "name": "工作报告生成器",
-    "version": "2.1.1",
-    "versionCode": 40,
-    "releasedAt": "2026-11-22",
+    "version": "2.1.2",
+    "versionCode": 41,
+    "releasedAt": "2026-11-23",
     "sizeBytes": 12442650,
     "sizeText": "11.9 MB",
-    "sha256": "da53424c3f6f59f8c00bf218253724f2ac0dd8f20713e46744dd7859edc0a0b0",
+    "sha256": "1e6dfce024b4f4cd8aa0eba244d54dd981a5edcae7a6cb87fde0ccbb94ffe279",
     "apkUrl": "https://github.com/ninoelvis/workreport-generator/releases/latest/download/workreport-native.apk",
-    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.1/workreport-native-v2.1.1.apk",
-    "apkMirrorUrl": "https://m6vmr0eobzn3k.space.mcode.cn/workreport-native-v2.1.1.apk",
-    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.1/workreport-native-source-v2.1.1.zip",
+    "apkVersionedUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.2/workreport-native-v2.1.2.apk",
+    "apkMirrorUrl": "https://3xci8uvpstz6y.space.mcode.cn/workreport-native-v2.1.2.apk",
+    "sourceUrl": "https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.2/workreport-native-source-v2.1.2.zip",
     "minAndroid": "Android 12 及以上",
     "techStack": "Kotlin + Jetpack Compose 纯原生实现，不含 WebView 与任何网页资源",
     "certSha256": "05453ccc8e8ddb0395f0e0b1bbcdd95dddaafc8a71a5215ed4605f35f72a07bf",
-    "sourceMirrorUrl": "https://m6vmr0eobzn3k.space.mcode.cn/workreport-native-source-v2.1.1.zip"
+    "sourceMirrorUrl": "https://3xci8uvpstz6y.space.mcode.cn/workreport-native-source-v2.1.2.zip"
   },
   "web": {
     "version": "v1.3",
@@ -34,6 +34,20 @@
   },
   "changelog": [
     {
+      "version": "v2.1.2",
+      "date": "2026-11-23",
+      "title": "统计页重做：「按周」修 bug、去掉「N 份」、标签两行不叠字",
+      "items": [
+        "**统计页「按周」修掉一个真 bug**：以前只按周号归并，十月的第 4 周和十一月的第 4 周被合成了同一根柱子 —— 看着像「11月第 4 周还没写怎么就有数据」。现在按 **年 + 月 + 周** 三级分组，每根柱子都认得清是哪个月",
+        "**统计页去掉没意义的「N 份」**：你每周只写一份周报，份数对你没有参考价值。图表只标「写了几条」，「每月明细」表也去掉了「N 份」那一列",
+        "**统计页轴标签改成两行**：上面月份、下面第几周，不再互相叠字；标签宽度自适应，放不下会自动退成短标签，跨年时年份也画得出来",
+        "**统计页「最忙的一周」并列时取最近的**，跨年时方块用短标签、完整年份在下方说明文字里给，不会被截断",
+        "**首页与引导页副标题缩短**：不再难看地换行，改成「自动生成加密周报 ZIP 并发送邮件」",
+        "导出内容、加密 ZIP 文件名、内层 Excel 文件名与样式、解压密码规则 —— **一条红线都没动**"
+      ],
+      "current": true
+    },
+    {
       "version": "v2.1.1",
       "date": "2026-11-22",
       "title": "开发者页体检改成折叠式 · 收尾检查修掉 10 个问题",
@@ -47,7 +61,7 @@
         "**修好：「清掉样本」可能误删真实报告** —— 现在要求名字前缀**和**标题标记同时满足才删，就算你姓「样本」，真实报告也动不了；同一周重复造样本也改用独立批次目录，不会互相覆盖",
         "导出内容、Excel 样式、加密 ZIP 文件名、内层 Excel 文件名、解压密码规则、加密格式**一个字都没改**：8 个红线文件与 v2.0.3 逐字节相同，导出路径的 3 个方法体也逐字节相同；单元测试 **305/305** 通过（新增 4 项样本等价性对拍）"
       ],
-      "current": true
+      "current": false
     },
     {
       "version": "v2.1.0",

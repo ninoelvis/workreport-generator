@@ -102,7 +102,7 @@ fun IntroScreen(
         ) {
             AppTopBar(
                 title = "工作报告生成器",
-                subtitle = "填写本周工作内容，一键生成加密周报 ZIP 并发送邮件",
+                subtitle = "填写本周工作内容，一键生成加密周报",
                 trailing = {
                     Surface(
                         shape = RoundedCornerShape(20.dp),

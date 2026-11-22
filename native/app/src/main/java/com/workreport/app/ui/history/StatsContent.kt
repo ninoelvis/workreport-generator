@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.workreport.app.R
 import com.workreport.app.domain.model.MonthStat
@@ -51,7 +52,6 @@ import com.workreport.app.domain.model.ReportStats
 import com.workreport.app.ui.common.EmptyState
 import com.workreport.app.ui.common.SectionCard
 import kotlin.math.max
-import kotlin.math.roundToInt
 
 /**
  * 周报统计视图（v2.0.0 起）。
@@ -123,20 +123,36 @@ fun StatsContent(
                     )
                     StatTile(
                         "最忙的月份",
-                        stats.busiestMonth?.let { "${it.month}月" } ?: "—",
+                        // ⚠️ 一格只有 ~77dp 可用（20sp 的「26年11月」要 85dp），
+                        //    所以方块里只放短标签，完整年份在下面的说明文字里给。
+                        stats.busiestMonth?.let { monthLabel(it.year, it.month) } ?: "—",
                         Modifier.weight(1f),
                     )
                     StatTile(
                         "最忙的一周",
-                        stats.weeks.maxByOrNull { it.itemCount }?.label ?: "—",
+                        // 「11月3周」@20sp 约 74dp，余量只有 3dp ——
+                        //    小屏或系统字号放大就会被截成「11月3…」，所以这格用小一号字。
+                        stats.busiestWeek?.let { weekTileLabel(it) } ?: "—",
                         Modifier.weight(1f),
+                        valueFontSize = 17.sp,
                     )
                 }
                 stats.busiestMonth?.let { busiest ->
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "产出最多的是 ${busiest.label}，" +
-                            "写了 ${busiest.itemCount} 条工作记录（${busiest.reportCount} 份周报）",
+                        "写得最多的是 ${busiest.label}，" +
+                            "一共 ${busiest.itemCount} 条工作记录",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                stats.busiestWeek?.let { busiest ->
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        // ⚠️ 必须用带年份的完整标签：
+                        //    「11月第3周」在跨年时看不出是 2025 年还是 2026 年
+                        "单周最多的是 ${busiest.fullLabel}，" +
+                            "写了 ${busiest.itemCount} 条",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -156,7 +172,7 @@ fun StatsContent(
             SectionCard(
                 title = "产出节奏",
                 icon = R.drawable.ic_calendar,
-                hint = "柱高 = 工作条目数",
+                hint = "柱高 = 写了几条",
             ) {
                 // 维度切换：按月 / 按周
                 UnderlineTabBar(
@@ -165,18 +181,32 @@ fun StatsContent(
                     onSelect = { dimension = it },
                 )
                 Spacer(Modifier.height(6.dp))
-                // ⚠️ 「按周」是按**月内第几周**归并的（跟压缩包文件名里的周数一致），
-                //    所以第 1 周会把不同月份、不同年份的第 1 周合到一根柱子里，
-                //    跟「按月」不是一回事 —— 这里要说清楚，免得误读。
+                // ⚠️ 「按周」按**年 + 月 + 周**分组（v2.1.2 修），
+                //    标签直接带上月份，不会把十月的第 4 周和十一月的第 4 周混成一根。
                 Text(
                     if (dimension == 0) {
-                        "按月份统计产出。"
+                        "按月份看：每个月一共写了几条工作记录。"
                     } else {
-                        "按「月内第几周」统计（第 1 周会合并不同月份的同周次）。"
+                        "按周看：按「年 + 月 + 周」分组，" +
+                            "不会把不同月份的同一周混在一起。" +
+                            if (stats.weeks.size > RECENT_WEEK_LIMIT) {
+                                "只画最近 $RECENT_WEEK_LIMIT 组。"
+                            } else {
+                                ""
+                            }
                     },
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (stats.hasMultipleYears) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "数据跨了多个年份，标签带年份；" +
+                            "下方「每月明细」里是完整年份。",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Spacer(Modifier.height(6.dp))
                 // v2.0.4：按月 / 按周 切换时图表淡入淡出（之前是瞬间替换）
                 AnimatedContent(
@@ -191,19 +221,36 @@ fun StatsContent(
                         ProductionBarChart(
                             bars = stats.months.map {
                                 ProductionBar(
-                                    label = "${it.month}月",
+                                    // 完整版带年份（跨年时才显示得出来），短版只有月份
+                                    labelTop = if (stats.hasMultipleYears) {
+                                        "${it.year % 100}年${it.month}月"
+                                    } else {
+                                        "${it.month}月"
+                                    },
+                                    labelTopShort = "${it.month}月",
                                     itemCount = it.itemCount,
-                                    reportCount = it.reportCount,
                                 )
                             },
                         )
                     } else {
+                        // ⚠️ 只画最近 RECENT_WEEK_LIMIT 组，
+                        //    否则积累几个月后柱子太多、标签挤成一团。
+                        val recent = stats.weeks.takeLast(RECENT_WEEK_LIMIT)
                         ProductionBarChart(
-                            bars = stats.weeks.map {
+                            bars = recent.map {
                                 ProductionBar(
-                                    label = it.label,
+                                    // 两行标签：上面月份、下面第几周
+                                    // —— 挤在一行会互相叠在一起
+                                    labelTop = if (stats.hasMultipleYears) {
+                                        "${it.year % 100}年${it.month}月"
+                                    } else {
+                                        "${it.month}月"
+                                    },
+                                    labelTopShort = "${it.month}月",
+                                    // ⚠️ 用「3周」不用「第3周」：12 组时每格只有 25dp，
+                                    //    「第3周」放不下会被整行跳过
+                                    labelBottom = it.shortLabel,
                                     itemCount = it.itemCount,
-                                    reportCount = it.reportCount,
                                 )
                             },
                         )
@@ -211,13 +258,21 @@ fun StatsContent(
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    // ⚠️ 柱子太多时份数标签会被省略（否则会叠在一起），
-                    //    说明文字要跟着改，不能还说"柱子下面有小字"。
-                    if (stats.months.size <= 6 && stats.weeks.size <= 6) {
-                        "柱子越高，那段时间写的工作条目越多；柱子下面的小字是那段时间生成了几份周报。"
-                    } else {
-                        "柱子越高，那段时间写的工作条目越多。月份/周数太多时省略了刻度与份数，" +
-                            "下方「每月明细」有完整数字。"
+                    // ⚠️ 说明文字必须跟实际显示的东西对得上 ——
+                    //    「下方每月明细有完整数字」只对按月成立，按周没有那张表。
+                    when {
+                        dimension == 1 && stats.weeks.size > RECENT_WEEK_LIMIT ->
+                            "柱子越高，那段时间写的工作条目越多。" +
+                                "分组太多，只画了最近 $RECENT_WEEK_LIMIT 组，" +
+                                "更早的月份在下方「每月明细」里（按月合计）。"
+                        dimension == 1 ->
+                            "柱子越高，那段时间写的工作条目越多。" +
+                                "轴标签上面是月份、下面是第几周。"
+                        stats.months.size > 6 ->
+                            "柱子越高，那段时间写的工作条目越多。" +
+                                "月份太多时只标了首尾，下方「每月明细」有完整数字。"
+                        else ->
+                            "柱子越高，那段时间写的工作条目越多。"
                     },
                     fontSize = 11.sp,
                     lineHeight = 16.sp,
@@ -269,9 +324,17 @@ fun StatsContent(
     }
 }
 
+/** 「按周」维度最多画多少组（最近的这些），再多柱子就挤成一团了 */
+private const val RECENT_WEEK_LIMIT = 12
+
 /** 单个数字块 */
 @Composable
-private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
+private fun StatTile(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    valueFontSize: TextUnit = 20.sp,
+) {
     Column(
         modifier = modifier
             .background(
@@ -283,16 +346,38 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
     ) {
         Text(
             value,
-            fontSize = 20.sp,
+            fontSize = valueFontSize,
             color = MaterialTheme.colorScheme.onSurface,
+            // ⚠️ 一格只有 ~77dp 可用，数值一折行就会把整行撑高，
+            //    旁边两格是顶对齐，视觉上就不对称了
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
         Text(
             label,
             fontSize = 11.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
+
+/**
+ * 方块里的月份标签 —— 永远用短形式。
+ *
+ * ⚠️ 方块只有 ~77dp 可用，带年份的「26年11月」要 85dp，会被截断。
+ *    跨年的完整信息由下面的说明文字给出。
+ */
+private fun monthLabel(year: Int, month: Int): String = "${month}月"
+
+/**
+ * 「最忙的一周」那一格的值。
+ *
+ * 一格只有 ~77dp 可用，「11月第3周」放不下会折行，
+ * 所以去掉「第」写成「11月3周」。
+ */
+private fun weekTileLabel(week: WeekStat): String = "${week.month}月${week.weekNum}周"
 
 /**
  * 柱状图的一根柱子。
@@ -310,12 +395,19 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
  * 现在报告份数**写在柱子下面**，一眼就能读，不用猜颜色。
  */
 private data class ProductionBar(
-    /** 轴上的短标签，如「11月」「第3周」 */
-    val label: String,
+    /** 轴标签第一行（完整版），如「26年11月」 */
+    val labelTop: String,
+    /**
+     * 轴标签第一行（短版），如「11月」。
+     *
+     * ⚠️ 完整版太长时（跨年才带年份）放不进一格，
+     *    就退到短版，至少还能看出是几月。
+     */
+    val labelTopShort: String = labelTop,
+    /** 轴标签第二行（周次），如「3周」；按月视图留空 */
+    val labelBottom: String = "",
     /** 工作条目数（柱高） */
     val itemCount: Int,
-    /** 报告份数（写在柱下的数字） */
-    val reportCount: Int,
 )
 
 /**
@@ -363,24 +455,25 @@ private fun ProductionBarChart(bars: List<ProductionBar>) {
         color = barColor,
     )
     val axisStyle = TextStyle(fontSize = 10.sp, color = axisColor)
-    val reportStyle = TextStyle(
-        fontSize = 10.sp,
-        fontWeight = FontWeight.Medium,
-        color = axisColor,
-    )
     val countLayouts = remember(bars, countStyle) {
         bars.map { measurer.measure(it.itemCount.toString(), countStyle) }
     }
-    val labelLayouts = remember(bars, axisStyle) {
-        bars.map { measurer.measure(it.label, axisStyle) }
+    val labelTopLayouts = remember(bars, axisStyle) {
+        bars.map { measurer.measure(it.labelTop, axisStyle) }
     }
-    val reportLayouts = remember(bars, reportStyle) {
-        bars.map { measurer.measure("${it.reportCount} 份", reportStyle) }
+    val labelTopShortLayouts = remember(bars, axisStyle) {
+        bars.map { measurer.measure(it.labelTopShort, axisStyle) }
     }
+    val labelBottomLayouts = remember(bars, axisStyle) {
+        bars.map { measurer.measure(it.labelBottom, axisStyle) }
+    }
+
 
     // 布局常量
     val topSpace = 18.dp      // 柱顶数字
-    val bottomSpace = 34.dp   // 轴标签 + 份数
+    // 轴标签（两行）：高度按实际文字行高算，字号放大也不会被裁掉
+    // （单位是 px —— 在 DrawScope 里用，那里才有 Density）
+    val labelLineHeight: Float = labelTopLayouts.maxOfOrNull { it.size.height.toFloat() } ?: 0f
     val maxBarWidth = 26.dp
     val maxGap = 16.dp
 
@@ -394,20 +487,37 @@ private fun ProductionBarChart(bars: List<ProductionBar>) {
 
         // 基线以上的可用高度
         val areaTop = topSpace.toPx()
-        val baseline = size.height - bottomSpace.toPx()
+        // 轴标签占的高度：上下留白 + 实际用到的行数 × 行高
+        //
+        // ⚠️ 按月视图只有一行标签（第二行是空的），
+        //    恒按两行算会让图表底部多空一截，柱子整体矮一截。
+        val hasSecondLine = labelBottomLayouts.any { it.size.width > 0 }
+        val labelRows = if (hasSecondLine) 2f else 1f
+        val bottomSpace: Float = 4.dp.toPx() + labelLineHeight * labelRows + 4.dp.toPx()
+        val baseline = size.height - bottomSpace
         val areaHeight = baseline - areaTop
 
         // 每根柱子占一格；数量多时自动收窄
+        //
+        // ⚠️ slot 上限不能写死：
+        //    以前固定 26dp(柱宽) + 16dp(间距) = 42dp，判定条件是「标签宽 <= slot - 2dp」，
+        //    于是「26年11月」(42.5dp) 在**任何屏幕宽度下**都放不下 ——
+        //    跨年时整个 x 轴一个标签都不显示，比不显示年份还糟。
+        //    现在 slot 按**实际标签宽度**撑开，画布不够时才收窄。
         val maxSlot = size.width / n
-        val slot = minOf(maxBarWidth.toPx() + maxGap.toPx(), maxSlot)
+        val widestLabel: Float = maxOf(
+            labelTopLayouts.maxOfOrNull { it.size.width.toFloat() } ?: 0f,
+            labelBottomLayouts.maxOfOrNull { it.size.width.toFloat() } ?: 0f,
+        )
+        val minSlot = maxBarWidth.toPx() + maxGap.toPx()
+        val wantedSlot = maxOf(minSlot, widestLabel + 2.dp.toPx())
+        val slot = minOf(maxSlot, wantedSlot)
         val barWidth = minOf(maxBarWidth.toPx(), slot * 0.56f)
         val totalWidth = slot * n
         val startX = (size.width - totalWidth) / 2f
 
         // 柱子太窄就不标数字（否则会叠在一起）
         val showCountOnBar = barWidth >= 13.dp.toPx()
-        // 轴标签也同理：太窄就只标首尾，中间留空
-        val showAllLabels = slot >= 22.dp.toPx()
 
         // 基线
         drawLine(
@@ -451,35 +561,49 @@ private fun ProductionBarChart(bars: List<ProductionBar>) {
                 )
             }
 
-            // 轴标签（窄的时候只标首尾，避免挤成一团）
-            val labelLayout = labelLayouts[index]
-            // 窄的时候只标首尾，中间留空
-            val labelVisible = showAllLabels || index == 0 || index == n - 1
+            // 轴标签：两行（月份 / 第几周）
+            //
+            // ⚠️ 窄的时候只标首尾，中间留空；
+            //    而且每一行都要**按实际文字宽度**判断放不放得下 ——
+            //    固定阈值判断不了：「11月第4周」这种长标签 4 根柱子时就会叠在一起。
+            val labelVisible = index == 0 || index == n - 1 || slot >= 40.dp.toPx()
             if (labelVisible) {
-                // ⚠️ 柱子多的时候，首尾那根的标签按中心对齐会画到 Canvas 外面
-                //    （Compose 默认不裁剪绘制），所以要把 x 夹进画布内。
-                drawText(
-                    textLayoutResult = labelLayout,
-                    topLeft = Offset(
-                        x = (centerX - labelLayout.size.width / 2f)
-                            .coerceIn(0f, (size.width - labelLayout.size.width).coerceAtLeast(0f)),
-                        y = baseline + 4.dp.toPx(),
-                    ),
-                )
+                // ⚠️ 完整标签（跨年带年份）放不下时，退到短标签，
+                //    宁可少一个年份，也不能一个标签都不画。
+                val fullTop = labelTopLayouts[index]
+                val shortTop = labelTopShortLayouts[index]
+                val topLayout = when {
+                    fullTop.size.width <= slot - 2.dp.toPx() -> fullTop
+                    shortTop.size.width <= slot - 2.dp.toPx() -> shortTop
+                    else -> null
+                }
+                if (topLayout != null) {
+                    drawText(
+                        textLayoutResult = topLayout,
+                        topLeft = Offset(
+                            x = (centerX - topLayout.size.width / 2f)
+                                .coerceIn(0f, (size.width - topLayout.size.width).coerceAtLeast(0f)),
+                            y = baseline + 4.dp.toPx(),
+                        ),
+                    )
+                }
+                val bottomLayout = labelBottomLayouts[index]
+                if (bottomLayout.size.width > 0 && bottomLayout.size.width <= slot - 2.dp.toPx()) {
+                    drawText(
+                        textLayoutResult = bottomLayout,
+                        topLeft = Offset(
+                            x = (centerX - bottomLayout.size.width / 2f)
+                                .coerceIn(0f, (size.width - bottomLayout.size.width).coerceAtLeast(0f)),
+                            // ⚠️ 底行的 y 要跟着顶行的**实际行高**走，
+                            //    写死 17dp 的话，系统字号放大 1.3 倍时两行会压在一起
+                            y = baseline + 4.dp.toPx() +
+                                (topLayout?.size?.height?.toFloat() ?: labelLineHeight) +
+                                1.dp.toPx(),
+                        ),
+                    )
+                }
             }
 
-            // 柱子下面：报告份数
-            val reportLayout = reportLayouts[index]
-            if (labelVisible) {
-                drawText(
-                    textLayoutResult = reportLayout,
-                    topLeft = Offset(
-                        x = (centerX - reportLayout.size.width / 2f)
-                            .coerceIn(0f, (size.width - reportLayout.size.width).coerceAtLeast(0f)),
-                        y = baseline + 18.dp.toPx(),
-                    ),
-                )
-            }
         }
     }
 }
@@ -553,18 +677,13 @@ private fun MonthStatTable(months: List<MonthStat>) {
                     m.label,
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.width(84.dp),
-                )
-                Text(
-                    "${m.reportCount} 份",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.width(56.dp),
+                    modifier = Modifier.weight(1f),
                 )
                 Text(
                     "${m.itemCount} 条",
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

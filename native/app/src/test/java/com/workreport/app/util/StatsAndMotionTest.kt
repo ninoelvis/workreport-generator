@@ -77,9 +77,19 @@ class StatsAndMotionTest {
             "图表应改成单一指标：柱高 = 工作条目数",
             stats.contains("ProductionBarChart"),
         )
+        // v2.1.2：用户每周只写一份周报，「N 份」这个计数没有意义，去掉
         assertTrue(
-            "报告份数要写在柱子下面，而不是叠在柱子里",
-            stats.contains("份"),
+            "图表里不该再出现「N 份」这个计数",
+            !stats.contains("reportCount = it.reportCount"),
+        )
+        assertTrue(
+            "ProductionBar 不该再有 reportCount 字段",
+            !Regex("data class ProductionBar\\([^)]*reportCount").containsMatchIn(stats),
+        )
+        // 每月明细表也不该再有「N 份」那一列
+        assertTrue(
+            "每月明细表不该再显示「N 份」",
+            !stats.contains("m.reportCount"),
         )
     }
 
@@ -92,7 +102,7 @@ class StatsAndMotionTest {
             "不能再出现旧的双编码提示「深色柱 = 报告份数」",
             !stats.contains("深色柱"),
         )
-        assertTrue("提示应说明柱高代表什么", stats.contains("柱高 = 工作条目数"))
+        assertTrue("提示应说明柱高代表什么", stats.contains("柱高 = 写了几条"))
     }
 
     // ---------- 3. 开发者调试入口 ----------

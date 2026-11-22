@@ -1,16 +1,16 @@
 # 工作报告生成器
 
-[![Release](https://img.shields.io/badge/下载-v2.1.1-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
+[![Release](https://img.shields.io/badge/下载-v2.1.2-blue)](https://github.com/ninoelvis/workreport-generator/releases/latest)
 [![License](https://img.shields.io/badge/license-个人使用-lightgrey)](LICENSE)
 
 ## ⬇️ 下载
 
-**原生版 Android App（v2.1.1，推荐）**:
-[workreport-native-v2.1.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.1/workreport-native-v2.1.1.apk)
+**原生版 Android App（v2.1.2，推荐）**:
+[workreport-native-v2.1.2.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.2/workreport-native-v2.1.2.apk)
 （11.7 MB · Kotlin + Jetpack Compose 纯原生实现 · 无 WebView / 无网页资源 · 可直接覆盖安装旧版 · **需 Android 12 及以上**）
 
 源码在 [`native/`](native/) 目录，用 Android Studio 直接打开即可构建。
-[工程源码包 v2.1.1](https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.1/workreport-native-source-v2.1.1.zip)
+[工程源码包 v2.1.2](https://github.com/ninoelvis/workreport-generator/releases/download/v2.1.2/workreport-native-source-v2.1.2.zip)
 
 **旧版 WebView App**：
 [workreport-generator-v1.2.1.apk](https://github.com/ninoelvis/workreport-generator/releases/download/v1.2.1/workreport-generator-v1.2.1.apk)
@@ -43,6 +43,7 @@
 
 *原生版 App*
 
+- `v2.1.2` **统计页重做**：「按周」修掉一个真 bug —— 以前只按周号归并，十月的第 4 周和十一月的第 4 周被合成同一根柱子，看着像「11月第 4 周还没写怎么就有数据」，现在按 **年 + 月 + 周** 三级分组；**去掉没意义的「N 份」**（每周只写一份周报，份数没有参考价值），图表只标「写了几条」；**轴标签改成两行**（上面月份、下面第几周）并按文字宽度自适应，不再互相叠字，跨年时年份也画得出来；**「最忙的一周」并列时取最近的**，跨年用短标签 + 下方完整年份，不会被截断；**首页与引导页副标题缩短**，不再难看地换行；导出格式与公司红线一字未改，单元测试 312/312
 - `v2.1.1` **开发者页「历史报告体检」改成折叠式**（一行汇总 + 异常摊开 + 明细折叠，页面长度不再随报告数增长）；**收尾检查修掉 10 个问题**，其中最重要的是：样本数据其实会写进用户的「下载」目录（`saveOutside` 在 `storage == null` 时恰恰是写下载目录），现已改为只落私有目录且与正式导出逐项对拍等价；还有样本日期累加算错、周日周区间退位、体检数据不刷新、空库永远「正在读取…」、切 Tab 闪烁与滚动位置丢失、图表标签重叠溢出、图表切维度掉帧、清样本可能误删真实报告、同周重复造样本互相覆盖；导出格式与公司红线一字未改，单元测试 305/305
 - `v2.1.0` **修好统计页底部被导航栏挡住**（底栏是悬浮胶囊，统计页漏了让位空间）；**统计图表改成单一指标**（柱高只表示工作条目数，柱顶写条数、柱下写生成了几份周报，不再是深浅双编码）；**开发者页面补齐最近新功能的调试入口**（统计样本数据工厂、搜索命中自检、主题即时切换、动效开关与速度、图标与周范围自检）；**全 App 动效统一**（点开历史报告会缓缓展开淡入，列表/统计切换、搜索框出现、图表换维度都有动画）；导出格式与公司红线一字未改，单元测试 301/301
 - `v2.0.3` **桌面图标改成纯文字「WorkReport」字标**（白底横排，「Work」灰蓝、「Report」深藏蓝，**没有任何图形**，字形直接从设计稿原图抠出；新增单色主题图标与启动图专用图标）；**桌面图标不再跟随系统深浅色**（删掉 5 个夜间图标目录，浅色/深色桌面上是同一个图标）；**App 内图标位也换成同一套字标并去掉边框与底色方块**，字样与背景融为一体；App 内深浅色切换照旧；导出格式与公司红线一字未改，单元测试 290/290
